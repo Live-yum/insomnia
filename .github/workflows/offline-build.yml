@@ -1,0 +1,109 @@
+name: Offline portable build
+
+on:
+  workflow_call:
+    inputs:
+      source_sha:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact reviewed source commit to build
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.repository == 'Live-yum/insomnia'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            target: win32-x64
+            flags: --win --x64
+            directory: win-unpacked
+            executable: Insomnia.exe
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            flags: --linux --arm64
+            directory: linux-arm64-unpacked
+            executable: insomnia
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      npm_config_update_notifier: 'false'
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      NODE_AUTH_TOKEN: ''
+      NODE_OPTIONS: --max_old_space_size=6144
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Verify actual committed archives and local resource generation
+        run: |
+          python -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python scripts/offline/vendor_plugins.py verify
+          test -f docs/OFFLINE-SOURCE-STATUS.json
+          test -f docs/OFFLINE-PLUGIN-LOADER-STATUS.json
+          python scripts/offline/vendor_plugins.py materialize --target '${{ matrix.target }}' --output packages/insomnia/offline-plugin-resources
+      - name: Install Linux GUI and test prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libnss3 libasound2t64 libgbm1 libxss1 libsecret-1-0 xvfb xauth
+      - name: Install application build dependencies in the connected build zone
+        run: npm ci --no-audit --no-fund
+      - name: Build the actual committed application source
+        run: npm run app-build
+      - name: Type-check application and generated routes
+        run: npm run type-check -w insomnia
+      - name: Create unpacked native application with all local plugin resources
+        working-directory: packages/insomnia
+        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir ${{ matrix.flags }} --publish never
+      - name: Preserve the upstream Windows secure executable wrapper
+        if: runner.os == 'Windows'
+        run: |
+          if [ -d /c/msys64/mingw64/bin ]; then export PATH="/c/msys64/mingw64/bin:$PATH"; fi
+          ./build-secure-wrapper.sh CI
+      - name: Fresh-profile packaged application and plugin discovery smoke test (Windows)
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.mjs packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
+      - name: Fresh-profile packaged application and plugin discovery smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node scripts/offline/smoke.mjs packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
+      - name: Archive validated architecture with portable launchers and checksums
+        run: python scripts/offline/package_portable.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}' --output offline-dist
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: success()
+        with:
+          name: offline-portable-${{ matrix.target }}
+          path: offline-dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-validation-${{ matrix.target }}
+          path: |
+            offline-smoke-report.json
+            packages/insomnia/offline-plugin-resources/catalog.json
+          if-no-files-found: warn
+          retention-days: 14
