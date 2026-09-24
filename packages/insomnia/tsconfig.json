@@ -43,6 +43,7 @@
     "dist",
     "config",
     "node_modules",
+    "offline-plugin-resources",
     "src/coverage",
     "svgr.config.js"
   ]

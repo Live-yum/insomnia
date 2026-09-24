@@ -12,7 +12,6 @@ import {
   BrowserWindow,
   type IpcRendererEvent,
   type MenuItemConstructorOptions,
-  shell,
   utilityProcess,
 } from 'electron';
 import type { UtilityProcess } from 'electron/main';
