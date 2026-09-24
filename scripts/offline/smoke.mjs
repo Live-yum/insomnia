@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -10,18 +12,30 @@ const executablePath = path.resolve(process.argv[2]);
 const directory = path.dirname(executablePath);
 const resourceRoot = path.join(directory, 'resources/offline-plugins');
 const catalog = JSON.parse(await readFile(path.join(resourceRoot, 'catalog.json'), 'utf8'));
-const prepared = catalog.entries.filter(e => e.status === 'materialized-unreviewed');
-assert(prepared.length > 50, 'A full catalog, not a selected handful of plugins, must be packaged.');
+const manifest = JSON.parse(await readFile('vendor/offline-plugins/manifest.json', 'utf8'));
+const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+assert(/^[0-9a-f]{40}$/.test(sourceCommit), 'Record the checked-out source, not the caller workflow commit.');
+assert.equal(catalog.sourceSha256, manifest.sourceSha256, 'Packaged catalog must match the reviewed source snapshot.');
+assert.deepEqual(
+  catalog.entries.map(entry => entry.name).sort(),
+  manifest.entries.map(entry => entry.name).sort(),
+  'Every entry in the exact catalog must be accounted for; a selected subset must fail.',
+);
+const sourceByName = new Map(manifest.entries.map(entry => [entry.name, entry]));
+const materializationFailures = catalog.entries.filter(entry =>
+  sourceByName.get(entry.name).status === 'dependency-complete-unreviewed' && entry.status !== 'materialized-unreviewed',
+);
+assert.deepEqual(materializationFailures, [], 'Do not silently omit complete plugins after an extraction failure.');
+const prepared = catalog.entries.filter(entry => entry.status === 'materialized-unreviewed');
 const expected = [];
 const incompatibleManifests = [];
 for (const entry of prepared) {
   assert(/^[0-9a-f]{20}$/.test(entry.profile));
   assert(/^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i.test(entry.name));
-  const manifest = JSON.parse(await readFile(path.join(resourceRoot, entry.profile, 'node_modules', entry.name, 'package.json'), 'utf8'));
-  assert.equal(manifest.name, entry.name, 'Packaged plugin identity must match the catalog.');
-  if (!manifest.insomnia || typeof manifest.insomnia !== 'object') {
-    // Source archives stay in the distribution for audit, but a package without the
-    // host's required manifest field must not be falsely counted as loadable.
+  const pluginManifest = JSON.parse(await readFile(path.join(resourceRoot, entry.profile, 'node_modules', entry.name, 'package.json'), 'utf8'));
+  assert.equal(pluginManifest.name, entry.name, 'Packaged plugin identity must match the catalog.');
+  assert.equal(pluginManifest.version, entry.version, 'Packaged plugin version must match the catalog.');
+  if (!pluginManifest.insomnia || typeof pluginManifest.insomnia !== 'object') {
     incompatibleManifests.push({ name: entry.name, reason: 'Missing required insomnia plugin metadata' });
   } else {
     expected.push(entry.name);
@@ -29,40 +43,67 @@ for (const entry of prepared) {
 }
 const profile = await mkdtemp(path.join(os.tmpdir(), 'insomnia-offline-smoke-'));
 const env = { ...process.env, INSOMNIA_OFFLINE_DATA_PATH: profile };
-for (const key of ['INSOMNIA_DATA_PATH', 'INSOMNIA_SESSION', 'INSOMNIA_OFFLINE_BROWSER_ORIGINS', 'INSOMNIA_OFFLINE_PLUGIN_DIR', 'GH_TOKEN', 'GITHUB_TOKEN', 'NODE_AUTH_TOKEN', 'NPM_TOKEN']) delete env[key];
+for (const key of [
+  'INSOMNIA_DATA_PATH', 'INSOMNIA_SESSION', 'INSOMNIA_SKIP_ONBOARDING', 'PLAYWRIGHT_TEST',
+  'INSOMNIA_OFFLINE_BROWSER_ORIGINS', 'INSOMNIA_OFFLINE_PLUGIN_DIR',
+  'GH_TOKEN', 'GITHUB_TOKEN', 'NODE_AUTH_TOKEN', 'NPM_TOKEN',
+]) delete env[key];
 let app;
+let probeRequests = 0;
+const probe = createServer((_request, response) => {
+  probeRequests += 1;
+  response.writeHead(200, { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' });
+  response.end('reachable-loopback-control');
+});
 const report = {
-  sourceCommit: process.env.GITHUB_SHA,
+  sourceCommit,
+  target: catalog.target,
+  catalogEntries: catalog.entries.length,
+  materializedPlugins: prepared.length,
   expectedPlugins: expected.length,
   incompatibleManifests,
-  archiveExceptions: catalog.entries.filter(e => e.status !== 'materialized-unreviewed').map(e => ({ name: e.name, status: e.status, error: e.error })),
+  archiveExceptions: catalog.entries.filter(entry => entry.status !== 'materialized-unreviewed').map(entry => ({ name: entry.name, status: entry.status, error: entry.error })),
   passed: false,
   allCatalogPluginsUsable: false,
-  scope: 'Packaged startup, account-free local route, disabled-plugin enumeration and Chromium URL policy; not all plugin functionality or an OS-level egress audit.',
+  scope: 'Packaged startup, account-free local route, disabled-plugin enumeration and Chromium URL policy with a reachable loopback control. Not all plugin functionality or OS-level egress certification.',
 };
 try {
+  await new Promise((resolve, reject) => {
+    probe.once('error', reject);
+    probe.listen(0, '127.0.0.1', resolve);
+  });
+  const probeUrl = `http://127.0.0.1:${probe.address().port}/offline-policy-control`;
+  const control = await fetch(probeUrl, { signal: AbortSignal.timeout(10_000) });
+  assert.equal(await control.text(), 'reachable-loopback-control');
+  assert.equal(probeRequests, 1, 'Positive control must reach the live server.');
+  probeRequests = 0;
   app = await electron.launch({ executablePath, env, timeout: 120_000 });
   const page = await app.firstWindow({ timeout: 120_000 });
   page.setDefaultTimeout(120_000);
   await page.waitForURL(url => url.pathname.startsWith('/organization/org_offline/'));
   await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
   const plugins = await page.evaluate(() => window.main.plugins.getPlugins());
-  const names = new Set(plugins.map(p => p.name));
+  const names = new Set(plugins.map(plugin => plugin.name));
   const missing = expected.filter(name => !names.has(name));
   assert.deepEqual(missing, [], 'Every prepared plugin with valid host metadata must be discoverable locally.');
-  assert(plugins.every(p => p.config.disabled), 'Unreviewed plugins must not start enabled.');
+  assert(plugins.every(plugin => plugin.config.disabled), 'Unreviewed plugins must not start enabled.');
   assert(names.has('insomnia-plugin-crypto'), 'Crypto Plugin must be present.');
-  const networkBlocked = await page.evaluate(async () => {
+  // Main-process Chromium fetch bypasses renderer CSP/CORS and custom protocols.
+  // A DNS failure to a deliberately nonexistent hostname is not a valid positive test.
+  const chromiumResult = await app.evaluate(async ({ net }, url) => {
     try {
-      const response = await fetch('https://offline-egress-test.invalid/');
-      return response.status === 403;
-    } catch {
-      return true;
+      const response = await net.fetch(url, { bypassCustomProtocolHandlers: true, signal: AbortSignal.timeout(10_000) });
+      return { status: response.status, error: null };
+    } catch (error) {
+      return { status: null, error: String(error) };
     }
-  });
-  assert(networkBlocked, 'Browser network policy should reject an unapproved external origin.');
+  }, probeUrl);
+  assert.equal(probeRequests, 0, 'A blocked Chromium request must never arrive at the reachable server.');
+  assert(chromiumResult.error || chromiumResult.status === 403, 'Chromium must reject the unapproved origin.');
   report.discoveredPlugins = plugins.length;
   report.defaultDisabled = true;
+  report.liveLoopbackControlPassed = true;
+  report.chromiumProbe = chromiumResult;
   report.passed = true;
   console.log(JSON.stringify(report, null, 2));
 } catch (error) {
@@ -71,5 +112,7 @@ try {
 } finally {
   await writeFile('offline-smoke-report.json', JSON.stringify(report, null, 2));
   await app?.close().catch(() => {});
+  probe.closeAllConnections();
+  if (probe.listening) await new Promise(resolve => probe.close(resolve));
   await rm(profile, { recursive: true, force: true, maxRetries: 3 }).catch(() => {});
 }
