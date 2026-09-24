@@ -1,0 +1,9 @@
+# The upstream root marks every path as text. npm archives must retain their
+# exact bytes so registry integrity and SHA-256 checks survive git checkout.
+*.tgz binary
+*.gz binary
+*.zip binary
+blobs/** linguist-vendored=true
+profiles/** linguist-generated=true
+plugin-hub.snapshot.html linguist-generated=true
+manifest.json linguist-generated=true
