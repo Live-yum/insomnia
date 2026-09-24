@@ -8,7 +8,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: offline-build-${{ github.head_ref || github.ref_name }}
+  group: offline-build-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   build:
@@ -78,7 +78,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Configure the standard setuid sandbox helper for this CI run only; do not disable Chromium sandboxing.
           sudo chown root:root packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
           sudo chmod 4755 packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
           xvfb-run -a bash -c '
