@@ -73,17 +73,8 @@ async function assertResolvesToPublicHost(hostname) {
 
 // Note: This is duplicated in inso's lint-specification.ts. Remember to mirror changes there as well.
 const safeHttpResolver = {
-  async resolve(ref) {
-    const href = ref.href();
-    if (!isSafeRefUrl(href)) {
-      throw new Error(`Failed to fetch "${href}". Only https URLs to public hosts are allowed.`);
-    }
-    await assertResolvesToPublicHost(new URL(href).hostname.toLowerCase());
-    const response = await fetch(href, { redirect: 'error', signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch "${href}": ${response.status} ${response.statusText}`);
-    }
-    return response.text();
+  async resolve(_ref) {
+    throw new Error('Remote specification references are disabled in this offline build. Bundle references into a local document.');
   },
 };
 

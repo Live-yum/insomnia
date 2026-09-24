@@ -2,6 +2,7 @@ import { models, services } from 'insomnia-data';
 import type { LoaderFunctionArgs } from 'react-router';
 import { href, redirect, useParams } from 'react-router';
 
+import { OFFLINE_BUILD } from '~/common/offline-policy';
 import { getProjectsWithGitRepositories } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { logout } from '~/ui/account/session';
@@ -29,7 +30,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   const { id: sessionId, accountId } = await services.userSession.get();
 
-  if (!sessionId) {
+  if (!OFFLINE_BUILD && !sessionId) {
     await logout();
     throw redirect(href('/auth/login'));
   }

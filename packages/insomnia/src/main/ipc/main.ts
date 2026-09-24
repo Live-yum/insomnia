@@ -34,6 +34,7 @@ import type {
 } from '~/common/plugins/types';
 import type { RenderedRequest } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
+import { assertOfflineBrowserRequest, openOfflineExternal } from '~/main/offline-network';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
@@ -98,7 +99,7 @@ let lintProcess: Electron.UtilityProcess | null = null;
 export const openInBrowser = (href: string) => {
   const { protocol } = new URL(href);
   if (protocol === 'http:' || protocol === 'https:') {
-    shell.openExternal(href);
+    openOfflineExternal(href);
   }
 };
 
@@ -429,11 +430,13 @@ export function registerMainHandlers() {
   });
   ipcMainHandle('authorizeUserInWindow', (_, options: Parameters<typeof authorizeUserInWindow>[0]) => {
     const { url, urlSuccessRegex, urlFailureRegex, sessionId } = options;
+    assertOfflineBrowserRequest(url);
     return authorizeUserInWindow({ url, urlSuccessRegex, urlFailureRegex, sessionId });
   });
 
   ipcMainHandle('authorizeUserInDefaultBrowser', (_, options: Parameters<typeof authorizeUserInDefaultBrowser>[0]) => {
-    return authorizeUserInDefaultBrowser(options);
+    void options;
+    throw new Error('External-browser authentication is disabled in the offline build. Use an approved in-app intranet origin.');
   });
   ipcMainHandle('onDefaultBrowserOAuthRedirect', (_, options: Parameters<typeof onDefaultBrowserOAuthRedirect>[0]) => {
     return onDefaultBrowserOAuthRedirect(options);

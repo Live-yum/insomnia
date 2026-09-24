@@ -12,6 +12,7 @@ import type {
 } from 'insomnia-vcs';
 
 import type { Operation } from '../../common/database';
+import { OFFLINE_BUILD } from '../../common/offline-policy';
 import { ipcMainHandle, ipcMainOn } from '../ipc/electron';
 import {
   cancelPendingSyncConflict,
@@ -84,14 +85,24 @@ export interface SyncBridgeAPI extends SyncBridgeMethods, GlobalSyncBridgeMethod
 
 export const registerSyncHandlers = () => {
   ipcMainHandle('sync.invoke', (event, workspaceId: string, methodName: string, ...args: unknown[]) => {
+    if (OFFLINE_BUILD && !new Set([
+      'archiveProject', 'checkout', 'fork', 'getBranchNames', 'getCurrentBranchName',
+      'getHistory', 'getHistoryCount', 'getVersion', 'merge', 'removeBranch',
+      'rollback', 'rollbackToLatest', 'stage', 'status', 'switchAndCreateBackendProjectIfNotExist',
+      'takeSnapshot', 'unstage', 'getActiveBackendProject', 'hasBackendProject',
+    ]).has(methodName)) throw new Error('Remote version-control operations are disabled in the offline build');
     return invokeVCSForWorkspace(event.sender, workspaceId, methodName, ...args);
   });
 
   ipcMainHandle('sync.invokeGlobal', (_event, methodName: string, ...args: unknown[]) => {
+    if (OFFLINE_BUILD && !new Set([
+      'localBackendProjects', 'hasBackendProjectForRootDocument', 'removeBackendProjectsForRoot', 'archiveBackendProject',
+    ]).has(methodName)) throw new Error('Remote project discovery is disabled in the offline build');
     return invokeGlobalVCS(methodName, ...args);
   });
 
   ipcMainHandle('sync.pullRemoteBackendProject', (event, options: PullRemoteBackendProjectOptions) => {
+    if (OFFLINE_BUILD) throw new Error('Cloud sync is disabled in the offline build');
     return pullRemoteBackendProject(event.sender, options);
   });
 

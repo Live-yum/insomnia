@@ -1,6 +1,7 @@
 import { models, services } from 'insomnia-data';
 import { href, Outlet, redirect, useOutletContext, useParams, useRouteLoaderData } from 'react-router';
 
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { invariant } from '~/common/utils/invariant';
 import { logout } from '~/ui/account/session';
 import { GitFileIssuesProvider, useProjectGitFileIssues } from '~/ui/hooks/use-git-file-issues';
@@ -15,12 +16,17 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const userSession = await services.userSession.get();
   const { id: sessionId, accountId } = userSession;
 
-  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
+  if (!OFFLINE_BUILD && !models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
     await logout();
     throw redirect(href('/auth/login'));
   }
 
   const project = await services.project.getById(projectId);
+  if (OFFLINE_BUILD && project) {
+    invariant(project.parentId === organizationId, 'Project does not belong to this local organization');
+    invariant(!project.remoteId && !project.gitRepositoryId, 'Import this project into local storage before using it offline');
+    invariant(organizationId === OFFLINE_ORGANIZATION_ID || models.organization.isScratchpadOrganizationId(organizationId), 'Unknown offline organization');
+  }
 
   if (!project) {
     // The project was deleted; stay inside the current organization rather than bouncing the user out.

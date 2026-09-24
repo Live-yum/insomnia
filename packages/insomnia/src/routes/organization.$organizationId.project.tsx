@@ -8,6 +8,7 @@ import * as reactUse from 'react-use';
 
 import { Icon } from '~/basic-components/icon';
 import { DEFAULT_SIDEBAR_SIZE } from '~/common/constants';
+import { OFFLINE_BUILD } from '~/common/offline-policy';
 import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { ScratchPadTutorialPanel } from '~/ui/components/panes/scratchpad-tutorial-pane';
 import {
@@ -50,7 +51,7 @@ const Component = () => {
   const { data: learningFeature } = useServerQuery({
     queryKey: ['learning-feature'],
     queryFn: getLearningFeature,
-    enabled: !isLearningFeatureDismissed,
+    enabled: !OFFLINE_BUILD && !isLearningFeatureDismissed,
     staleTime: 1000 * 60 * 60 * 24, // 1 day
     refetchOnWindowFocus: true,
   });

@@ -13,6 +13,7 @@ import {
   matchPath,
   Meta,
   Outlet,
+  redirect,
   Scripts,
   ScrollRestoration,
   useFetchers,
@@ -24,6 +25,7 @@ import {
 import { useLatest } from 'react-use';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME, isDevelopment } from '~/common/constants';
+import { OFFLINE_BUILD, OFFLINE_ENTRY } from '~/common/offline';
 import { parseDeepLinkUrl as parseImportDeepLinkUrl, resolveImportDeepLink } from '~/common/import-deep-link';
 import { useAuthorizeActionFetcher } from '~/routes/auth.authorize';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
@@ -68,6 +70,22 @@ export const links: Route.LinksFunction = () => {
   ];
 };
 
+const offlineRouteMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
+  if (OFFLINE_BUILD) {
+    const pathname = new URL(request.url).pathname;
+    const cloudAccountRoute = /^\/auth(?:\/(?:login|login-tip|authorize|logout|default-browser-redirect))?\/?$/.test(pathname);
+    const onboardingRoute = pathname === '/onboarding' || pathname.startsWith('/onboarding/');
+    const orgMatch = /^\/organization\/([^/]+)/.exec(pathname);
+    const unknownOrganization = orgMatch &&
+      ![models.organization.OFFLINE_ORGANIZATION_ID, models.organization.SCRATCHPAD_ORGANIZATION_ID].includes(orgMatch[1]);
+    if (cloudAccountRoute || onboardingRoute || unknownOrganization) {
+      if (request.method !== 'GET') throw new Response('Cloud action disabled in offline build', { status: 403 });
+      throw redirect(OFFLINE_ENTRY);
+    }
+  }
+  await next();
+};
+
 const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
   await next();
 
@@ -86,7 +104,7 @@ const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ reque
     console.log('[locationHistoryMiddleware] Failed to store location history entry', err);
   }
 };
-export const clientMiddleware: Route.ClientMiddlewareFunction[] = [locationHistoryMiddleware];
+export const clientMiddleware: Route.ClientMiddlewareFunction[] = [offlineRouteMiddleware, locationHistoryMiddleware];
 
 const parseDeepLinkUrl = (url: string) => parseImportDeepLinkUrl(url, isDevelopment());
 

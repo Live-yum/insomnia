@@ -3,6 +3,7 @@ import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { isNotNullOrUndefined } from '~/common/misc';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent } from '~/ui/analytics';
@@ -60,6 +61,13 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 };
 
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
+  if (OFFLINE_BUILD) {
+    invariant(organizationId === OFFLINE_ORGANIZATION_ID, 'Select the offline organization to create a project');
+    invariant(newProjectData.storageType === 'local', 'Only local storage is available in this offline build');
+    invariant(typeof newProjectData.name === 'string' && newProjectData.name.trim().length > 0, 'Project name is required');
+    const project = await services.project.create({ name: newProjectData.name, parentId: organizationId });
+    return project._id;
+  }
   const user = await services.userSession.get();
   const sessionId = user.id;
   invariant(sessionId, 'User must be logged in to create a project');

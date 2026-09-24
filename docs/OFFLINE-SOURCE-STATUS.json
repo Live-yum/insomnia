@@ -1,0 +1,146 @@
+{
+  "baseCommit": "ae09eea24dc00594dd9acbe0a7e27ae5fa9bcc9c",
+  "buildValidated": false,
+  "files": [
+    {
+      "path": "packages/insomnia/src/common/insomnia-fetch.ts",
+      "sha256": "a57d30becf7b839b67fa4f223fdacdb067233f8c056291d36bf567d6ee58e0a0"
+    },
+    {
+      "path": "packages/insomnia/src/main/analytics.ts",
+      "sha256": "7ed667f918d9ff7a0d5c14b954c809cc53efb9b79dbdfd71ee7b21afd4ec454c"
+    },
+    {
+      "path": "packages/insomnia/src/main/sentry.ts",
+      "sha256": "e7d40dbe30e6af12972d2419901febe1b6280b2e148d7683c45bbffad7b31d86"
+    },
+    {
+      "path": "packages/insomnia/src/ui/sentry.ts",
+      "sha256": "7e1afa307989393dc48e42013e63e715641b220290bee01ac549132fb22207f9"
+    },
+    {
+      "path": "packages/insomnia/src/main/updates.ts",
+      "sha256": "4ed836790bb99fb8a789b3f74395955d6281d25d60bb67b8d46ada2c78266244"
+    },
+    {
+      "path": "packages/insomnia/src/main/api.protocol.ts",
+      "sha256": "319f8dd82c029900a66ff931a6219914044f2de392972e94b99f84a58f878e6f"
+    },
+    {
+      "path": "packages/insomnia/src/ui/hooks/use-account-server-data.ts",
+      "sha256": "6445ad18511f1b57d64d6902770a241b7a166c7704dbf900fbde6a88ab4cd13f"
+    },
+    {
+      "path": "packages/insomnia/src/common/organization-storage-rules.ts",
+      "sha256": "a5e31bbde23ce655b81a4897d068ab80746633162408f8056dbe7755bddda033"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization._index.tsx",
+      "sha256": "7133dcc54411b20442d6c81179bb1bd8e23e8f612a17309d160a83966ea236b0"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId._index.tsx",
+      "sha256": "314667a8657d58a715900b502432e604573b9d8761219a6fce676a27a1c6c31c"
+    },
+    {
+      "path": "packages/insomnia-data/src/models/organization.ts",
+      "sha256": "ec24eea530e6e6f9b583201f369cf824efab76e78ca4e9fd62bf972892069db4"
+    },
+    {
+      "path": "packages/insomnia/src/ui/utils/router.ts",
+      "sha256": "090209ca38ded8156f13c472c94dbce63b92c770fb4a93e24cf8713ce7066cfd"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.new.tsx",
+      "sha256": "6390e02af1740cdce2a08ce45b082296596800d40aff5f4eec378cf25808860d"
+    },
+    {
+      "path": "packages/insomnia/src/ui/containers/app-hooks.tsx",
+      "sha256": "7d941b08304ef92a457e98b3854a3b723438bb764038663d124ad077f7cb0e3b"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.tsx",
+      "sha256": "68f33a523d6467a6492c18576e9ad76ea6d226ac4f40c34abd59a7a84eda3608"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.tsx",
+      "sha256": "3c19865defbb04e98fd9317e4e98ae63293dc58be6e2644123eeb3d8ec288a24"
+    },
+    {
+      "path": "packages/insomnia/src/root.tsx",
+      "sha256": "9cd85edcd4d531b377d25b93a345642cea783b7eaf64adbdd3e78f7d5848e19f"
+    },
+    {
+      "path": "packages/insomnia/src/entry.client.tsx",
+      "sha256": "79b1d3ba451927c09b97dba6b7c3c771d8668ce4de295efc8cf1e8a9a186d013"
+    },
+    {
+      "path": "packages/insomnia/src/entry.main.ts",
+      "sha256": "d9e9850c163fe94642f51f55e0c56c84a6f1610fb4fc4badbd81399c364fffcb"
+    },
+    {
+      "path": "packages/insomnia/src/main/window-utils.ts",
+      "sha256": "14bf3be4e43d9c869fc95732f4bcec6d2f549b9d50dbf725001cf753d4a566e1"
+    },
+    {
+      "path": "packages/insomnia/config/config.json",
+      "sha256": "97320b68460bd2273dcc75da7b729f6f5ea4368b92dcc2ab097b7e688e118c89"
+    },
+    {
+      "path": "packages/insomnia/src/main/ipc/main.ts",
+      "sha256": "f22f07a27709d3a2623736e4cbb84b2c40012660cc28b96ce8852d88cd46bf86"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.tsx",
+      "sha256": "ef94e6ba6c0b734e0e99b7a8d90f25c2c50f418a2cce6a94e115b25abb973cff"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project._index.tsx",
+      "sha256": "1aeaaa0b9b5c9d7ac633158a5ee6bf9bed6336fd720dff311bcb4cf390440ad2"
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.delete.tsx",
+      "sha256": "cc490d163728efb9cf42a8a5df040f163adb987eb3d627008c50c38ed3b05365"
+    },
+    {
+      "path": "packages/insomnia/src/entry.hidden-window.ts",
+      "sha256": "666ed794b75165bf6de9f7ebe3ad98d33ad58744ef5e2a9d6f827c8b9269d645"
+    },
+    {
+      "path": "packages/insomnia/src/ui/hooks/use-query.ts",
+      "sha256": "7f03d5b6ebf6c976480b45a63ac8f42f7a6ffb70dd67da2d16cefcb144681ad2"
+    },
+    {
+      "path": "packages/insomnia/src/main/install-plugin.ts",
+      "sha256": "82ed60bb95068de26d799aff97c6963889ae7d8b95466615ba38c5765d4f82cf"
+    },
+    {
+      "path": "packages/insomnia/src/main/bundle-spectral-ruleset.ts",
+      "sha256": "e1bc330bef6e6e37e9c076f9e082a342858dde17287d5dce4b3f8b4d63025e6b"
+    },
+    {
+      "path": "packages/insomnia/src/main/lint-process.mjs",
+      "sha256": "b04c1fad2b25fb5271782e79a8818fbf4bf62c6236b7c72878d84c461f9e8978"
+    },
+    {
+      "path": "packages/insomnia/src/main/cloud-sync/ipc.ts",
+      "sha256": "215e145179614e61ee3be3caab2e91b1eae9595d84a93be46b426c400a0f89ce"
+    },
+    {
+      "path": "packages/insomnia-data/src/models/settings.ts",
+      "sha256": "03f09b6e826bb1b5d22566fbe9bc51908bd7b853df4e29744ecc75331dde3446"
+    },
+    {
+      "path": "packages/insomnia/src/common/offline-policy.ts",
+      "sha256": "96815ff9c242c4727538e00ba7fdd40af0eb1088b48ece8eb10e0cb5f0c43b96"
+    },
+    {
+      "path": "packages/insomnia/src/common/offline.ts",
+      "sha256": "07e4bbcd355a62a6e45f93a39dc4638af2fb6922ff69fee6d14b8f9a501c359d"
+    },
+    {
+      "path": "packages/insomnia/src/main/offline-network.ts",
+      "sha256": "3f66c11b7d02e668323fff8ef26537b07db529c62729d37c2ad76cd21744c6ad"
+    }
+  ]
+}

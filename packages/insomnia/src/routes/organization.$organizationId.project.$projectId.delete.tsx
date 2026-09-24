@@ -4,6 +4,7 @@ import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
 import { projectLock } from '~/common/project';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
@@ -20,7 +21,9 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const user = await services.userSession.get();
   const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to delete a project');
+  const isOfflineLocalProject = OFFLINE_BUILD && organizationId === OFFLINE_ORGANIZATION_ID &&
+    project.parentId === organizationId && !project.remoteId && !project.gitRepositoryId;
+  invariant(sessionId || isOfflineLocalProject, 'Only an offline local project can be deleted without a login');
 
   try {
     await projectLock.lock();
