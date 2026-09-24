@@ -5,6 +5,13 @@ export const OFFLINE_SERVICE_ERROR = 'Insomnia cloud services are disabled in th
 
 const networkProtocols = new Set(['http:', 'https:', 'ws:', 'wss:']);
 
+/** Reject characters URL parsing could silently normalize before origin validation. */
+const hasForbiddenOriginCharacter = (value: string) =>
+  [...value].some(character => {
+    const code = character.charCodeAt(0);
+    return code <= 32 || code === 127 || character === '\\';
+  });
+
 /** Parse an administrator-managed list of EXACT origins; never accept host wildcards. */
 export function parseOfflineOrigins(value: string | undefined): ReadonlySet<string> {
   if (!value) return new Set<string>();
@@ -26,11 +33,18 @@ export function parseOfflineOrigins(value: string | undefined): ReadonlySet<stri
       throw new Error('Invalid origin in INSOMNIA_OFFLINE_BROWSER_ORIGINS.');
     }
     if (
-      !networkProtocols.has(url.protocol) || /[\u0000-\u0020\u007f\\]/.test(item) ||
-      !/^(?:https?|wss?):\/\//i.test(item) || url.username || url.password ||
-      url.search || url.hash || (url.pathname !== '/' && url.pathname !== '') ||
-      url.hostname.includes('*') || url.hostname.endsWith('.') ||
-      item.trim() !== item || url.origin === 'null'
+      !networkProtocols.has(url.protocol) ||
+      hasForbiddenOriginCharacter(item) ||
+      !/^(?:https?|wss?):\/\//i.test(item) ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      (url.pathname !== '/' && url.pathname !== '') ||
+      url.hostname.includes('*') ||
+      url.hostname.endsWith('.') ||
+      item.trim() !== item ||
+      url.origin === 'null'
     ) {
       throw new Error('Offline browser origins must have no credentials, paths, queries, fragments or wildcards.');
     }
