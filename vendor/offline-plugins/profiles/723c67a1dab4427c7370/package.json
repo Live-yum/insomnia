@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-import-openapi-hp": "1.0.0"
+  },
+  "name": "offline-plugin-profile-723c67a1dab4427c7370",
+  "private": true,
+  "version": "1.0.0"
+}

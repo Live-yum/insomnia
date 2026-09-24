@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-minikube": "1.0.1"
+  },
+  "name": "offline-plugin-profile-d75d5cef0cd64a4f2ff8",
+  "private": true,
+  "version": "1.0.0"
+}

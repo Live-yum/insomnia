@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hubspot": "0.0.2"
+  },
+  "name": "offline-plugin-profile-a72d95ee505ea62aebff",
+  "private": true,
+  "version": "1.0.0"
+}

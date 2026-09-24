@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-paramater-store": "0.0.7"
+  },
+  "name": "offline-plugin-profile-c971221778813386cc54",
+  "private": true,
+  "version": "1.0.0"
+}

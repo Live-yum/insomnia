@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-local-snapshot": "1.1.4"
+  },
+  "name": "offline-plugin-profile-b493b0b75a4bc8c07610",
+  "private": true,
+  "version": "1.0.0"
+}

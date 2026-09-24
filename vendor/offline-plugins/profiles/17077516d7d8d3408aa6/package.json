@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-dpop-header-adder": "0.0.4"
+  },
+  "name": "offline-plugin-profile-17077516d7d8d3408aa6",
+  "private": true,
+  "version": "1.0.0"
+}

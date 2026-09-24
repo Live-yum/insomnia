@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-totp": "1.0.4"
+  },
+  "name": "offline-plugin-profile-1caef2e6fde81fa861c8",
+  "private": true,
+  "version": "1.0.0"
+}

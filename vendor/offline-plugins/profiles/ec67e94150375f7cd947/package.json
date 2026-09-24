@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-auto-set-bearer-token": "0.0.2"
+  },
+  "name": "offline-plugin-profile-ec67e94150375f7cd947",
+  "private": true,
+  "version": "1.0.0"
+}

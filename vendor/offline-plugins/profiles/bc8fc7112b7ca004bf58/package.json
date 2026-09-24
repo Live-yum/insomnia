@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-ovhcloud-signature": "1.0.0"
+  },
+  "name": "offline-plugin-profile-bc8fc7112b7ca004bf58",
+  "private": true,
+  "version": "1.0.0"
+}

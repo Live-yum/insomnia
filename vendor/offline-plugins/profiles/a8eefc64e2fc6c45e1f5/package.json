@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@platform-of-trust/insomnia-plugin-platform-of-trust": "0.0.16"
+  },
+  "name": "offline-plugin-profile-a8eefc64e2fc6c45e1f5",
+  "private": true,
+  "version": "1.0.0"
+}

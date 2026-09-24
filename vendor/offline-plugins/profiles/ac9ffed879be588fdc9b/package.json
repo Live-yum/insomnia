@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hmac-acquia-2-0": "1.0.3"
+  },
+  "name": "offline-plugin-profile-ac9ffed879be588fdc9b",
+  "private": true,
+  "version": "1.0.0"
+}

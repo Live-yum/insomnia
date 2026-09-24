@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hide-request-history": "1.0.0"
+  },
+  "name": "offline-plugin-profile-28fdf80a8b26b1c30dc9",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@smartrent/insomnia-plugin-sha512-hmac-auth": "2.0.0"
+  },
+  "name": "offline-plugin-profile-e43d729bc1260074658c",
+  "private": true,
+  "version": "1.0.0"
+}

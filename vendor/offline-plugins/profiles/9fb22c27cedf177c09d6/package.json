@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-optimizely-contentgraph-hmac": "0.0.2"
+  },
+  "name": "offline-plugin-profile-9fb22c27cedf177c09d6",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-dapr": "1.0.0"
+  },
+  "name": "offline-plugin-profile-bde1dd80c144e23dec13",
+  "private": true,
+  "version": "1.0.0"
+}

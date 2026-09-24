@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cuid2": "1.1.2"
+  },
+  "name": "offline-plugin-profile-a2a16da9144bba642022",
+  "private": true,
+  "version": "1.0.0"
+}

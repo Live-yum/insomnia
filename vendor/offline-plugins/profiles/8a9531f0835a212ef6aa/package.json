@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-genai-image-preview": "0.1.8"
+  },
+  "name": "offline-plugin-profile-8a9531f0835a212ef6aa",
+  "private": true,
+  "version": "1.0.0"
+}

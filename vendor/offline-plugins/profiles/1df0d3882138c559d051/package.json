@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-request-signer": "1.0.0"
+  },
+  "name": "offline-plugin-profile-1df0d3882138c559d051",
+  "private": true,
+  "version": "1.0.0"
+}

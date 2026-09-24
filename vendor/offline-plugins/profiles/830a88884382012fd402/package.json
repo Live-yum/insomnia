@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-request-navigator-forked": "0.3.2"
+  },
+  "name": "offline-plugin-profile-830a88884382012fd402",
+  "private": true,
+  "version": "1.0.0"
+}

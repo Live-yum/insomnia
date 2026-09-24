@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-skugga-sse": "0.2.3"
+  },
+  "name": "offline-plugin-profile-5d8207fb1bf124a21c9f",
+  "private": true,
+  "version": "1.0.0"
+}

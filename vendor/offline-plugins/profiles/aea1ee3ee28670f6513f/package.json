@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-laravel-csrf": "0.2.0"
+  },
+  "name": "offline-plugin-profile-aea1ee3ee28670f6513f",
+  "private": true,
+  "version": "1.0.0"
+}

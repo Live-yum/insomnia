@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@rtsoft/insomnia-plugin-hmac-authorization": "1.0.2"
+  },
+  "name": "offline-plugin-profile-7caffe3cbdbed5527888",
+  "private": true,
+  "version": "1.0.0"
+}

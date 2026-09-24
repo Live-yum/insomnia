@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-twilio-signature": "1.0.0"
+  },
+  "name": "offline-plugin-profile-2a2bfdb5ecd1cf1e36fb",
+  "private": true,
+  "version": "1.0.0"
+}

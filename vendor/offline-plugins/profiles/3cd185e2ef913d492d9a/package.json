@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@via-work/insomnia-plugin-laravel-sanctum": "0.1.1"
+  },
+  "name": "offline-plugin-profile-3cd185e2ef913d492d9a",
+  "private": true,
+  "version": "1.0.0"
+}

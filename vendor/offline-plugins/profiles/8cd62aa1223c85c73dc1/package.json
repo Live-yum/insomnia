@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-datetimeaddition": "1.0.1"
+  },
+  "name": "offline-plugin-profile-8cd62aa1223c85c73dc1",
+  "private": true,
+  "version": "1.0.0"
+}

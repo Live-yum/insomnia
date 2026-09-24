@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-content-disposition-validator": "1.0.2"
+  },
+  "name": "offline-plugin-profile-43f7f5a24f782d101e61",
+  "private": true,
+  "version": "1.0.0"
+}

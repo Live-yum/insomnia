@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-save-variables": "4.0.14"
+  },
+  "name": "offline-plugin-profile-4f337ed2b86b911a59c3",
+  "private": true,
+  "version": "1.0.0"
+}

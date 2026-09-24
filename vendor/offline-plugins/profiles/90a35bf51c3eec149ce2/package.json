@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-swagger-path-parameters": "1.0.7"
+  },
+  "name": "offline-plugin-profile-90a35bf51c3eec149ce2",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@dogecash/insomnia-plugin-bybit-signature-generator": "1.0.0"
+  },
+  "name": "offline-plugin-profile-c544266d7bef3d6657d8",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-atlassian-asap-slauth": "1.1.4"
+  },
+  "name": "offline-plugin-profile-e70643a02a0ad2378ff6",
+  "private": true,
+  "version": "1.0.0"
+}

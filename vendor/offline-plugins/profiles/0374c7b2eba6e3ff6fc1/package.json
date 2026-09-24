@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-auto-cookie-refresh": "1.0.14"
+  },
+  "name": "offline-plugin-profile-0374c7b2eba6e3ff6fc1",
+  "private": true,
+  "version": "1.0.0"
+}

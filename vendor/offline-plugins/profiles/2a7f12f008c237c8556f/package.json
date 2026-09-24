@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-jws-sign-decode": "0.1.0"
+  },
+  "name": "offline-plugin-profile-2a7f12f008c237c8556f",
+  "private": true,
+  "version": "1.0.0"
+}

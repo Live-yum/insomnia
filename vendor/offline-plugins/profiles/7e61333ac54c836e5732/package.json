@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-create-message-signature": "0.0.2"
+  },
+  "name": "offline-plugin-profile-7e61333ac54c836e5732",
+  "private": true,
+  "version": "1.0.0"
+}

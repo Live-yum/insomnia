@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cairn-hmac-auth": "1.0.5"
+  },
+  "name": "offline-plugin-profile-bbb0b847b2a4236adfb9",
+  "private": true,
+  "version": "1.0.0"
+}

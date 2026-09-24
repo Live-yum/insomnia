@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-datetime-formatter": "0.1.1"
+  },
+  "name": "offline-plugin-profile-c5c05f13f1b607a66a4e",
+  "private": true,
+  "version": "1.0.0"
+}

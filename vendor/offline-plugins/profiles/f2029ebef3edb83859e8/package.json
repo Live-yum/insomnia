@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-bitvavo-signing": "1.0.0"
+  },
+  "name": "offline-plugin-profile-f2029ebef3edb83859e8",
+  "private": true,
+  "version": "1.0.0"
+}

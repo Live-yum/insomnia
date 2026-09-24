@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-quicky-fake-data-generation": "1.0.0"
+  },
+  "name": "offline-plugin-profile-330d6b24314da5ca5ab5",
+  "private": true,
+  "version": "1.0.0"
+}

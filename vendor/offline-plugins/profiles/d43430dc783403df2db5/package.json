@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-amplify-auth": "0.1.2"
+  },
+  "name": "offline-plugin-profile-d43430dc783403df2db5",
+  "private": true,
+  "version": "1.0.0"
+}

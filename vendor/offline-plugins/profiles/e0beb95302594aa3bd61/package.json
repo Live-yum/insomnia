@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-brokeredmessage": "1.0.2"
+  },
+  "name": "offline-plugin-profile-e0beb95302594aa3bd61",
+  "private": true,
+  "version": "1.0.0"
+}

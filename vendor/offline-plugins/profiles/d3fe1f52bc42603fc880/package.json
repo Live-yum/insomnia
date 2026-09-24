@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cdata-xml-response": "1.0.1"
+  },
+  "name": "offline-plugin-profile-d3fe1f52bc42603fc880",
+  "private": true,
+  "version": "1.0.0"
+}

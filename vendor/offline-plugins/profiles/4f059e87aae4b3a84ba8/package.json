@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-platform-of-trust-xydens": "0.0.17"
+  },
+  "name": "offline-plugin-profile-4f059e87aae4b3a84ba8",
+  "private": true,
+  "version": "1.0.0"
+}

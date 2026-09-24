@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-firebase-custom-auth": "1.0.1"
+  },
+  "name": "offline-plugin-profile-a406b0c486109352b0c1",
+  "private": true,
+  "version": "1.0.0"
+}
