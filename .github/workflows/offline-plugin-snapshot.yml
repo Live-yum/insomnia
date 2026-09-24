@@ -1,0 +1,77 @@
+name: Offline plugin snapshot
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths:
+      - scripts/offline/vendor_plugins.py
+      - .github/workflows/offline-plugin-snapshot.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-plugin-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      npm_config_ignore_scripts: 'true'
+      npm_config_update_notifier: 'false'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+      - name: Download all catalog packages and dependency closures without executing them
+        run: python3 scripts/offline/vendor_plugins.py snapshot --workers 8
+      - name: Verify downloaded archive integrity
+        run: python3 scripts/offline/vendor_plugins.py verify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-plugin-snapshot
+          path: vendor/offline-plugins/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  commit-snapshot:
+    needs: snapshot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      commit: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: offline/standalone-vendored
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: offline-plugin-snapshot
+          path: vendor/offline-plugins/
+      - name: Commit data archives only; never execute downloaded plugin code in this job
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s vendor/offline-plugins/manifest.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add --force -- vendor/offline-plugins
+          if ! git diff --cached --quiet; then
+            git commit -m 'vendor: add complete Plugin Hub snapshot and pinned dependency archives'
+            git push origin HEAD:offline/standalone-vendored
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
