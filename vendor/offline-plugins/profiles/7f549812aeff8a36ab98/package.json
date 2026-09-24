@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-shein-request-signer": "1.0.6"
+  },
+  "name": "offline-plugin-profile-7f549812aeff8a36ab98",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@inikolaev/insomnia-plugin-mongodb-objectid": "1.0.0"
+  },
+  "name": "offline-plugin-profile-376314350c4bd9622735",
+  "private": true,
+  "version": "1.0.0"
+}

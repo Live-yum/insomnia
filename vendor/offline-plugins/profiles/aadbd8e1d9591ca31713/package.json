@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-service-bus-sas-token-generator": "1.1.5"
+  },
+  "name": "offline-plugin-profile-aadbd8e1d9591ca31713",
+  "private": true,
+  "version": "1.0.0"
+}

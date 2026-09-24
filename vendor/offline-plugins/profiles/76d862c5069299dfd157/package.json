@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-azure-keyvault-secrets": "1.2.0"
+  },
+  "name": "offline-plugin-profile-76d862c5069299dfd157",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-keychain-reader": "1.0.0"
+  },
+  "name": "offline-plugin-profile-6e4dcd1a7b89f91dca16",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-unleashed-api-auth-signature": "1.0.2"
+  },
+  "name": "offline-plugin-profile-ac639dba67828e797ade",
+  "private": true,
+  "version": "1.0.0"
+}

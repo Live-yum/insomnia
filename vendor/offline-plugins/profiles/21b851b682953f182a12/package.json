@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-plus4u-oidc-v2": "1.1.0"
+  },
+  "name": "offline-plugin-profile-21b851b682953f182a12",
+  "private": true,
+  "version": "1.0.0"
+}

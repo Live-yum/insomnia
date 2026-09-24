@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-req-body-hash": "1.0.0"
+  },
+  "name": "offline-plugin-profile-8a0fbb5544d9fadc351a",
+  "private": true,
+  "version": "1.0.0"
+}

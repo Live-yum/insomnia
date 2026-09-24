@@ -13,6 +13,8 @@ import { isMac } from 'insomnia-data/common';
 import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
+import { OFFLINE_BUILD } from '~/common/offline-policy';
+import { installOfflineNetworkPolicy } from '~/main/offline-network';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
@@ -51,10 +53,14 @@ import * as windowUtils from './main/window-utils';
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
 const dataPath =
-  process.env.INSOMNIA_DATA_PATH ||
-  path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+  process.env.INSOMNIA_OFFLINE_DATA_PATH ||
+  path.join(app.getPath('appData'), isDevelopment() ? 'InsomniaOffline-Dev' : userDataFolder);
 
+if (process.env.INSOMNIA_DATA_PATH) {
+  throw new Error('Unset INSOMNIA_DATA_PATH; use a fresh INSOMNIA_OFFLINE_DATA_PATH for this offline build.');
+}
 app.setPath('userData', dataPath);
+installOfflineNetworkPolicy();
 
 initializeLogging();
 initElectronStorage(dataPath);
@@ -118,7 +124,7 @@ app.on('ready', async () => {
    * This API is a no-op on macOS.
    */
   const disableSpellcheckerDownload = () => {
-    electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
+    electron.session.defaultSession.setSpellCheckerEnabled(false);
   };
   disableSpellcheckerDownload();
 
@@ -128,7 +134,7 @@ app.on('ready', async () => {
   );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
 
-  if (isDevelopment()) {
+  if (!OFFLINE_BUILD && isDevelopment()) {
     try {
       const extensions = [REACT_DEVELOPER_TOOLS];
       const extensionsPlural = extensions.length > 0 ? 's' : '';
@@ -146,9 +152,9 @@ app.on('ready', async () => {
   initRuntime(nodeRuntime);
   await _createModelInstances();
   // proxy has to be set up before backup's net.fetch below
-  await watchProxySettings();
+  if (!OFFLINE_BUILD) await watchProxySettings();
   // backup needs the channel from settings which needs the database
-  await backupIfNewerVersionAvailable();
+  if (!OFFLINE_BUILD) await backupIfNewerVersionAvailable();
   sentryWatchAnalyticsEnabled();
 
   await runGitCredentialsMigration();
@@ -168,7 +174,7 @@ app.on('ready', async () => {
 });
 
 // Set as default protocol
-const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const defaultProtocol = `insomnia-offline${isDevelopment() ? 'dev' : ''}`;
 const fullDefaultProtocol = `${defaultProtocol}://`;
 let defaultProtocolSuccessful: boolean;
 if (isDevelopment()) {

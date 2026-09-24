@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-sfsf-samlassertion": "1.1.4"
+  },
+  "name": "offline-plugin-profile-3bff84de8bf987958d6f",
+  "private": true,
+  "version": "1.0.0"
+}

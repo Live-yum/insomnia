@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@klicksite/insomnia-plugin-repo-sync": "0.1.0"
+  },
+  "name": "offline-plugin-profile-2174d8bbf425baa52778",
+  "private": true,
+  "version": "1.0.0"
+}

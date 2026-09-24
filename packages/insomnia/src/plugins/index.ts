@@ -6,6 +6,7 @@ import type { Request, RequestGroup, Workspace } from 'insomnia-data';
 import { database as db, models, services } from 'insomnia-data';
 import type { PluginConfigMap } from 'insomnia-data/common';
 
+import { getOfflinePlugin } from '~/common/offline-plugins';
 import { parsePluginPermissions } from '~/common/plugins/permissions';
 import { type SandboxSettings, shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import type {
@@ -23,7 +24,7 @@ import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-exte
 import type { PluginTemplateTag, RenderPurpose } from '~/common/templating/types';
 import type { ActionDescriptor, PluginExportManifest } from '~/templating/sandbox/marshal';
 
-import { getAppBundlePlugins, isDevelopment } from '../common/constants';
+import { getAppBundlePlugins } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
@@ -458,47 +459,24 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
 }
 
 function getBundlePluginMap() {
-  const appBundlePlugins = getAppBundlePlugins();
-  const bundlePluginMap: Record<string, Plugin> = {};
-  appBundlePlugins.forEach(({ name: pluginName }) => {
-    try {
-      const isExecutedInInso = !process.type;
-      // In Insomnia, the packagePath is just the pluginName
-      let bundlePluginPath = pluginName;
-      if (isExecutedInInso) {
-        // When executed in Inso, the __dirname points to <packageRoot>/packages/insomnia-inso/dist
-        // The bundle plugin module is placed under <packageRoot>/node_module
-        const rootNodeModuleDir = path.resolve(__dirname, '..', '..', '..', 'node_modules');
-        // use require.resolve to reliably get the absolute path to the plugin's entry point
-        bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
-      }
-      console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = getNodeRequire()(bundlePluginPath);
-      bundlePluginMap[pluginName] = {
-        name: pluginName,
-        displayName: '',
-        description: `Insomnia bundled plugin for ${pluginName}`,
-        version: 'unknown',
-        directory: '',
-        config: { disabled: false },
-        // Bundle plugins are first-party; they declare no manifest and run on the baseline grant.
-        permissions: { modules: [], capabilities: [] },
-        permissionWarnings: [],
-        permissionsDeclared: false,
-        module: module,
-      };
-    } catch (err) {
-      if (isDevelopment()) {
-        console.warn(
-          `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
-          err,
-        );
-      } else {
-        console.error(`Failed to load bundled plugin ${pluginName}`, err);
-      }
-    }
-  });
-  return bundlePluginMap;
+  const result: Record<string, Plugin> = {};
+  for (const { name } of getAppBundlePlugins()) {
+    const bundled = getOfflinePlugin(name);
+    result[name] = {
+      name,
+      displayName: bundled.displayName,
+      description: 'Reviewed vendored offline plugin; no installation or Internet required',
+      version: bundled.version,
+      directory: '',
+      config: { disabled: false },
+      // Trust applies ONLY to these immutable bundled sources, never arbitrary user plugins.
+      permissions: { modules: [], capabilities: [] },
+      permissionWarnings: [],
+      permissionsDeclared: false,
+      module: bundled.module,
+    };
+  }
+  return result;
 }
 
 export async function reloadPlugins() {

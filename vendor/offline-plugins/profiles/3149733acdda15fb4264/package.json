@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-load-test-timing": "1.0.7"
+  },
+  "name": "offline-plugin-profile-3149733acdda15fb4264",
+  "private": true,
+  "version": "1.0.0"
+}

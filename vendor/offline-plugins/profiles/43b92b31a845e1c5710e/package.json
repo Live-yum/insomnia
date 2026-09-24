@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-sync-gist-multiprovider-proxy": "0.0.27"
+  },
+  "name": "offline-plugin-profile-43b92b31a845e1c5710e",
+  "private": true,
+  "version": "1.0.0"
+}

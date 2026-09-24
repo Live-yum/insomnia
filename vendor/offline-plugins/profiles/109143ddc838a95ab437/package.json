@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-jwt-google-tokengenerator": "1.0.3"
+  },
+  "name": "offline-plugin-profile-109143ddc838a95ab437",
+  "private": true,
+  "version": "1.0.0"
+}

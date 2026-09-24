@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-sanitize-url-html": "1.0.1"
+  },
+  "name": "offline-plugin-profile-d24447ada619c46ec965",
+  "private": true,
+  "version": "1.0.0"
+}

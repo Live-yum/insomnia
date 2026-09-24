@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-faker-qa-infracommerce": "0.0.2"
+  },
+  "name": "offline-plugin-profile-722dae8138b8a434a93a",
+  "private": true,
+  "version": "1.0.0"
+}

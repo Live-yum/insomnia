@@ -1,0 +1,43 @@
+name: Offline catalog integrity
+on:
+  push:
+    branches: [offline/local-crypto-pr, develop]
+    paths: [vendor/offline-plugins/**, scripts/offline/vendor_plugins.py, .github/workflows/offline-catalog-check.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Verify archive and lockfile hashes without network access
+        run: python3 scripts/offline/vendor_plugins.py verify
+      - name: Summarize availability separately from compatibility
+        shell: python
+        run: |
+          import json, os
+          from pathlib import Path
+          manifest = json.loads(Path('vendor/offline-plugins/manifest.json').read_text())
+          counts = {}
+          for entry in manifest['entries']:
+              counts[entry['status']] = counts.get(entry['status'], 0) + 1
+          report = {'catalogEntries': len(manifest['entries']), 'counts': counts,
+                    'archives': len(list(Path('vendor/offline-plugins/blobs').glob('*.tgz'))),
+                    'archiveBytes': sum(p.stat().st_size for p in Path('vendor/offline-plugins/blobs').glob('*.tgz')),
+                    'securityAudited': False, 'compatibilityVerified': False}
+          Path('offline-catalog-summary.json').write_text(json.dumps(report, indent=2))
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+              f.write('## Checked-in plugin catalog\n\n```json\n' + json.dumps(report, indent=2) + '\n```\n\nArchives are not automatically enabled. Incomplete entries are listed in vendor/offline-plugins/EXCEPTIONS.json.\n')
+          print(json.dumps(report, indent=2))
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-catalog-report
+          path: |
+            offline-catalog-summary.json
+            vendor/offline-plugins/REPORT.md
+            vendor/offline-plugins/EXCEPTIONS.json
+          retention-days: 14

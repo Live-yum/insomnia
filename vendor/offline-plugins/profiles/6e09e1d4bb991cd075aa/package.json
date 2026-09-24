@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-preflight-guard": "1.1.3"
+  },
+  "name": "offline-plugin-profile-6e09e1d4bb991cd075aa",
+  "private": true,
+  "version": "1.0.0"
+}

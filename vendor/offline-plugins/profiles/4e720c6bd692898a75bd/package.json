@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-swagerize-response": "0.0.2"
+  },
+  "name": "offline-plugin-profile-4e720c6bd692898a75bd",
+  "private": true,
+  "version": "1.0.0"
+}

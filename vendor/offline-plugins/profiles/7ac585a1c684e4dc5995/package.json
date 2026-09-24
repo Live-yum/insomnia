@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@api-mocked/insomnia-plugin-api-mocked": "2.1.2"
+  },
+  "name": "offline-plugin-profile-7ac585a1c684e4dc5995",
+  "private": true,
+  "version": "1.0.0"
+}

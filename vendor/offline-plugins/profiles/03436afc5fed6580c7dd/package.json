@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-first-data-hmac": "1.0.3"
+  },
+  "name": "offline-plugin-profile-03436afc5fed6580c7dd",
+  "private": true,
+  "version": "1.0.0"
+}

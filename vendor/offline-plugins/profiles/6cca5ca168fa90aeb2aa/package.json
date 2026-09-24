@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-azure-ad-authentication": "1.2.2"
+  },
+  "name": "offline-plugin-profile-6cca5ca168fa90aeb2aa",
+  "private": true,
+  "version": "1.0.0"
+}

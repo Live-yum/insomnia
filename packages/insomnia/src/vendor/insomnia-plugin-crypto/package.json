@@ -1,0 +1,24 @@
+{
+  "name": "insomnia-plugin-crypto",
+  "version": "1.1.1-offline.1",
+  "main": "app.js",
+  "insomnia": {
+    "name": "crypto",
+    "description": "plugin for encrypting and decrypting request/response payload using node crypto",
+    "publisher": {
+      "name": "zaigr"
+    },
+    "images": {
+      "icon": "assets/icon.svg"
+    },
+    "unlisted": false
+  },
+  "homepage": "https://github.com/zaigr/insomnia-plugin-crypto",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zaigr/insomnia-plugin-crypto.git"
+  },
+  "author": "zaigr",
+  "license": "MIT",
+  "scripts": {}
+}

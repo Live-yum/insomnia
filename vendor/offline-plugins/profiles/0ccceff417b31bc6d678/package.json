@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@scalefast/insomnia-plugin-scalefast-sync": "1.11.0"
+  },
+  "name": "offline-plugin-profile-0ccceff417b31bc6d678",
+  "private": true,
+  "version": "1.0.0"
+}

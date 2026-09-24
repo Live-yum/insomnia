@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-s3-presigned-link": "1.0.4"
+  },
+  "name": "offline-plugin-profile-ac7fb0f1c6c2660fd3bf",
+  "private": true,
+  "version": "1.0.0"
+}

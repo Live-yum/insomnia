@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-thanos-theme": "0.1.3"
+  },
+  "name": "offline-plugin-profile-731d7e26470d3d559294",
+  "private": true,
+  "version": "1.0.0"
+}

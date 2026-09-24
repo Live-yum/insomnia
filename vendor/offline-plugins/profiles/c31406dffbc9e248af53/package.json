@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-gql-fragments": "1.0.13"
+  },
+  "name": "offline-plugin-profile-c31406dffbc9e248af53",
+  "private": true,
+  "version": "1.0.0"
+}

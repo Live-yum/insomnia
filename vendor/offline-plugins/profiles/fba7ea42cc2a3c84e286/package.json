@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-graphql-codegen": "0.3.8"
+  },
+  "name": "offline-plugin-profile-fba7ea42cc2a3c84e286",
+  "private": true,
+  "version": "1.0.0"
+}

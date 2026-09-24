@@ -6,6 +6,8 @@ import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { OFFLINE_BUILD } from '~/common/offline-policy';
+
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useRootLoaderData } from '~/root';
@@ -215,7 +217,7 @@ const Component = () => {
     // currently we have 2 cases that will set the asyncTaskList state
     // 1. first entry
     // 2. when user switch to another organization
-    if (asyncTaskList?.length) {
+    if (!OFFLINE_BUILD && asyncTaskList?.length) {
       syncOrgsAndProjects();
     }
   }, [organizationId, asyncTaskList, syncOrgsAndProjects]);
@@ -308,7 +310,7 @@ const Component = () => {
                     <div className="flex w-12.5 shrink-0 justify-center py-2">
                       <InsomniaLogo />
                     </div>
-                    {!isScratchPad && (
+                    {!OFFLINE_BUILD && !isScratchPad && (
                       <div ref={setOrgSelectNode}>
                         <OrganizationSelect
                           organizationId={organizationId}
@@ -323,11 +325,13 @@ const Component = () => {
                       </div>
                     )}
 
-                    {!user ? <GitHubStarsButton /> : null}
+                    {!OFFLINE_BUILD && !user ? <GitHubStarsButton /> : null}
                   </div>
                   <CommandPalette />
                   <div className="flex min-w-min items-center justify-end gap-(--padding-sm) space-x-3 p-2">
-                    {user ? (
+                    {OFFLINE_BUILD ? (
+                      <span className="px-3 text-sm" data-testid="offline-mode">Offline · Local only</span>
+                    ) : user ? (
                       <LoginUserActions
                         organizationId={organizationId}
                         isMinimal={false}
@@ -439,11 +443,13 @@ const Component = () => {
                     </div>
                     <div className="flex shrink grow basis-1/3 justify-end">
                       <div className="flex items-center gap-2">
-                        <NetworkAndSyncIndicator
-                          asyncTaskStatus={asyncTaskStatus}
-                          settings={settings}
-                          sync={syncOrgsAndProjects}
-                        />
+                        {OFFLINE_BUILD ? <span className="px-4 text-xs">Local storage · Cloud disabled</span> : (
+                          <NetworkAndSyncIndicator
+                            asyncTaskStatus={asyncTaskStatus}
+                            settings={settings}
+                            sync={syncOrgsAndProjects}
+                          />
+                        )}
 
                         <Link>
                           <a

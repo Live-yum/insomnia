@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-kucoin-signing": "1.0.1"
+  },
+  "name": "offline-plugin-profile-04bce4e0fedd705cb91f",
+  "private": true,
+  "version": "1.0.0"
+}

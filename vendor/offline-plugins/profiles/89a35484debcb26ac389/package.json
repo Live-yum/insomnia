@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-apiauth-ruby": "1.0.0"
+  },
+  "name": "offline-plugin-profile-89a35484debcb26ac389",
+  "private": true,
+  "version": "1.0.0"
+}

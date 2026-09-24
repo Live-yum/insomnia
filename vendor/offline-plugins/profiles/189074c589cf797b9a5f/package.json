@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@energostalin/insomnia-plugin-response-js": "1.0.2"
+  },
+  "name": "offline-plugin-profile-189074c589cf797b9a5f",
+  "private": true,
+  "version": "1.0.0"
+}

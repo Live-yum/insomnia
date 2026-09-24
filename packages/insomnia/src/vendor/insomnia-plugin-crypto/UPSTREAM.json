@@ -1,0 +1,35 @@
+{
+  "upstream": "https://github.com/zaigr/insomnia-plugin-crypto",
+  "revision": "769994ff8976233ead2e94a9054b3b4a72171485",
+  "upstreamVersion": "1.1.1",
+  "license": "MIT",
+  "runtimeDependencies": ["Node.js crypto", "Node.js buffer"],
+  "upstreamGitBlobs": {
+    "LICENSE": "db25a67eda4ce915f8d791964c311e640b0561d5",
+    "README.md": "acdd67a20d2c86a4f58e628cb5d69404f43fafaf",
+    "app.js": "e43c28a44d1760037fe94049e699783d517d0077",
+    "encrypt.js": "2e4698c33e0270fec010840e92150e3a7ab79923",
+    "store.js": "76b004b1cf76cd3510b688da2d264909dbe9e21c",
+    "package.json": "c899f22f95d38d8e13ef22050e2d96c284591311",
+    "assets/icon.svg": "5bfa55f841d88bb14ade7e964764847bb22fc485",
+    "test/encrypt.test.js": "b28259774313245a5cc5e5da90e0d5a1241f0b74",
+    "test/store.test.js": "ef19bb6362ec5a280fb7a39d9a3d9d01d72e79c6"
+  },
+  "patches": [
+    "Fail closed on encryption/decryption errors and missing configuration",
+    "Require Base64 transport to avoid UTF-8 corruption",
+    "Remove remote publisher icon and development install scripts",
+    "Make CBC corruption test deterministic and distinguish unauthenticated CBC from GCM rejection"
+  ],
+  "sha256": {
+    "LICENSE": "261a4b65d649a20155ea7533427987c2916ab60b559a3263ef16155e7bc2f1f3",
+    "README.md": "f32e06f7be94390374c2a3186bfb68ecdb3297b058ce0d1463a8f39f89ab11a9",
+    "app.js": "33dbae397cb6ce36e670a6f630a0cadab96977644a93dbc11dd04b5c6bea859b",
+    "assets/icon.svg": "bd7eaa10760df82b30ae83e9f3aa703988585951a2ece3de664988fe42044f86",
+    "encrypt.js": "0e5eaad2073763c9f8a4a8dd0a49c2c2f1cef93651f259b08957719b8c1687a3",
+    "package.json": "5eae66760a0450a01e79ccb635fe2e4f98572ef6beff0e617cf36656139b0b16",
+    "store.js": "31e397993e4bff8c8c95d339c8efd8ad3609047c0050060b01ee3f98429314b2",
+    "test/encrypt.test.js": "c34f427e3d9a97a5b1a450bd1a4fe26975aa96c3e0f9fdc6dfe526e869a9fc0e",
+    "test/store.test.js": "5c800ccdf363c5568ccba45b1bc07ff87922a25368103c0755abcebbbf73f9e6"
+  }
+}

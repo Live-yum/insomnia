@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-exodus-signature-authentication": "1.0.0"
+  },
+  "name": "offline-plugin-profile-1818a383a7958863e77c",
+  "private": true,
+  "version": "1.0.0"
+}

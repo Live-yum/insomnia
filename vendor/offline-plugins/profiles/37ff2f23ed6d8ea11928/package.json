@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-refresh-iiko-token": "0.0.3"
+  },
+  "name": "offline-plugin-profile-37ff2f23ed6d8ea11928",
+  "private": true,
+  "version": "1.0.0"
+}

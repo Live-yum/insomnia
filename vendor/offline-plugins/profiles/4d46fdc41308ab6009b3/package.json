@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hashicorp-vault-secrets": "1.0.13"
+  },
+  "name": "offline-plugin-profile-4d46fdc41308ab6009b3",
+  "private": true,
+  "version": "1.0.0"
+}

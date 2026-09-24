@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-iceberg": "0.0.4"
+  },
+  "name": "offline-plugin-profile-5fcde7fecbb44ed1f5a3",
+  "private": true,
+  "version": "1.0.0"
+}

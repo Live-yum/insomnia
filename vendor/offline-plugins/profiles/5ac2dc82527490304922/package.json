@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@lion2486/insomnia-plugin-sync": "1.2.2"
+  },
+  "name": "offline-plugin-profile-5ac2dc82527490304922",
+  "private": true,
+  "version": "1.0.0"
+}

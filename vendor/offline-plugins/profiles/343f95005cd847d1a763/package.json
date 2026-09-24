@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-secrets-manager": "0.0.1"
+  },
+  "name": "offline-plugin-profile-343f95005cd847d1a763",
+  "private": true,
+  "version": "1.0.0"
+}

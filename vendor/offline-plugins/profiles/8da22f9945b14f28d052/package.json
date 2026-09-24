@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-js-with-env-variables": "0.0.1"
+  },
+  "name": "offline-plugin-profile-8da22f9945b14f28d052",
+  "private": true,
+  "version": "1.0.0"
+}

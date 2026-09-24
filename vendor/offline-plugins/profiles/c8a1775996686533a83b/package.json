@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-basic-auth-header": "1.0.0"
+  },
+  "name": "offline-plugin-profile-c8a1775996686533a83b",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,170 +1,51 @@
-# Insomnia API Client
+# Insomnia Offline — 内网离线版
 
-[![Website](https://img.shields.io/badge/Get%20started%20for%20free-8A2BE2)](https://insomnia.rest)
-![Stars](https://img.shields.io/github/stars/Kong/insomnia?style=flat-square)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/Kong/insomnia?style=flat-square)
-[![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
-[![license](https://img.shields.io/github/license/Kong/insomnia.svg)](LICENSE)
-![Twitter Follow](https://img.shields.io/twitter/follow/GetInsomnia?style=social)
+这是 `Live-yum/insomnia` 的本地化分支，基于 Insomnia 开源源码。**本地工作区不需要 Insomnia/Kong 账号**。厂商登录、云同步、营销、统计、Sentry、更新检查和在线插件安装已禁用；不会伪造会员或把需要服务端的功能宣称为离线功能。
 
-Insomnia is an open-source, cross-platform API client for GraphQL, REST, WebSockets, Server-Sent Events (SSE), gRPC and any other HTTP compatible protocol.
+> 本仓库是可审查的离线候选实现，不是安全认证。请查看当前 Actions 检查结果；高安全部署仍须操作系统/网关出站白名单和现场验收。
 
-With Insomnia you can:
+## 已内置的加密解密功能
 
-- **Debug APIs** using the most popular protocols and formats.
-- **Design APIs** using the native OpenAPI editor and visual preview.
-- **Test APIs** using native test suites and collection runner.
-- **Mock APIs** using a cloud or self-hosted mocking server.
-- **Build CI/CD pipelines** using the native Insomnia CLI for linting and testing.
-- **Collaborate with others** using the many collaboration features.
-- **And more** including the ability to use 3rd party plugins.
+以下插件的实际源码、许可证和测试位于 [`packages/insomnia/src/vendor/`](packages/insomnia/src/vendor/)，静态打包进应用。运行目标机器不需要再下载插件或安装 npm 依赖。
 
-The following storage options are supported for your Insomnia projects, collections, design specs and all other resources:
+| 内置插件 | 功能 |
+| --- | --- |
+| Crypto `1.1.1-offline.1` | AES-128/192/256-CBC 请求加密、响应解密；配置缺失或加密失败中止操作，不静默发送原文。 |
+| Offline Crypto Tools `1.0.0` | AES-256-GCM、RSA-OAEP SHA-256、HMAC，以及明确标注“不验证签名”的 JWT payload 检视。 |
 
-- **Local Vault**: for 100% local storage of collections, design specs and every other resource.
-- **Git Sync**: for Git storage using any 3rd party Git repository, without going through the cloud.
-- **Cloud Sync**: for cloud collaboration, optionally end-to-end encrypted (E2EE) in the cloud.
+请求右键菜单提供 `Toggle Request Encryption` / `Toggle Response Decryption`；私有环境中配置 `crypto-alg`、`crypto-key`、`crypto-base64: true`。模板标签中搜索 `Offline AES-256-GCM`、`Offline RSA-OAEP SHA-256`、`Offline HMAC`。
 
-![Insomnia API Client](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
+CBC 是兼容模式，不提供消息认证；GCM 的封装格式要求服务端配套。**不要把真实密钥提交 Git。插件预置也不代表本地项目数据自动加密。** 详见 [使用、构建及部署说明](docs/OFFLINE-LOCAL.md)。
 
-## Get started for free
+## 已下载到仓库的其他插件
 
-Insomnia is available for Mac, Windows, and Linux and can be downloaded from the website:
+[`vendor/offline-plugins/`](vendor/offline-plugins/) 保存固定目录快照的真实 npm 压缩包、依赖锁文件和完整性值，不是在线下载链接或 Git LFS 指针。
 
-**[https://insomnia.rest](https://insomnia.rest)**
+2026-09-24 快照记录 **552 个插件条目、2,722 个压缩包，约 324.3 MiB**：545 个条目的依赖已归档齐全；另有 4 个仅归档插件本体、3 个不可用，逐项列在 [`EXCEPTIONS.json`](vendor/offline-plugins/EXCEPTIONS.json)。**依赖归档齐全不代表已通过安全或平台兼容性审查；市场目录不会全部自动启用。** 应用默认集成的是上面的两组加密插件。
 
-## Account & Subscriptions
+```sh
+# 不联网、不执行插件，严格验证已提交归档和锁文件
+python3 scripts/offline/vendor_plugins.py verify
 
-You can use Insomnia without an account with the local **Scratch Pad**, or you can [create an account for free](https://insomnia.rest/pricing) to get access to the full capabilities of the product.
-
-Even with an account, Insomnia only stores your projects and files accordingly to the **storage backend** that you have selected, which can be Local Vault, Cloud Sync, Git Sync or any combination of them. As such - for example - you have the freedom to choose to store sensitive projects 100% locally or in a Git repository, while still being able to collaborate on others in the cloud. It's the best of both worlds.
-
-For added security, Insomnia also offers a **Private Environments** feature, where your environments configuration is always stored locally and never in the cloud, independently from the storage option that you have chosen for your project.
-
-## Premium features and support
-
-Insomnia has a very generous free plan that will be satisfactory for most users, but if you need to get access to premium capabilities like unlimited collaboration, the Git Sync feature, the ability to create organizations for your projects, using a 3rd party IDP for logins (SAML, OIDC) and many other features, then you can explore the other subscription plans.
-
-You can [compare all subscription plans](https://insomnia.rest/pricing) and get started for free.
-
-## Why does Insomnia require an account?
-
-Insomnia does not require an account if you decide to use the local **Scratch Pad**, but to access most capabilities of the product we require an account. Your account data is securely stored in compliance with ISO27001, SOC 2 Type II, ISO27018, Gold CSA STAR regulations and in accordance with our terms of service and privacy policy.
-
-We require an account to sustainably build and improve the product, and to make sure we can continue to offer the many core capabilities in a free and open-source distribution. While open source software is free to use, it is unfortunately not free to build, and our ability to continue working on Insomnia is dependent on our ability to convert a subset of free users (that need premium features) to become paying customers of our product.
-
-If you are a user that cannot share API data like collections and design specifications to the cloud, this is still possible by selecting "Local Vault" as the storage of your Insomnia projects: having an Insomnia account is not tied to how you wish to store your sensitive API data (which can be stored 100% locally via Local Vault, on a 3rd party Git repository without any cloud storage via Git Sync, or in the cloud for ease of collaboration via Cloud Sync).
-
-## Bugs and Feature Requests
-
-Have a bug or a feature request? First, read the
-[issue guidelines](CONTRIBUTING.md#using-the-issue-tracker) and search for existing and closed issues. If your problem or idea is not addressed yet, [please open a new issue](https://github.com/Kong/insomnia/issues).
-
-For more generic product questions and feedback, join the [Slack Team](https://chat.insomnia.rest).
-
-## Contributing
-
-Please read through our [contributing guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md). Included are directions for opening issues, coding standards, and notes on development.
-
-## Documentation
-
-Check out our official [Insomnia Documentation](https://docs.insomnia.rest/).
-
-## Develop Insomnia
-
-Development on Insomnia can be done on Mac, Windows, or Linux as long as you have [Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
-
-<details>
-<summary>Initial Dev Setup</summary>
-
-This repository is structured as a monorepo and contains many Node.JS packages. Each package has its own set of commands, but the most common commands are available from the root [`package.json`](package.json) and can be accessed using the `npm run …` command. Here are the only three commands you should need to start developing on the app.
-
-```shell
-# Install and Link Dependencies
-npm i
-
-# Run Lint
-npm run lint
-
-# Run type checking
-npm run type-check
-
-# Run Tests
-npm test
-
-# Start App with Live Reload
-npm run dev
-
-# Start App with both renderer process live reload and main process auto restart
-npm run dev:autoRestart
+# 在全新目录离线展开依赖完整的插件，供管理员审查；不执行安装脚本
+python3 scripts/offline/vendor_plugins.py materialize --output ./review-win32 --target win32-x64
+python3 scripts/offline/vendor_plugins.py materialize --output ./review-arm64 --target linux-arm64
 ```
 
-### Linux
+参见 [插件快照、异常及校验说明](docs/OFFLINE-CATALOG-SNAPSHOT.md)。正常应用构建和启动不会执行维护用下载、迁移或修复脚本。
 
-If you are on Linux, you may need to install the following supporting packages:
+## Windows x64 / Linux arm64 可移植包
 
-<details>
-<summary>Ubuntu/Debian</summary>
+`Offline portable build` 工作流构建 Windows ZIP 和 Linux ARM64 tar.gz，并附带 SHA-256。两平台类型检查、构建及相应启动检查通过后，`develop` 的发布任务才创建预发布包。检查 Actions 和 Releases 的实际结果，**不能把源码导出成功当成成品构建成功**。
 
-```shell
-# Update library
-sudo apt-get update
+Windows 解压后使用 `Start-Insomnia-Offline.cmd`；Linux 使用 `./start-insomnia-offline.sh`。两者将数据放在包旁的 `data/`。直接启动二进制使用系统中独立的 `InsomniaOffline` 目录。Linux 仍需要兼容的桌面运行库和 Chromium sandbox；不要用 `--no-sandbox` 绕过。Windows 保留上游安全启动器，但不包含商业签名证书。
 
-# Install font configuration library & support
-sudo apt-get install libfontconfig-dev
-```
+## 离线边界
 
-</details>
+本地项目、请求调试和预置密码学工具与厂商账号解耦。云协作、SSO、在线 AI、订阅管理以及 Git Sync 创建没有启用。Chromium 页面默认拒绝外部来源；管理员可通过 `INSOMNIA_OFFLINE_BROWSER_ORIGINS` 配置精确内网来源。
 
-<details>
-<summary>Fedora</summary>
+**用户请求引擎、脚本、用户插件和子进程不是由页面拦截器完全隔离的。** 请对整个进程树采用系统/网关出站白名单，并验证允许的 API、DNS、代理、重定向与异常路径。
 
-```shell
-# Install libcurl for node-libcurl
-sudo dnf install libcurl-devel
-```
+## 上游与许可证
 
-</details>
-
-Also on Linux, if Electron is failing during the install process, run the following
-
-```shell
-# Clear Electron install conflicts
-rm -rf ~/.cache/electron
-```
-
-### Windows
-
-If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
-
-</details>
-
-<details>
-<summary>Editor Requirements</summary>
-
-You can use any editor you'd like, but make sure to have support/plugins for the following tools:
-
-- [ESLint](http://eslint.org/) - For catching syntax problems and common errors
-- [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) - For React components
-
-</details>
-
-## Develop Inso CLI
-
-- `npm i`
-- Start the compiler in watch mode: `npm run inso-start`
-- Run: `./packages/insomnia-inso/bin/inso -v`
-
-## Plugins
-
-Search for, discover, and install plugins from the Insomnia [Plugin Hub](https://insomnia.rest/plugins/)!
-
-## Community Projects
-
-- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) - Generate beautiful API documentation pages using the [documenter plugin](https://insomnia.rest/plugins/insomnia-plugin-documenter) or your Insomnia export file.
-- [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) - A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
-- [Swaggymnia](https://github.com/mlabouardy/swaggymnia) - Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
-
-## License
-
-[Apache-2.0](LICENSE) &copy; [Insomnia](https://insomnia.rest)
+保留 [原上游 README](docs/UPSTREAM-README.md) 供参考，其中账号和云服务描述不适用于本离线分支。核心代码沿用 [Apache-2.0](LICENSE)；Crypto 保留 MIT 许可证；其他归档依各自许可证使用和再分发。

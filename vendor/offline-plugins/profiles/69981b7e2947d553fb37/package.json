@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-obfuscated-secrets-export": "1.0.6"
+  },
+  "name": "offline-plugin-profile-69981b7e2947d553fb37",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-dotenv": "1.2.0"
+  },
+  "name": "offline-plugin-profile-7fb0d450c3d3b7b6d574",
+  "private": true,
+  "version": "1.0.0"
+}

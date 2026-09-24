@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-tiktok-shop-request-signer": "1.0.2"
+  },
+  "name": "offline-plugin-profile-404b234646db1deb80f6",
+  "private": true,
+  "version": "1.0.0"
+}

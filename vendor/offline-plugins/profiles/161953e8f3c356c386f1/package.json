@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-kong-hmac-auth": "0.0.6"
+  },
+  "name": "offline-plugin-profile-161953e8f3c356c386f1",
+  "private": true,
+  "version": "1.0.0"
+}

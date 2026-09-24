@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@asheliahut/insomnia-plugin-jwt-tokengenerator": "1.0.7"
+  },
+  "name": "offline-plugin-profile-c0d6c8c5a5eecb9ab5a9",
+  "private": true,
+  "version": "1.0.0"
+}

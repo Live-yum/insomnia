@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
@@ -46,7 +47,7 @@ export const getInitialRouteForOrganization = async ({
   if (prevOrganizationLocation) {
     const match = getMatchParams(prevOrganizationLocation);
 
-    if (match && match.params.organizationId && match.params.projectId) {
+    if (match && match.params.organizationId === organizationId && match.params.projectId) {
       const existingProject = await services.project.getById(match.params.projectId);
 
       if (existingProject) {
@@ -86,6 +87,9 @@ export const getInitialRouteForOrganization = async ({
 };
 
 export const getInitialEntry = async () => {
+  if (OFFLINE_BUILD) {
+    return getInitialRouteForOrganization({ organizationId: OFFLINE_ORGANIZATION_ID, navigateToWorkspace: true });
+  }
   // If the user has not seen the onboarding, then show it
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization

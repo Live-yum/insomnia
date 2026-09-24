@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-githubjwt": "1.0.1"
+  },
+  "name": "offline-plugin-profile-9e3247f0b34fb575671b",
+  "private": true,
+  "version": "1.0.0"
+}

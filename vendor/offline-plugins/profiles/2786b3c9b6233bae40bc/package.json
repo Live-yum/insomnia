@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-elrond-native-auth": "0.6.0"
+  },
+  "name": "offline-plugin-profile-2786b3c9b6233bae40bc",
+  "private": true,
+  "version": "1.0.0"
+}

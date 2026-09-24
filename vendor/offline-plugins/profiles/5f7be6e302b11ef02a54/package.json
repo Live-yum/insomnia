@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-credential-extractor": "1.0.0"
+  },
+  "name": "offline-plugin-profile-5f7be6e302b11ef02a54",
+  "private": true,
+  "version": "1.0.0"
+}

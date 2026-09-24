@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-xdebug": "0.2.1"
+  },
+  "name": "offline-plugin-profile-17a14d8a2ca606f1e17a",
+  "private": true,
+  "version": "1.0.0"
+}

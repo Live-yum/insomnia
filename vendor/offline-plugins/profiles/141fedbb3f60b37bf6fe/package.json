@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-path-parameter-tag": "1.0.3"
+  },
+  "name": "offline-plugin-profile-141fedbb3f60b37bf6fe",
+  "private": true,
+  "version": "1.0.0"
+}

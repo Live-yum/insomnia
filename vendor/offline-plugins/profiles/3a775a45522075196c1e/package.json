@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-zipkin": "0.0.2"
+  },
+  "name": "offline-plugin-profile-3a775a45522075196c1e",
+  "private": true,
+  "version": "1.0.0"
+}

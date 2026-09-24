@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-chance": "1.4.3"
+  },
+  "name": "offline-plugin-profile-d0bae66457cd6557a316",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@thatconference/insomnia-plugin-that-signing": "1.0.6"
+  },
+  "name": "offline-plugin-profile-37bb2df10ff66d613c11",
+  "private": true,
+  "version": "1.0.0"
+}

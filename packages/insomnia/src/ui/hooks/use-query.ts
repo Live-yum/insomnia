@@ -28,5 +28,6 @@ export function useServerQuery<
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 >(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>): UseQueryResult<TData, TError> {
-  return useQuery(options, useServerDataQueryClient());
+  // Server queries must not run or retry in this local-only fork. DB queries above are unaffected.
+  return useQuery({ ...options, enabled: false, retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false, refetchInterval: false }, useServerDataQueryClient());
 }

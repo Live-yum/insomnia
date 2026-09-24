@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-sleep-before-request": "1.0.3"
+  },
+  "name": "offline-plugin-profile-057f54e8ff7e439f092f",
+  "private": true,
+  "version": "1.0.0"
+}

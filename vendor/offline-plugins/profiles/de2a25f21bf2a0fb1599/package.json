@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cors-doctor": "1.0.4"
+  },
+  "name": "offline-plugin-profile-de2a25f21bf2a0fb1599",
+  "private": true,
+  "version": "1.0.0"
+}

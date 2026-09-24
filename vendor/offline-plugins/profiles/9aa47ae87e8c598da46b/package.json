@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-es-aws4-request": "0.0.1-alpha.2"
+  },
+  "name": "offline-plugin-profile-9aa47ae87e8c598da46b",
+  "private": true,
+  "version": "1.0.0"
+}

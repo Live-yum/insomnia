@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@iteo/insomnia-plugin-run-folder-graphql": "1.0.6"
+  },
+  "name": "offline-plugin-profile-069eaa1ecd39a9a4fd51",
+  "private": true,
+  "version": "1.0.0"
+}
