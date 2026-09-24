@@ -1,6 +1,8 @@
 name: Offline portable build
 
 on:
+  push:
+    branches: [offline/standalone-vendored, develop]
   workflow_call:
     inputs:
       source_sha:
@@ -35,8 +37,15 @@ jobs:
             executable: insomnia
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
+    concurrency:
+      group: offline-native-${{ github.workflow }}-${{ github.ref }}-${{ matrix.target }}
+      cancel-in-progress: true
     env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
       SCARF_DO_NOT_TRACK: 'true'
+      SCARF_ANALYTICS: 'false'
+      DO_NOT_TRACK: '1'
       npm_config_audit: 'false'
       npm_config_fund: 'false'
       npm_config_update_notifier: 'false'
@@ -50,7 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ inputs.source_sha }}
+          ref: ${{ inputs.source_sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
         with:
