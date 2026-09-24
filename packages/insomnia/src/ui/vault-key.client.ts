@@ -37,10 +37,10 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
 
 export const validateVaultKey = async (session: UserSession, vaultKey: string, vaultSalt: string) => {
   if (!session.offlineVaultVerifier || session.vaultSalt !== vaultSalt) return false;
-  const actual = await verifierFor(vaultKey, vaultSalt);
-  const expected = session.offlineVaultVerifier;
+  const actual = new TextEncoder().encode(await verifierFor(vaultKey, vaultSalt));
+  const expected = new TextEncoder().encode(session.offlineVaultVerifier);
   if (actual.length !== expected.length) return false;
   let difference = 0;
-  for (let index = 0; index < actual.length; index++) difference |= actual.charCodeAt(index) ^ expected.charCodeAt(index);
+  for (let index = 0; index < actual.length; index++) difference |= actual[index] ^ expected[index];
   return difference === 0;
 };
