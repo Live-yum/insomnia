@@ -1,0 +1,133 @@
+name: Offline portable build
+on:
+  push:
+    branches: [offline/local-crypto-pr, develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-build-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            target: windows-x64
+            platform: win
+            arch: x64
+            executable: packages/insomnia/dist/win-unpacked/Insomnia.exe
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            platform: linux
+            arch: arm64
+            executable: packages/insomnia/dist/linux-arm64-unpacked/insomnia
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      NODE_OPTIONS: --max_old_space_size=6144
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      INSOMNIA_OFFLINE_SMOKE_EXE: ${{ matrix.executable }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Test vendored plugins and browser policy without npm dependencies
+        run: node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
+      - name: Install Linux build and desktop runtime libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libnss3 libasound2t64 libgbm1 libxss1 libsecret-1-0 libcurl4-openssl-dev xvfb
+      - name: Install locked build dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Full application type check
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run type-check -w insomnia 2>&1 | tee offline-typecheck.log
+      - name: Build application
+        run: npm run app-build
+      - name: Package complete application (no auto-publish or vendor signing service)
+        working-directory: packages/insomnia
+        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Preserve upstream Windows secure wrapper
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          export PATH="/c/mingw64/bin:$PATH"
+          bash ./build-secure-wrapper.sh CI
+      - name: Windows packaged application smoke
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.mjs
+      - name: Linux packaged application smoke with no external network interfaces
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Configure the standard setuid sandbox helper for this CI run only; do not disable Chromium sandboxing.
+          sudo chown root:root packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
+          sudo chmod 4755 packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
+          xvfb-run -a bash -c '
+            sudo unshare --net bash -c '\''
+              ip link set lo up
+              exec runuser -u "$1" -- env PATH="$2" DISPLAY="$3" INSOMNIA_OFFLINE_SMOKE_EXE="$4" node scripts/offline/smoke.mjs
+            '\'' _ "$USER" "$PATH" "$DISPLAY" "$INSOMNIA_OFFLINE_SMOKE_EXE"
+          '
+      - name: Assemble portable archive and SHA256
+        run: python scripts/offline/package-portable.py ${{ matrix.target }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: insomnia-offline-${{ matrix.target }}
+          path: offline-dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-test-logs-${{ matrix.target }}
+          path: |
+            offline-typecheck.log
+            offline-test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push' && github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: insomnia-offline-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish tested portable candidates with checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd release-assets
+          for checksum in *.sha256; do sha256sum -c "$checksum"; done
+          test "$(find . -maxdepth 1 -name '*.zip' | wc -l)" -eq 1
+          test "$(find . -maxdepth 1 -name '*.tar.gz' | wc -l)" -eq 1
+          gh release create "offline-build-${RUN_NUMBER}" ./* --target "$SOURCE_SHA" --prerelease --title "Insomnia Offline portable build ${RUN_NUMBER}" --notes 'Windows x64 and Linux arm64 portable candidates with vendored crypto plugins. Build, type checks and focused smoke passed. Not a security certification: site-specific process-tree egress policy and protocol regression remain required. See docs/OFFLINE-LOCAL.md at the tagged commit.'
