@@ -1,0 +1,160 @@
+[
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Add api keypair signature for insomnia",
+    "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_08_44_704Z-debug-0.log\n",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-api-signature-fulll",
+    "license": "MIT",
+    "name": "insomnia-plugin-api-signature-fulll",
+    "repository": {
+      "directory": "packages/insomnia-plugin-api-signature-fulll",
+      "type": "git",
+      "url": "git+https://github.com/fulll/nodejs-libs.git"
+    },
+    "rootArchive": {
+      "bin": {},
+      "bytes": 876,
+      "cpu": [],
+      "file": "blobs/8ae6fe451457d01dca77a5a31bf7be30b5b7029b9850fae23a6cd50c077ff116.tgz",
+      "integrity": "sha512-lipM8pCHWau1GYvvyfwrYikg59MhIXSu4LTO14Fllj995YpY/y1l5Ncdj1MLBOqD5TwKb5FX0dubzUWorkuATA==",
+      "license": "MIT",
+      "name": "insomnia-plugin-api-signature-fulll",
+      "os": [],
+      "scripts": {},
+      "sha256": "8ae6fe451457d01dca77a5a31bf7be30b5b7029b9850fae23a6cd50c077ff116",
+      "url": "https://registry.npmjs.org/insomnia-plugin-api-signature-fulll/-/insomnia-plugin-api-signature-fulll-1.0.0.tgz",
+      "version": "1.0.0"
+    },
+    "status": "archive-only",
+    "tested": false,
+    "version": "1.0.0"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Generate Code with custom templates using httpsnippet package",
+    "error": "Unpinned or non-registry dependency: node_modules/httpsnippet",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-codegen",
+    "license": "MIT",
+    "name": "insomnia-plugin-codegen",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/michaelversus/insomnia-plugin-codegen.git"
+    },
+    "rootArchive": {
+      "bin": {},
+      "bytes": 476509,
+      "cpu": [],
+      "file": "blobs/e1df41e83fdfe2a5b06d04161f86066c290cdb5f6b072ef760036c49c1081e28.tgz",
+      "integrity": "sha512-FQ57dv3vzB3FXNLkTejlqG8tePsbRyI/m+ajyZf48PlzrVMV4joNPz7ato4uA59utOn7f46lsaNwGksg+q9DJg==",
+      "license": "MIT",
+      "name": "insomnia-plugin-codegen",
+      "os": [],
+      "scripts": {},
+      "sha256": "e1df41e83fdfe2a5b06d04161f86066c290cdb5f6b072ef760036c49c1081e28",
+      "url": "https://registry.npmjs.org/insomnia-plugin-codegen/-/insomnia-plugin-codegen-1.1.4.tgz",
+      "version": "1.1.4"
+    },
+    "status": "archive-only",
+    "tested": false,
+    "version": "1.1.4"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "",
+    "error": "Redistribution review required for explicitly private/unlicensed package",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-gluwa-dev",
+    "license": "UNLICENSED",
+    "name": "insomnia-plugin-gluwa-dev",
+    "repository": null,
+    "status": "unresolved",
+    "tested": false,
+    "version": "0.0.3"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Add a customizable HMAC template tag to insomnia.",
+    "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.1' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_10_26_319Z-debug-0.log\n",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-hmac-fulll",
+    "license": "MIT",
+    "name": "insomnia-plugin-hmac-fulll",
+    "repository": {
+      "directory": "packages/insomnia-plugin-hmac-fulll",
+      "type": "git",
+      "url": "https://github.com/fulll/nodejs-libs"
+    },
+    "rootArchive": {
+      "bin": {},
+      "bytes": 1875,
+      "cpu": [],
+      "file": "blobs/22af6b52a6ddda3b6956eb0c47bbd82033f800279fd592719e07bc07478d03d0.tgz",
+      "integrity": "sha512-GnAqBJjtywzbb4qfE/mDtyB4aVCMxFlgD9Rxb36/MuDDMv0s5BAIjC7ybg+Nw2zzsrZ/nLo8yfTOHkOfWSTUpA==",
+      "license": "MIT",
+      "name": "insomnia-plugin-hmac-fulll",
+      "os": [],
+      "scripts": {},
+      "sha256": "22af6b52a6ddda3b6956eb0c47bbd82033f800279fd592719e07bc07478d03d0",
+      "url": "https://registry.npmjs.org/insomnia-plugin-hmac-fulll/-/insomnia-plugin-hmac-fulll-1.1.1.tgz",
+      "version": "1.1.1"
+    },
+    "status": "archive-only",
+    "tested": false,
+    "version": "1.1.1"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Add a customizable HMAC template tag to insomnia.",
+    "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@ied%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@ied/signature@^1.2.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_10_26_924Z-debug-0.log\n",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-hmac-ied",
+    "license": "",
+    "name": "insomnia-plugin-hmac-ied",
+    "repository": null,
+    "rootArchive": {
+      "bin": {},
+      "bytes": 1181,
+      "cpu": [],
+      "file": "blobs/0c0caefd64acccb924d26e08f3588838dad8a961e2bbc529fcef376ffcbdda5a.tgz",
+      "integrity": "sha512-J45H2hyEjBEz/8ysFBZsLcejEToDlxMv2M90ibRCMT02ZSzZbYpNp3l6ncdHqG+KLXYGlXosMEw5DZeMXi1gvg==",
+      "license": "REVIEW_REQUIRED",
+      "name": "insomnia-plugin-hmac-ied",
+      "os": [],
+      "scripts": {},
+      "sha256": "0c0caefd64acccb924d26e08f3588838dad8a961e2bbc529fcef376ffcbdda5a",
+      "url": "https://registry.npmjs.org/insomnia-plugin-hmac-ied/-/insomnia-plugin-hmac-ied-1.0.9.tgz",
+      "version": "1.0.9"
+    },
+    "status": "archive-only",
+    "tested": false,
+    "version": "1.0.9"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Security holding package",
+    "error": "unexpected end of data",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-ya-taxi",
+    "license": "",
+    "name": "insomnia-plugin-ya-taxi",
+    "repository": null,
+    "status": "unresolved",
+    "tested": false,
+    "version": "66.0.2"
+  },
+  {
+    "defaultEnabled": false,
+    "deprecated": null,
+    "description": "Security holding package",
+    "error": "unexpected end of data",
+    "hub": "https://insomnia.rest/plugins/insomnia-plugin-yav",
+    "license": "",
+    "name": "insomnia-plugin-yav",
+    "repository": null,
+    "status": "unresolved",
+    "tested": false,
+    "version": "66.0.0"
+  }
+]

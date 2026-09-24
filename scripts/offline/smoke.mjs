@@ -27,10 +27,12 @@ try {
   assert.equal(initial.updateStatus, 'idle');
   assert.deepEqual(initial.plugins.map(p => p.name).sort(), ['insomnia-plugin-crypto', 'insomnia-plugin-offline-crypto-tools']);
   await page.getByRole('button', { name: 'Create new Project', exact: true }).click();
-  // The empty-state page also has a project form: operate only on the active dialog.
+  // The empty-state page also has a form. Use the active dialog and visible
+  // React Aria label; its hidden radio input is intentionally covered by the label.
   const dialog = page.getByRole('dialog', { name: 'Create or update dialog', exact: true });
   await dialog.getByRole('textbox', { name: 'Project name', exact: true }).fill('Offline smoke project');
-  await dialog.getByRole('radio', { name: 'Project Type: local', exact: true }).check();
+  await dialog.locator('[aria-label="Project Type Item: local"]').click();
+  await dialog.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true }).waitFor();
   await dialog.getByRole('button', { name: 'Create', exact: true }).click();
   await page.waitForURL(/\/organization\/org_offline\/project\/[^/]+/);
   const projectUrl = page.url();

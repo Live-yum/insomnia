@@ -64,15 +64,19 @@ jobs:
       - name: Package complete application (no auto-publish or vendor signing service)
         working-directory: packages/insomnia
         run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Windows packaged application UI and template smoke before wrapper construction
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.mjs
       - name: Preserve upstream Windows secure wrapper
         if: runner.os == 'Windows'
         shell: bash
         run: |
           export PATH="/c/mingw64/bin:$PATH"
           bash ./build-secure-wrapper.sh CI
-      - name: Windows packaged application smoke
+      - name: Windows released secure entrypoint normal-start smoke without debugger flags
         if: runner.os == 'Windows'
-        run: node scripts/offline/smoke.mjs
+        shell: pwsh
+        run: ./scripts/offline/smoke-windows-wrapper.ps1
       - name: Linux packaged application smoke with no external network interfaces
         if: runner.os == 'Linux'
         shell: bash
@@ -120,4 +124,4 @@ jobs:
           for checksum in *.sha256; do sha256sum -c "$checksum"; done
           test "$(find . -maxdepth 1 -name '*.zip' | wc -l)" -eq 1
           test "$(find . -maxdepth 1 -name '*.tar.gz' | wc -l)" -eq 1
-          gh release create "offline-build-${RUN_NUMBER}" ./* --target "$SOURCE_SHA" --prerelease --title "Insomnia Offline portable build ${RUN_NUMBER}" --notes 'Windows x64 and Linux arm64 portable candidates with vendored crypto plugins. Build, type checks and focused smoke passed. Not a security certification: site-specific process-tree egress policy and protocol regression remain required. See docs/OFFLINE-LOCAL.md at the tagged commit.'
+          gh release create "offline-build-${RUN_NUMBER}" ./* --target "$SOURCE_SHA" --prerelease --title "Insomnia Offline portable build ${RUN_NUMBER}" --notes 'Windows x64 and Linux arm64 portable candidates with vendored crypto plugins. Build and type checks passed. Linux UI smoke used an isolated network namespace. Windows UI/template smoke ran before secure-wrapper construction; the released wrapper then passed a separate normal-start check without debugger flags. Not a security certification: site-specific process-tree egress policy and protocol regression remain required. See docs/OFFLINE-LOCAL.md.'
