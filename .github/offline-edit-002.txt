@@ -1,0 +1,111 @@
+OFFLINE_FILE {"path":"packages/insomnia/src/common/insomnia-fetch.ts","old":"8100c507d5d9802968cff4a8e493add007bff5a2e1cc4ba52f43aca151c20285","new":"e7adec929a351a33287cbbbd827513ccd6f029c79c2d91c03155c77698ab855a"}
+OFFLINE_EDIT [0,1,true]
+import type { FetchConfig } from 'insomnia-api';
+OFFLINE_END_EDIT
+OFFLINE_EDIT [2,4,true]
+import { OfflineModeError } from './offline';
+OFFLINE_END_EDIT
+OFFLINE_EDIT [5,12,true]
+// This adapter is ONLY for the application's cloud backend, never the user's API requests.
+export function setFetchImplementation(_impl: (input: string, init?: RequestInit) => Promise<Response>) {
+  // Intentionally do not retain or call a network implementation.
+OFFLINE_END_EDIT
+OFFLINE_EDIT [14,19,true]
+export const proxyAwareFetch: typeof globalThis.fetch = async () => {
+  throw new OfflineModeError();
+};
+OFFLINE_END_EDIT
+OFFLINE_EDIT [20,97,true]
+export async function insomniaFetch<T = void>(
+  _options: FetchConfig & { retries?: number; onDeepLink?: (uri: string) => void },
+): Promise<T> {
+  throw new OfflineModeError();
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/common/offline.test.ts","old":null,"new":"315910675ccdd3808d416b4b7843998322864fbe92d360303d50ac90c5b2a23e"}
+OFFLINE_EDIT [0,0,true]
+import { describe, expect, it, vi } from 'vitest';
+
+import { insomniaFetch, proxyAwareFetch, setFetchImplementation } from './insomnia-fetch';
+import { isOfflineNetworkUrlAllowed, OFFLINE_BUILD, OfflineModeError } from './offline';
+
+describe('offline network policy', () => {
+  it('is an immutable offline build', () => expect(OFFLINE_BUILD).toBe(true));
+  it.each(['https://insomnia-app.local/organization/org_offline/project', 'file:///app/index.html', 'http://127.0.0.1:8080', 'http://10.1.2.3', 'http://172.16.0.1', 'http://192.168.1.2', 'http://[::1]', 'http://[fd00::1]'])('allows local %s', url => expect(isOfflineNetworkUrlAllowed(url)).toBe(true));
+  it.each(['https://api.insomnia.rest/v1', 'https://updates.insomnia.rest', 'https://api.segment.io', 'https://o1147619.ingest.sentry.io', 'https://renderer.gist.build', 'https://example.com', 'https://localhost.evil.example', 'http://172.32.0.1', 'javascript:alert(1)', 'not a URL'])('blocks %s', url => expect(isOfflineNetworkUrlAllowed(url)).toBe(false));
+  it('requires exact administrator host entries and never allows vendor services', () => {
+    expect(isOfflineNetworkUrlAllowed('https://api.corp.test', ['api.corp.test'])).toBe(true);
+    expect(isOfflineNetworkUrlAllowed('https://api.corp.test.evil.test', ['api.corp.test'])).toBe(false);
+    expect(isOfflineNetworkUrlAllowed('https://api.insomnia.rest', ['api.insomnia.rest'])).toBe(false);
+  });
+  it('never calls the cloud transport, even with injected configuration and credentials', async () => {
+    const transport = vi.fn();
+    setFetchImplementation(transport);
+    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'old-cloud-session' })).rejects.toBeInstanceOf(OfflineModeError);
+    await expect(proxyAwareFetch('https://api.insomnia.rest')).rejects.toBeInstanceOf(OfflineModeError);
+    expect(transport).not.toHaveBeenCalled();
+  });
+});
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/common/offline.ts","old":null,"new":"d8b389a6f63f4ee202e974f39dfdf40be4b7ae875aec3b73bfe02e1451dd0100"}
+OFFLINE_EDIT [0,0,true]
+/** Immutable policy for this fork. No preference or environment variable enables cloud services. */
+export const OFFLINE_BUILD = true;
+export const OFFLINE_ORGANIZATION_ID = 'org_offline';
+export const OFFLINE_PLUGIN_NAME = 'insomnia-plugin-offline-toolkit';
+
+export class OfflineModeError extends Error {
+  constructor() {
+    super('Cloud services and online installation are disabled in this offline build.');
+    this.name = 'OfflineModeError';
+  }
+}
+
+/** Host allowlist for Electron traffic, not a replacement for a host/network firewall. */
+export function isOfflineNetworkUrlAllowed(value: string, allowedHosts: readonly string[] = []): boolean {
+  let url: URL;
+  try { url = new URL(value); } catch { return false; }
+  if (['file:', 'data:', 'blob:', 'insomnia:', 'insomniadev:', 'insomnia-templating-worker-database:'].includes(url.protocol)) return true;
+  if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return false;
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
+  const vendorDomains = ['insomnia.rest', 'insomnia.plus', 'konghq.com', 'segment.io', 'segment.com', 'customer.io', 'customerio.com', 'gist.build', 'sentry.io'];
+  if (vendorDomains.some(domain => host === domain || host.endsWith('.' + domain))) return false;
+  if (url.protocol === 'https:' && host === 'insomnia-app.local' && !url.port) return true;
+  if (host === 'localhost' || host === '::1') return true;
+  if (allowedHosts.some(allowed => allowed.toLowerCase().trim() === host)) return true;
+  const ipv4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(host);
+  if (ipv4) {
+    const [a, b, c, d] = ipv4.slice(1).map(Number);
+    if ([a, b, c, d].some(value => value > 255)) return false;
+    return a === 127 || a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  }
+  return host.includes(':') && /^(fc|fd)[0-9a-f]{2}:/.test(host);
+}
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/common/organization-storage-rules.ts","old":"f8e6e6e58f5c44766dc72fcbe6e5f6a0cba018aa75b740b2f5e5042f9111f2e3","new":"a27f83e22dbf6acec1feae5313ec7f9ef8a06c5971e2abdf10386d3f2adc35f3"}
+OFFLINE_EDIT [8,9,true]
+  enableCloudSync: false,
+OFFLINE_END_EDIT
+OFFLINE_EDIT [24,25,true]
+      enableGitSync: organizationId === models.organization.OFFLINE_ORGANIZATION_ID,
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/common/utils/vault.ts","old":"c890bafbafd9f8f8cf2b366412c8cc75a824abbaedfad89e46a37bd977a398e6","new":"358fdea80bb158b0b2e6b1e0a9f78ee7b2b51f58e6a2ae8fe278de0bf34c7986"}
+OFFLINE_EDIT [23,24,true]
+    console.error('Failed to decode vault key');
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/entry.client.tsx","old":"a46dc30a25ea88061360c1f57373bb1473808962b0a0d1db321b03e3d2dee8b4","new":"7a7ec260ed4734c517de330df3b1b41cc7937957fda8abdbf60ad7964a6a7e09"}
+OFFLINE_EDIT [11,12,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [14,15,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [16,17,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [24,27,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [36,37,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [61,63,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [89,147,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [154,171,false]
+OFFLINE_END_EDIT

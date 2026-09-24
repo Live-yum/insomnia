@@ -1,0 +1,232 @@
+name: Offline portable release
+
+on:
+  push:
+    branches: [offline/intranet]
+    paths-ignore: ['.github/workflows/offline-validation.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-portable-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  NODE_OPTIONS: --max-old-space-size=6144
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    permissions:
+      contents: write
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Apply reviewed offline source patch once
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib, json
+          from pathlib import Path, PurePosixPath
+          chunks = sorted(Path('.github').glob('offline-edit-*.txt'))
+          if chunks:
+              items = []
+              item = None
+              edit = None
+              replacement = []
+              for line in ''.join(p.read_text() for p in chunks).splitlines(keepends=True):
+                  if line.startswith('OFFLINE_FILE '):
+                      item = json.loads(line[len('OFFLINE_FILE '):])
+                      item['edits'] = []
+                      items.append(item)
+                  elif line.startswith('OFFLINE_EDIT '):
+                      edit = json.loads(line[len('OFFLINE_EDIT '):])
+                      replacement = []
+                  elif line == 'OFFLINE_END_EDIT\n':
+                      text = ''.join(replacement)
+                      if not edit[2] and text.endswith('\n'):
+                          text = text[:-1]
+                      item['edits'].append([edit[0], edit[1], text])
+                      edit = None
+                  else:
+                      assert edit is not None
+                      replacement.append(line)
+              assert len(items) == 47
+              assert hashlib.sha256(json.dumps(items, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest() == '374503f93b717be3f24363f2b39a382e0be24ecbc89d95ee0d8613340d292fcf'
+              updates = []
+              for item in items:
+                  name = item['path']
+                  path = PurePosixPath(name)
+                  assert not path.is_absolute() and '..' not in path.parts
+                  assert name in ('README.md', 'package-lock.json') or name.startswith(('packages/', 'scripts/offline/', 'docs/'))
+                  target = Path(name)
+                  old = target.read_bytes() if target.exists() else None
+                  assert (hashlib.sha256(old).hexdigest() if old is not None else None) == item['old'], name
+                  lines = (old or b'').decode('utf-8').splitlines(keepends=True)
+                  for start, end, replacement in reversed(item['edits']):
+                      lines[start:end] = replacement.splitlines(keepends=True)
+                  result = ''.join(lines).encode('utf-8')
+                  assert hashlib.sha256(result).hexdigest() == item['new'], name
+                  updates.append((target, result))
+              for target, result in updates:
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(result)
+              for path in chunks:
+                  path.unlink()
+          PYCODE
+          node scripts/offline/verify-source.cjs
+      - name: Save inspectable source checkpoint before dependency installation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if test -n "$(git status --porcelain)"; then
+            git add --all
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'feat: offline source, local vault, bundled crypto and portable packaging'
+            AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/intranet
+          fi
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked build dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Format and lint only changed application source
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          files = subprocess.check_output(['git', 'diff', '--name-only', '--diff-filter=ACM', '-z', '5c44d1d7e8354ecabe824010d9a8a135a9d0b050', 'HEAD']).decode().split('\0')
+          source = sorted({p for p in files if p.endswith(('.ts', '.tsx')) and p.startswith('packages/')})
+          if source:
+              subprocess.run(['npx', '--no-install', 'prettier', '--write', *source], check=True)
+              subprocess.run(['npx', '--no-install', 'eslint', '--fix', *source], check=True)
+          PY
+      - name: Type check desktop application
+        run: npm run type-check -w insomnia
+      - name: Offline regressions and renderer security invariants
+        run: npm exec -w insomnia -- vitest run src/common/offline.test.ts src/plugins/offline-toolkit.test.ts src/main/window-security.test.ts src/main/permission-policy.test.ts
+      - name: Commit reviewed generated source to the offline branch
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if test -n "$(git status --porcelain)"; then
+            git add --all
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'feat: account-free offline client, bundled crypto toolkit and portable profiles'
+            AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/intranet
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git archive --format=tar --output=offline-reviewed-source.tar HEAD
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-reviewed-source
+          path: offline-reviewed-source.tar
+          retention-days: 14
+          if-no-files-found: error
+
+  build:
+    needs: prepare
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2022
+            platform: win32
+            arch: x64
+            target: windows-x64
+            args: --win --x64
+          - runner: ubuntu-22.04-arm
+            platform: linux
+            arch: arm64
+            target: linux-arm64
+            args: --linux --arm64
+    env:
+      OFFLINE_SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Verify native architecture and offline policy
+        run: |
+          node -e "if(process.platform!=='${{ matrix.platform }}'||process.arch!=='${{ matrix.arch }}')process.exit(1)"
+          node scripts/offline/verify-source.cjs
+      - name: Linux desktop test dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2 libgbm1 libsecret-1-0
+      - name: Install locked dependencies and native Electron modules
+        run: npm ci --no-audit --no-fund
+      - name: Build application
+        run: npm run app-build
+      - name: Package portable application directory
+        run: npm exec -w insomnia -- electron-builder --config electron-builder.offline.cjs ${{ matrix.args }} --dir --publish never
+      - name: Test real packaged application (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node scripts/offline/smoke.cjs
+      - name: Test real packaged application (Windows)
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.cjs
+      - name: Create clean portable archive and checksums
+        run: python scripts/offline/archive.py ${{ matrix.target }}
+      - name: Generate dependency inventory
+        shell: bash
+        run: npm sbom --omit=dev --sbom-format=cyclonedx > release-assets/${{ matrix.target }}.sbom.cdx.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: offline-tests-${{ matrix.target }}
+          path: offline-test-results/
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-portable-${{ matrix.target }}
+          path: release-assets/
+          retention-days: 30
+          if-no-files-found: error
+
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: offline-portable-*
+          path: release-assets
+          merge-multiple: true
+      - name: Publish only after both native smoke tests succeed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+        run: |
+          test "$(find release-assets -name '*.zip' | wc -l)" -eq 1
+          test "$(find release-assets -name '*.tar.gz' | wc -l)" -eq 1
+          (cd release-assets && sha256sum -c *.sha256)
+          TAG="offline-${SOURCE_SHA:0:12}"
+          printf 'Source commit: `%s`\n\nWindows x64 ZIP and Linux ARM64 tar.gz, with statically bundled Crypto & Offline Toolkit. No Insomnia cloud login, telemetry or updater.\n\nNative packaged startup, local project creation, bundled tags and loopback HTTP smoke tests passed on both runners. This is an unsigned pre-release, not an air-gap security certification. Review docs/OFFLINE.md and validate on your own intranet image before production deployment.\n' "$SOURCE_SHA" > notes.md
+          gh release create "$TAG" release-assets/* --target "$SOURCE_SHA" --title 'Insomnia Offline — Windows x64 / Linux ARM64' --notes-file notes.md --prerelease

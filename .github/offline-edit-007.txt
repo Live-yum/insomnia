@@ -1,0 +1,122 @@
+OFFLINE_FILE {"path":"packages/insomnia/src/ui/sentry.ts","old":"de7becaa17a46cf537b80f68d6e319edb1d1359d3c4113b00dffd20a441488fb","new":"c67725c8209f6b7c5fa731e1962907ae6749c858eaee684012df03c99b17f556"}
+OFFLINE_EDIT [0,18,true]
+// Deliberately never initialize the renderer telemetry SDK.
+export function initializeSentry() {}
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/ui/utils/router.ts","old":"7a1c9db29bc21d877a5bc57cefbd8a5a25ac3d317a0ca80d406def6e2f3ec0ad","new":"1c6092e8238f6eda03b8246db0bbba0d525ae16bdb004168dd4e0083831835b9"}
+OFFLINE_EDIT [0,3,true]
+import { models, services } from 'insomnia-data';
+OFFLINE_END_EDIT
+OFFLINE_EDIT [6,9,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [88,179,true]
+  return getInitialRouteForOrganization({
+    organizationId: models.organization.OFFLINE_ORGANIZATION_ID,
+    navigateToWorkspace: true,
+  });
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"packages/insomnia/src/ui/vault-key.client.ts","old":"a9382f36664b8b24dc2b459cc61761b70cf9a15219e20087c00a148187580301","new":"0908a96a0b5b9c225044be1d57e60b6eba76ab5a24556fffaa7b2420b231b465"}
+OFFLINE_EDIT [0,2,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [5,5,true]
+import { OFFLINE_ORGANIZATION_ID } from '~/common/offline';
+OFFLINE_END_EDIT
+OFFLINE_EDIT [7,8,true]
+async function verifierFor(key: string, salt: string) {
+  // Keys are randomly generated 256-bit AES keys, not low-entropy passwords.
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${key}`));
+  return Array.from(new Uint8Array(hash), value => value.toString(16).padStart(2, '0')).join('');
+}
+OFFLINE_END_EDIT
+OFFLINE_EDIT [9,10,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [11,12,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [14,15,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [19,26,false]
+OFFLINE_END_EDIT
+OFFLINE_EDIT [27,47,true]
+    const session = await services.userSession.get();
+    if (type === 'create' && session.offlineVaultVerifier) return { error: 'A local vault already exists.' };
+    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+    const encoded = base64encode(JSON.stringify(await crypto.subtle.exportKey('jwk', key)));
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(32)), value => value.toString(16).padStart(2, '0')).join('');
+    // Check OS secret storage BEFORE a user-confirmed reset modifies anything.
+    const encryptedVaultKey = await window.main.secretStorage.encryptString(encoded);
+    const offlineVaultVerifier = await verifierFor(encoded, salt);
+    if (type === 'reset') await services.environment.removeAllSecrets([OFFLINE_ORGANIZATION_ID]);
+    await services.userSession.update({ vaultSalt: salt, vaultKey: encryptedVaultKey, offlineVaultVerifier });
+    await saveVaultKeyIfNecessary(session.accountId, encoded);
+    return { key: encoded };
+OFFLINE_END_EDIT
+OFFLINE_EDIT [48,49,true]
+    return { error: error instanceof Error ? error.message : 'Failed to create local vault' };
+OFFLINE_END_EDIT
+OFFLINE_EDIT [53,84,true]
+  if (!session.offlineVaultVerifier || session.vaultSalt !== vaultSalt) return false;
+  const actual = await verifierFor(vaultKey, vaultSalt);
+  const expected = session.offlineVaultVerifier;
+  if (actual.length !== expected.length) return false;
+  let difference = 0;
+  for (let index = 0; index < actual.length; index++) difference |= actual.charCodeAt(index) ^ expected.charCodeAt(index);
+  return difference === 0;
+OFFLINE_END_EDIT
+OFFLINE_FILE {"path":"scripts/offline/archive.py","old":null,"new":"9ba9c2b5a15ac866f4d1544a7f85b74ffd46cdcf51b33ab5117ae976b1430867"}
+OFFLINE_EDIT [0,0,true]
+"""Create a portable, clean archive; test data are never copied into the distribution."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import sys
+import tarfile
+import zipfile
+
+root = Path(__file__).resolve().parents[2]
+target = sys.argv[1]
+assert target in ('windows-x64', 'linux-arm64'), target
+out = root / 'release-assets'
+out.mkdir(exist_ok=True)
+folders = list((root / 'packages/insomnia/dist-offline').glob('*unpacked'))
+assert len(folders) == 1, folders
+source = folders[0]
+version = json.loads((root / 'packages/insomnia/package.json').read_text())['version']
+sha = os.environ['OFFLINE_SOURCE_SHA']
+name = f'Insomnia-Offline-{version}-{target}-{sha[:8]}'
+stage = root / 'portable-stage' / name
+shutil.copytree(source, stage)
+(stage / 'data').mkdir()
+(stage / 'data/.portable').write_text('Portable user data directory. Keep this folder private.\n')
+shutil.copy(root / 'docs/OFFLINE.md', stage / 'OFFLINE-README.md')
+shutil.copy(root / 'LICENSE', stage / 'SOURCE-LICENSE.txt')
+if target == 'windows-x64':
+    executables = list(stage.glob('*.exe'))
+    assert len(executables) == 1, executables
+    (stage / 'Start-Insomnia.cmd').write_text('@echo off\nsetlocal\nif not defined INSOMNIA_DATA_PATH set "INSOMNIA_DATA_PATH=%~dp0data"\n"%~dp0' + executables[0].name + '" %*\n', newline='\r\n')
+else:
+    launcher = stage / 'start-insomnia.sh'
+    launcher.write_text('#!/bin/sh\nset -eu\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexport INSOMNIA_DATA_PATH="${INSOMNIA_DATA_PATH:-$HERE/data}"\nexec "$HERE/insomnia-offline" "$@"\n')
+    launcher.chmod(0o755)
+manifest = {'sourceCommit': sha, 'target': target, 'applicationVersion': version, 'offlineBuild': True, 'builtInPlugin': 'insomnia-plugin-offline-toolkit', 'pluginVersion': '1.0.0', 'runtimeDownloads': False, 'signed': False, 'cloudServices': False}
+(stage / 'OFFLINE-MANIFEST.json').write_text(json.dumps(manifest, indent=2) + '\n')
+manifest_path = out / (name + '.manifest.json')
+manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+if target == 'windows-x64':
+    archive = out / (name + '.zip')
+    with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+        for item in sorted(stage.rglob('*')):
+            if item.is_file(): z.write(item, item.relative_to(stage.parent))
+else:
+    archive = out / (name + '.tar.gz')
+    with tarfile.open(archive, 'w:gz', compresslevel=6) as t: t.add(stage, arcname=name)
+hasher = hashlib.sha256()
+with archive.open('rb') as f:
+    for block in iter(lambda: f.read(1024 * 1024), b''):
+        hasher.update(block)
+digest = hasher.hexdigest()
+(out / (archive.name + '.sha256')).write_text(f'{digest}  {archive.name}\n')
+shutil.copy(root / 'offline-test-results/smoke.json', out / (name + '.smoke.json'))
+print(archive)
+OFFLINE_END_EDIT
