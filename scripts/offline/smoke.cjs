@@ -56,6 +56,31 @@ async function main() {
     assert(initial.plugins.some(plugin => plugin.name === 'insomnia-plugin-offline-toolkit'));
     const tags = initial.tags.filter(tag => tag.plugin.name === 'insomnia-plugin-offline-toolkit');
     assert.equal(tags.length, 12, 'Not all offline tools were bundled');
+    // Exercise the authenticated templating bridge used by real template rendering.
+    const cryptoResults = await page.evaluate(async () => {
+      const token = await window.main.templatingDb.getAuthToken();
+      const bridge = async (name, body) => {
+        const response = await fetch('insomnia-templating-worker-database://' + name, {
+          method: 'POST', headers: { 'x-insomnia-templating-auth': token }, body: JSON.stringify(body),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result?.error || 'Template bridge failed');
+        return result;
+      };
+      const discovered = await bridge('plugin.getBundlePluginTemplateTags', {});
+      const run = (tagName, args) => bridge('plugin.executeBundlePluginTag', {
+        pluginName: 'insomnia-plugin-offline-toolkit', tagName, args,
+        context: { meta: {}, context: {}, renderPurpose: 'preview' },
+      });
+      const hash = await run('offlineHash', ['abc', 'sha256']);
+      const key = 'ab'.repeat(32);
+      const envelope = await run('offlineAesEncrypt', ['offline packaged crypto', key]);
+      const decrypted = await run('offlineAesDecrypt', [envelope, key]);
+      return { hash, decrypted, tagCount: discovered.filter(tag => tag.plugin.name === 'insomnia-plugin-offline-toolkit').length };
+    });
+    assert.equal(cryptoResults.tagCount, 12, 'Template rendering cannot discover all offline tags');
+    assert.equal(cryptoResults.hash, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+    assert.equal(cryptoResults.decrypted, 'offline packaged crypto');
     // Exercise the actual React Router create action, not only the database service.
     await page.getByRole('button', { name: 'Create new Project' }).click();
     await page.getByPlaceholder('My Project').fill('Offline UI Smoke Project');
@@ -88,7 +113,7 @@ async function main() {
     const attemptedVendorRequests = events.filter(event => typeof event.params?.url === 'string' && vendor.test(event.params.url));
     assert.equal(attemptedVendorRequests.length, 0, 'Startup attempted to contact vendor services');
     assert.deepEqual(consoleErrors, [], 'Renderer errors occurred');
-    fs.writeFileSync(path.join(out, 'smoke.json'), JSON.stringify({ passed: true, platform: process.platform, arch: process.arch, localProjectCreatedThroughUI: true, nativeHttpStatus: result.response.statusCode, bundledOfflineTags: tags.map(tag => tag.templateTag.name), attemptedVendorRequests: 0, limitations: 'Electron netlog is not a complete OS-level egress capture; no full air-gap certification is implied.' }, null, 2));
+    fs.writeFileSync(path.join(out, 'smoke.json'), JSON.stringify({ passed: true, platform: process.platform, arch: process.arch, localProjectCreatedThroughUI: true, templateBridgeCryptoVerified: true, nativeHttpStatus: result.response.statusCode, bundledOfflineTags: tags.map(tag => tag.templateTag.name), attemptedVendorRequests: 0, limitations: 'Electron netlog is not a complete OS-level egress capture; no full air-gap certification is implied.' }, null, 2));
   } catch (error) {
     if (page) await page.screenshot({ path: path.join(out, 'failure.png') }).catch(() => {});
     throw error;

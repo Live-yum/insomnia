@@ -21,6 +21,7 @@ import type {
   PluginToMainAPIPaths,
 } from '~/common/templating/types';
 import { getPluginCommonContext, getPlugins, getTemplateTags } from '~/plugins';
+import { offlineToolkit } from '~/plugins/offline-toolkit';
 import {
   HOOK_REQUEST_FIELDS,
   type PluginExportManifest,
@@ -127,6 +128,7 @@ const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined)
 };
 
 const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
+  if (pluginName === 'insomnia-plugin-offline-toolkit') return offlineToolkit;
   if (pluginName in Object.keys(bundlePluginModuleMap)) {
     return bundlePluginModuleMap[pluginName];
   }
