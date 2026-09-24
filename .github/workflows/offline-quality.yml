@@ -1,0 +1,63 @@
+name: Offline full quality
+
+on:
+  push:
+    branches: [offline/standalone-vendored, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-full-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    if: github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      SCARF_ANALYTICS: 'false'
+      DO_NOT_TRACK: '1'
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      NODE_OPTIONS: --max_old_space_size=6144
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Install exact application lockfile and required build patches
+        run: npm ci --no-audit --no-fund
+      - name: Workspace lint without automatic repairs
+        run: npm run lint
+      - name: Full workspace types and generated routes
+        run: npm run type-check
+      - name: Build application before its complete unit suite
+        run: npm run app-build
+      - name: Prepare Node native ABI for tests
+        run: npm run install-libcurl-node
+      - name: All workspace unit suites, not just selected offline tests
+        run: |
+          mkdir -p offline-quality-reports
+          set -o pipefail
+          npm test 2>&1 | tee offline-quality-reports/unit-tests.log
+      - name: Offline archive, encoding, extraction and resource regression tests
+        run: |
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-full-quality-${{ github.sha }}
+          path: offline-quality-reports/
+          if-no-files-found: warn
+          retention-days: 7
