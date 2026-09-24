@@ -7,7 +7,8 @@ for (const file of ['main/sentry.ts', 'ui/sentry.ts', 'main/analytics.ts', 'ui/h
   assert(!/Sentry\.init|new InsomniaAnalytics|AnalyticsBrowser\.load/.test(read(root + file)), `${file} initializes telemetry`);
 }
 assert(!/electron-updater|autoUpdater|checkForUpdates/.test(read(root + 'main/updates.ts')));
-assert(read(root + 'main/install-plugin.ts').includes("throw new Error('Online plugin installation is disabled."));
+// The denial must still be guarded by immutable OFFLINE_BUILD; formatting may add line breaks.
+assert(/if\s*\(OFFLINE_BUILD\)\s*\{?\s*throw new Error\(\s*'Online plugin installation is disabled\./.test(read(root + 'main/install-plugin.ts')));
 assert(read(root + 'entry.main.ts').includes("app.setPath('sessionData', dataPath)"));
 assert(!read(root + 'entry.main.ts').includes('setAsDefaultProtocolClient('));
 assert(read(root + 'main/window-security.ts').includes('nodeIntegration: false'));
