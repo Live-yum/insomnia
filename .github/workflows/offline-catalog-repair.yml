@@ -13,6 +13,8 @@ jobs:
         with:
           persist-credentials: false
           ref: offline/catalog-repair
+      - name: Restore original binary bytes using original pinned SHA256 and registry integrity
+        run: python3 scripts/offline/restore-pinned-archives.py
       - name: Repair the existing pinned snapshot and verify every archived dependency
         run: python3 scripts/offline/vendor_plugins.py repair --workers 12
       - name: Commit verified archives without force push
@@ -23,8 +25,8 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add vendor/offline-plugins
-          if ! git diff --cached --quiet; then git commit -m 'fix: verify authoritative catalog names and archive missing locked dependencies'; fi
+          git add .gitattributes vendor/offline-plugins
+          if ! git diff --cached --quiet; then git commit -m 'fix: restore binary npm archives and verify complete pinned catalog'; fi
           AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/catalog-repair
       - name: Capture small report
