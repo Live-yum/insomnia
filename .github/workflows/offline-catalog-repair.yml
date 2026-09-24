@@ -13,33 +13,48 @@ jobs:
         with:
           persist-credentials: false
           ref: offline/catalog-repair
-      - name: Restore original binary bytes using original pinned SHA256 and registry integrity
+      - name: Restore missing archives using original pinned SHA256 and registry integrity
         run: python3 scripts/offline/restore-pinned-archives.py
-      - name: Repair the existing pinned snapshot and verify every archived dependency
-        run: python3 scripts/offline/vendor_plugins.py repair --workers 12
-      - name: Commit verified archives without force push
+      - name: Verify existing pinned snapshot
+        run: python3 scripts/offline/vendor_plugins.py verify
+      - name: Commit all archives, including new files ignored by the upstream tgz rule
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '!*.tgz\n' > vendor/offline-plugins/blobs/.gitignore
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .gitattributes vendor/offline-plugins
+          git add -f vendor/offline-plugins/blobs/*.tgz
+          if ! git diff --cached --quiet; then git commit -m 'fix: track every restored npm archive and preserve binary bytes'; fi
+      - name: Verify only the files actually committed, in a clean directory without network
+        shell: bash
+        run: |
+          set -euo pipefail
+          REVIEW=$(mktemp -d)
+          git archive HEAD scripts/offline/vendor_plugins.py vendor/offline-plugins | tar -x -C "$REVIEW"
+          sudo unshare --net runuser -u "$USER" -- python3 "$REVIEW/scripts/offline/vendor_plugins.py" verify
+          rm -rf "$REVIEW"
+      - name: Publish verified commit without force push
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .gitattributes vendor/offline-plugins
-          if ! git diff --cached --quiet; then git commit -m 'fix: restore binary npm archives and verify complete pinned catalog'; fi
           AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/catalog-repair
-      - name: Capture small report
+      - name: Capture tracked-file report
         if: always()
         shell: python
         run: |
-          import json
+          import json, subprocess
           from pathlib import Path
           manifest = json.loads(Path('vendor/offline-plugins/manifest.json').read_text())
+          tracked = subprocess.check_output(['git','ls-files','vendor/offline-plugins/blobs/*.tgz'], text=True).splitlines()
           report = {k:v for k,v in manifest.items() if k != 'entries'}
           report['catalogEntries'] = len(manifest['entries'])
-          report['archives'] = len(list(Path('vendor/offline-plugins/blobs').glob('*.tgz')))
-          report['archiveBytes'] = sum(p.stat().st_size for p in Path('vendor/offline-plugins/blobs').glob('*.tgz'))
+          report['archives'] = len(tracked)
+          report['archiveBytes'] = sum(Path(p).stat().st_size for p in tracked)
           Path('offline-catalog-summary.json').write_text(json.dumps(report, indent=2))
           print(json.dumps(report, indent=2))
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
