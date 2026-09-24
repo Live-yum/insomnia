@@ -34,6 +34,9 @@ async function main() {
       env: { ...process.env, INSOMNIA_DATA_PATH: data, INSOMNIA_SESSION: '{"id":"must-be-ignored","accountId":"must-be-ignored"}' },
       timeout: 90000,
     });
+    const processLog = path.join(out, 'main-process.log');
+    app.process().stdout?.on('data', data => fs.appendFileSync(processLog, data));
+    app.process().stderr?.on('data', data => fs.appendFileSync(processLog, data));
     const deadline = Date.now() + 90000;
     while (Date.now() < deadline) {
       for (const candidate of app.windows()) {
@@ -101,8 +104,8 @@ async function main() {
       const workspace = await call('workspace', 'create', { parentId: project._id, name: 'Offline native test', scope: 'collection' });
       const request = await call('request', 'create', { parentId: workspace._id, name: 'Native HTTP test', url, method: 'GET' });
       const settings = await call('settings', 'get');
-      const response = await window.main.curlRequest({ requestId: request._id, req: { ...request, cookieJar: {}, cookies: [], suppressUserAgent: false }, finalUrl: url, settings, certificates: [], caCertficatePath: null });
-      return { projectId: project._id, workspaceId: workspace._id, response: response.patch };
+      const response = await window.main.curlRequest({ requestId: request._id, req: { ...request, cookieJar: { cookies: [] }, cookies: [], suppressUserAgent: false }, finalUrl: url, settings, certificates: [], caCertficatePath: null });
+      return { projectId: project._id, workspaceId: workspace._id, response: { ...response.patch, statusCode: response.headerResults.at(-1)?.code } };
     }, url);
     assert.equal(result.response.statusCode, 200, JSON.stringify(result.response));
     await page.screenshot({ path: path.join(out, 'offline-smoke.png') });
