@@ -1,0 +1,72 @@
+name: Offline audit
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - run: git archive --format=tar --output=offline-audit-source.tar HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-audit-source-${{ github.sha }}
+          path: offline-audit-source.tar
+          retention-days: 7
+          if-no-files-found: error
+  diagnostics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked tooling without dependency lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Collect lint diagnostics and reviewable autofix patch
+        shell: bash
+        run: |
+          mkdir -p offline-audit-reports
+          set +e
+          npm run lint -- --fix > offline-audit-reports/lint.log 2>&1
+          lint_status=$?
+          git diff --binary > offline-audit-reports/lint-autofix.patch
+          echo "$lint_status" > offline-audit-reports/lint.exit-code
+          cat offline-audit-reports/lint.log
+          exit "$lint_status"
+      - name: Typecheck without hiding prior failures
+        if: success() || failure()
+        shell: bash
+        run: |
+          mkdir -p offline-audit-reports
+          set -o pipefail
+          npm run type-check -w insomnia 2>&1 | tee offline-audit-reports/typecheck.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-audit-reports-${{ github.sha }}
+          path: offline-audit-reports/
+          retention-days: 7
+          if-no-files-found: warn
