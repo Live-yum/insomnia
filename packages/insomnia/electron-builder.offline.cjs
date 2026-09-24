@@ -1,3 +1,4 @@
+/* global require, module */
 const base = require('./electron-builder.config.js');
 
 /** Portable review builds. Preserve the upstream executable name so its Windows
