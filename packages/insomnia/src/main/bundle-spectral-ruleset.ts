@@ -5,6 +5,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 
 import { ALLOWED_EXTENDS_IDENTIFIERS, toArray, validateSpectralRuleset } from '../common/spectral-ruleset-validator';
+import { OFFLINE_BUILD } from '../common/offline-policy';
 import { isPrivateOrLoopbackHost } from './private-host';
 
 const MAX_EXTENDS_DEPTH = 5;
@@ -100,6 +101,7 @@ async function assertSafeRemoteUrl(url: URL): Promise<void> {
 // any network call is made. Redirects are rejected because a redirect could forward us
 // to an internal host that bypassed the assertSafeRemoteUrl check.
 async function readRemoteRuleset(url: URL): Promise<Ruleset> {
+  if (OFFLINE_BUILD) throw new Error('Remote ruleset loading is disabled. Import a reviewed local ruleset instead.');
   await assertSafeRemoteUrl(url);
 
   let response: Response;

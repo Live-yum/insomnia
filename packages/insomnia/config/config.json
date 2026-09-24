@@ -7,11 +7,27 @@
   "icon": "src/icons/icon.ico",
   "githubOrg": "Live-yum",
   "githubRepo": "insomnia",
-  "segmentWriteKeys": { "development": "", "production": "" },
-  "cio": {
-    "development": { "writeKey": "", "siteId": "" },
-    "production": { "writeKey": "", "siteId": "" }
+  "segmentWriteKeys": {
+    "development": "",
+    "production": ""
   },
-  "bundlePlugins": [],
+  "cio": {
+    "development": {
+      "writeKey": "",
+      "siteId": ""
+    },
+    "production": {
+      "writeKey": "",
+      "siteId": ""
+    }
+  },
+  "bundlePlugins": [
+    {
+      "name": "insomnia-plugin-crypto"
+    },
+    {
+      "name": "insomnia-plugin-offline-crypto-tools"
+    }
+  ],
   "sentryDsn": ""
 }

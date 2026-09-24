@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { app, BrowserWindow, clipboard, dialog, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog } from 'electron';
 import iconv from 'iconv-lite';
 import type { AllTypes, CloudProviderCredential, Request as DBRequest, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -12,6 +12,8 @@ import { ProxyScopes } from 'insomnia-data/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
+import { getOfflinePlugin } from '~/common/offline-plugins';
+import { openOfflineExternal } from './offline-network';
 import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
@@ -29,7 +31,6 @@ import {
 import type { SandboxModuleDenialError } from '~/templating/sandbox/plugin-tag-sandbox';
 
 import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants';
-import { isDevelopment } from '../common/constants';
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { curlRequest } from './network/libcurl-promise';
@@ -37,7 +38,6 @@ import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templating-worker-database-auth';
 
-const bundlePluginModuleMap: Record<string, Plugin['module']> = {};
 
 const templatingDbCorsHeaders = (request: Request): Record<string, string> => ({
   'Access-Control-Allow-Origin': request.headers.get('Origin') ?? '*',
@@ -126,25 +126,7 @@ const assertResponseBodyPathReadOwnership = async (bodyPath: string | undefined)
   }
 };
 
-const getBundlePluginModule = (pluginName: string): Plugin['module'] => {
-  if (pluginName in Object.keys(bundlePluginModuleMap)) {
-    return bundlePluginModuleMap[pluginName];
-  }
-  try {
-    const module = require(pluginName) as Plugin['module'];
-    bundlePluginModuleMap[pluginName] = module;
-    return module;
-  } catch (err) {
-    if (isDevelopment()) {
-      console.warn(
-        `[plugin] Failed to load bundled plugin ${pluginName}. You can ignore this warning if you not developing external vault feature.`,
-      );
-    } else {
-      console.error(`Failed to load bundled plugin ${pluginName}`, err);
-    }
-  }
-  return {};
-};
+const getBundlePluginModule = (pluginName: string): Plugin['module'] => getOfflinePlugin(pluginName).module;
 
 // Run a resolved plugin template tag with a freshly-built common context. Shared by the bundle
 // and user-plugin execute handlers so both build context (incl. renderPurpose) identically.
@@ -762,7 +744,7 @@ export const pluginToMainAPI: Record<PluginToMainAPIPaths, (...args: any[]) => P
     const { url } = body;
     const { protocol } = new URL(url);
     if (protocol === 'http:' || protocol === 'https:') {
-      return shell.openExternal(url);
+      return openOfflineExternal(url);
     }
   },
   'network.sendRequest': async (body: { request: DBRequest; extraInfo?: { requestChain: string[] } }) => {

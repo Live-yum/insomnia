@@ -26,6 +26,7 @@ import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
 import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
+import { openOfflineExternal } from './offline-network';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 
@@ -239,7 +240,7 @@ export function createWindow(): ElectronBrowserWindow {
     event.preventDefault();
     const { protocol } = new URL(url);
     if (protocol === 'http:' || protocol === 'https:') {
-      shell.openExternal(url);
+      openOfflineExternal(url);
     }
   };
   mainBrowserWindow.webContents.on('will-navigate', guardNavigation);
@@ -293,7 +294,7 @@ export function createWindow(): ElectronBrowserWindow {
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        click: () => shell.openExternal('https://github.com/Kong/insomnia/releases'),
+        click: () => openOfflineExternal('https://github.com/Kong/insomnia/releases'),
       },
       {
         type: 'separator',
@@ -484,7 +485,7 @@ export function createWindow(): ElectronBrowserWindow {
         click: () => {
           const { protocol } = new URL(docsBase);
           if (protocol === 'http:' || protocol === 'https:') {
-            shell.openExternal(docsBase);
+            openOfflineExternal(docsBase);
           }
         },
       },
@@ -518,13 +519,13 @@ export function createWindow(): ElectronBrowserWindow {
       {
         label: 'Show Software Bill of Materials',
         click: () => {
-          shell.openExternal('https://github.com/Kong/insomnia/releases');
+          openOfflineExternal('https://github.com/Kong/insomnia/releases');
         },
       },
       {
         label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://insomnia.rest/license');
+          openOfflineExternal('https://insomnia.rest/license');
         },
       },
     ],
