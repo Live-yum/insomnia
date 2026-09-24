@@ -1,0 +1,114 @@
+name: Offline CI source repair
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths:
+      - scripts/offline/repair_ci_source.py
+      - .github/workflows/offline-ci-repair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-ci-source-repair
+  cancel-in-progress: false
+
+env:
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+  NODE_OPTIONS: --max_old_space_size=6144
+
+jobs:
+  prepare:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked application dependencies and their required build patches
+        run: npm ci --no-audit --no-fund
+      - name: Apply reviewed type and lint fixes to application source only
+        run: python3 scripts/offline/repair_ci_source.py
+      - name: Require application lint without autofix
+        run: npm run lint -w insomnia
+      - name: Require full application and route type checks
+        run: npm run type-check -w insomnia
+      - name: Require offline policy and archive regression tests
+        run: |
+          npm run test -w insomnia -- src/common/__tests__/offline-origin-policy.test.ts
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+      - name: Export reviewed source patch
+        run: |
+          git diff --check
+          git diff --binary > offline-ci-repair.patch
+          git diff --stat
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-ci-reviewed-repair
+          path: offline-ci-repair.patch
+          if-no-files-found: error
+          retention-days: 7
+
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: offline-ci-reviewed-repair
+          path: ${{ runner.temp }}/offline-repair
+      - name: Commit source edits without running dependency or plugin code
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          patch="$RUNNER_TEMP/offline-repair/offline-ci-repair.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          for name in names:
+              if not (name.startswith('packages/insomnia/src/') or name == 'packages/insomnia/scripts/verify-bundle-plugins.ts' or name in {'docs/OFFLINE-SOURCE-STATUS.json', 'docs/OFFLINE-PLUGIN-LOADER-STATUS.json'}):
+                  raise SystemExit('Unexpected repair path: ' + name)
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'fix: apply CI-verified offline types, imports and policy regression repairs'
+            git fetch origin offline/standalone-vendored
+            git rebase origin/offline/standalone-vendored
+            git push origin HEAD:offline/standalone-vendored
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  portable:
+    needs: commit
+    uses: ./.github/workflows/offline-build.yml
+    with:
+      source_sha: ${{ needs.commit.outputs.sha }}
+    permissions:
+      contents: read
