@@ -1,0 +1,58 @@
+name: Materialize offline application source
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths:
+      - scripts/offline/migration/**
+      - scripts/offline/apply_application.py
+      - .github/workflows/offline-apply-source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-source-materialization
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: offline/standalone-vendored
+          fetch-depth: 0
+      - name: Check all original source hashes before applying the migration
+        run: python3 scripts/offline/apply_application.py
+      - name: Materialize source files, not build-time substitutions
+        run: python3 scripts/offline/apply_application.py --apply
+      - name: Commit only the changed application source and validation record
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- packages docs/OFFLINE-SOURCE-STATUS.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: apply account-free local-only application source changes'
+            for attempt in 1 2 3; do
+              git fetch origin offline/standalone-vendored
+              git rebase origin/offline/standalone-vendored
+              if git push origin HEAD:offline/standalone-vendored; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+            done
+          fi
+          git archive --format=tar --output=offline-source-review.tar HEAD scripts/offline docs packages package.json package-lock.json .nvmrc .npmrc .github
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-source-review
+          path: offline-source-review.tar
+          if-no-files-found: error
+          retention-days: 7
