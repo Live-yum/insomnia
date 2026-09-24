@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@homeinside/insomnia-plugin-jsonschema-generator": "1.1.0"
+  },
+  "name": "offline-plugin-profile-2c9812700498c2df4126",
+  "private": true,
+  "version": "1.0.0"
+}

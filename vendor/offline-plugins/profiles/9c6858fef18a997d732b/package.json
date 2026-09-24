@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-firebase-token": "0.0.1"
+  },
+  "name": "offline-plugin-profile-9c6858fef18a997d732b",
+  "private": true,
+  "version": "1.0.0"
+}

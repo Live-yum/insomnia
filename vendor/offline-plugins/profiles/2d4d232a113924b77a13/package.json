@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-faked-moment": "0.1.0"
+  },
+  "name": "offline-plugin-profile-2d4d232a113924b77a13",
+  "private": true,
+  "version": "1.0.0"
+}

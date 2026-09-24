@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@net-os/insomnia-plugin-debugbar": "1.0.0"
+  },
+  "name": "offline-plugin-profile-9bfd38470cc3f9707987",
+  "private": true,
+  "version": "1.0.0"
+}

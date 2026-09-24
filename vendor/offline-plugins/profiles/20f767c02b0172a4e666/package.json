@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-merax-sync": "0.0.2"
+  },
+  "name": "offline-plugin-profile-20f767c02b0172a4e666",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-response-regex": "1.0.0-beta"
+  },
+  "name": "offline-plugin-profile-2ddb3f48d79c5df3775c",
+  "private": true,
+  "version": "1.0.0"
+}

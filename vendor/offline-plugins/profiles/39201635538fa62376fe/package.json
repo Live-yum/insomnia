@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-openapi-export": "2.1.1"
+  },
+  "name": "offline-plugin-profile-39201635538fa62376fe",
+  "private": true,
+  "version": "1.0.0"
+}

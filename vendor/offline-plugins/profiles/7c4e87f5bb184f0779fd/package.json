@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-repo-sync-2": "2.0.1"
+  },
+  "name": "offline-plugin-profile-7c4e87f5bb184f0779fd",
+  "private": true,
+  "version": "1.0.0"
+}

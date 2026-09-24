@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-jwt-cookie-auth-token": "1.0.0"
+  },
+  "name": "offline-plugin-profile-e27f172dc8e27b874e56",
+  "private": true,
+  "version": "1.0.0"
+}

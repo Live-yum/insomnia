@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-random-cnpj": "1.0.2"
+  },
+  "name": "offline-plugin-profile-d0808fcfd247347aa9fe",
+  "private": true,
+  "version": "1.0.0"
+}

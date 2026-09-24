@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-traceparent-tag": "1.0.1"
+  },
+  "name": "offline-plugin-profile-12dfe89c50ed1995aee2",
+  "private": true,
+  "version": "1.0.0"
+}

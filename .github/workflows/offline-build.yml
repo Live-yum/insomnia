@@ -76,16 +76,7 @@ jobs:
       - name: Linux packaged application smoke with no external network interfaces
         if: runner.os == 'Linux'
         shell: bash
-        run: |
-          set -euo pipefail
-          sudo chown root:root packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
-          sudo chmod 4755 packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
-          xvfb-run -a bash -c '
-            sudo unshare --net bash -c '\''
-              ip link set lo up
-              exec runuser -u "$1" -- env PATH="$2" DISPLAY="$3" INSOMNIA_OFFLINE_SMOKE_EXE="$4" node scripts/offline/smoke.mjs
-            '\'' _ "$USER" "$PATH" "$DISPLAY" "$INSOMNIA_OFFLINE_SMOKE_EXE"
-          '
+        run: bash scripts/offline/smoke-linux.sh
       - name: Assemble portable archive and SHA256
         run: python scripts/offline/package-portable.py ${{ matrix.target }}
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

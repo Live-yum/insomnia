@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-faker-regex": "1.0.1"
+  },
+  "name": "offline-plugin-profile-782c596d8e1cac98b740",
+  "private": true,
+  "version": "1.0.0"
+}

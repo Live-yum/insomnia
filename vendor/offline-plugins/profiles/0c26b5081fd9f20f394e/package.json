@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-mfa-authenticator": "0.1.1"
+  },
+  "name": "offline-plugin-profile-0c26b5081fd9f20f394e",
+  "private": true,
+  "version": "1.0.0"
+}

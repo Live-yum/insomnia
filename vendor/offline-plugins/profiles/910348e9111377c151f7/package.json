@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@massiveinfinity/insomnia-plugin-stephen-strange": "1.0.3"
+  },
+  "name": "offline-plugin-profile-910348e9111377c151f7",
+  "private": true,
+  "version": "1.0.0"
+}

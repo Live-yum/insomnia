@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cryptojs-aes": "1.0.1"
+  },
+  "name": "offline-plugin-profile-79d7d59b21defaf64353",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-cognito-identity": "0.15.0"
+  },
+  "name": "offline-plugin-profile-8e9fea10b6075699c1a0",
+  "private": true,
+  "version": "1.0.0"
+}

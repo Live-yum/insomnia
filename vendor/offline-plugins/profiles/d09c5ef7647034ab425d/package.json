@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-nats-request-reply": "0.0.18"
+  },
+  "name": "offline-plugin-profile-d09c5ef7647034ab425d",
+  "private": true,
+  "version": "1.0.0"
+}

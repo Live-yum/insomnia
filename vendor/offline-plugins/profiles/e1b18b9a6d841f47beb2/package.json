@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-convert-uuid-to-base64": "1.0.0"
+  },
+  "name": "offline-plugin-profile-e1b18b9a6d841f47beb2",
+  "private": true,
+  "version": "1.0.0"
+}

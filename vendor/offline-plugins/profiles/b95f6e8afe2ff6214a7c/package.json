@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cognito-password-token": "0.0.3"
+  },
+  "name": "offline-plugin-profile-b95f6e8afe2ff6214a7c",
+  "private": true,
+  "version": "1.0.0"
+}

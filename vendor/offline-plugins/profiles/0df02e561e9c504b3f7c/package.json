@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-mockchineseidcard": "1.0.6"
+  },
+  "name": "offline-plugin-profile-0df02e561e9c504b3f7c",
+  "private": true,
+  "version": "1.0.0"
+}

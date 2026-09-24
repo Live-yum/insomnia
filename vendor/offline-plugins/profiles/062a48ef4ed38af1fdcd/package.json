@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-lagoon-token": "0.2.9"
+  },
+  "name": "offline-plugin-profile-062a48ef4ed38af1fdcd",
+  "private": true,
+  "version": "1.0.0"
+}

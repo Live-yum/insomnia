@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-inso-plugin-support": "0.0.8"
+  },
+  "name": "offline-plugin-profile-2db0eea34d35888e8ebf",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-exodus-binauth": "1.0.2"
+  },
+  "name": "offline-plugin-profile-c431123a0b56d594c5c7",
+  "private": true,
+  "version": "1.0.0"
+}

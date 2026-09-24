@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-better-http-signatures": "1.0.0"
+  },
+  "name": "offline-plugin-profile-7ba2044944e245e6b273",
+  "private": true,
+  "version": "1.0.0"
+}

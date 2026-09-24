@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-snap-request": "1.0.0"
+  },
+  "name": "offline-plugin-profile-1dd7fca80a4e25167ffd",
+  "private": true,
+  "version": "1.0.0"
+}

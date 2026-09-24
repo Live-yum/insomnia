@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@mitter-io/insomnia-plugin-mitter": "0.11.0"
+  },
+  "name": "offline-plugin-profile-8de2bfb98191b0b2e30d",
+  "private": true,
+  "version": "1.0.0"
+}

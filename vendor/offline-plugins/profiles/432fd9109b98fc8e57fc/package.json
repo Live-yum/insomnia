@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-azure-resource-manager-api-tools": "1.2.1"
+  },
+  "name": "offline-plugin-profile-432fd9109b98fc8e57fc",
+  "private": true,
+  "version": "1.0.0"
+}

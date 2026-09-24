@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-auth-wsse": "0.0.4"
+  },
+  "name": "offline-plugin-profile-82b46c5e326eed2a7d3b",
+  "private": true,
+  "version": "1.0.0"
+}

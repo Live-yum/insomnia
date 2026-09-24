@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-binance-request-signing": "1.0.1"
+  },
+  "name": "offline-plugin-profile-8a31d81b601ef9864fb8",
+  "private": true,
+  "version": "1.0.0"
+}

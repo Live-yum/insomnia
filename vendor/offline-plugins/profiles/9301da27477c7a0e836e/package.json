@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-workspace-jwt": "1.1.1"
+  },
+  "name": "offline-plugin-profile-9301da27477c7a0e836e",
+  "private": true,
+  "version": "1.0.0"
+}

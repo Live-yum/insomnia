@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-reqresp-base64": "0.0.4"
+  },
+  "name": "offline-plugin-profile-4a1a428ef42924567923",
+  "private": true,
+  "version": "1.0.0"
+}

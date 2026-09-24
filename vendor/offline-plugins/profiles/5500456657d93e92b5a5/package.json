@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-random-iban-template-tag": "0.0.5"
+  },
+  "name": "offline-plugin-profile-5500456657d93e92b5a5",
+  "private": true,
+  "version": "1.0.0"
+}

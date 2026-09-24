@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-oci-auth": "1.0.3"
+  },
+  "name": "offline-plugin-profile-23f07ae56e0f799d2f18",
+  "private": true,
+  "version": "1.0.0"
+}

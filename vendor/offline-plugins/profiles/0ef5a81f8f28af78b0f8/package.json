@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-run-requests-parallel": "2.0.0"
+  },
+  "name": "offline-plugin-profile-0ef5a81f8f28af78b0f8",
+  "private": true,
+  "version": "1.0.0"
+}

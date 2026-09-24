@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@cznec/insomnia-plugin-sync": "1.2.0"
+  },
+  "name": "offline-plugin-profile-d9ce1fe05fce32497525",
+  "private": true,
+  "version": "1.0.0"
+}

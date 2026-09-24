@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@alvarium/insomnia-plugin-jwt-tokengenerator": "1.0.3"
+  },
+  "name": "offline-plugin-profile-9f70b5fed2170034818a",
+  "private": true,
+  "version": "1.0.0"
+}

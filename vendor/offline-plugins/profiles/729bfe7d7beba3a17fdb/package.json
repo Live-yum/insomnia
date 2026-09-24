@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hmac-auth-body-fixed": "1.0.8"
+  },
+  "name": "offline-plugin-profile-729bfe7d7beba3a17fdb",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-grpc-stream-to-file": "0.0.2"
+  },
+  "name": "offline-plugin-profile-63f811a606bcfbf3cf24",
+  "private": true,
+  "version": "1.0.0"
+}

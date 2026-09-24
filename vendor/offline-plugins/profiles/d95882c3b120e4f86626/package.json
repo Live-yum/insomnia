@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-gitlab-wiki": "0.0.2"
+  },
+  "name": "offline-plugin-profile-d95882c3b120e4f86626",
+  "private": true,
+  "version": "1.0.0"
+}

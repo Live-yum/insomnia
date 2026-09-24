@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-ftx-signing": "1.0.0"
+  },
+  "name": "offline-plugin-profile-000e0cf80a09909e7c6b",
+  "private": true,
+  "version": "1.0.0"
+}

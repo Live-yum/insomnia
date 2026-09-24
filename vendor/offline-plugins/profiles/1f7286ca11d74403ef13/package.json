@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-git-sync": "3.1.0"
+  },
+  "name": "offline-plugin-profile-1f7286ca11d74403ef13",
+  "private": true,
+  "version": "1.0.0"
+}

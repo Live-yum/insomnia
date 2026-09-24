@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-fireblocks": "0.0.3"
+  },
+  "name": "offline-plugin-profile-fbd99f203ae723123985",
+  "private": true,
+  "version": "1.0.0"
+}

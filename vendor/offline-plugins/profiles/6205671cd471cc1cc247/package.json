@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-aws-iam-v4": "1.0.2"
+  },
+  "name": "offline-plugin-profile-6205671cd471cc1cc247",
+  "private": true,
+  "version": "1.0.0"
+}

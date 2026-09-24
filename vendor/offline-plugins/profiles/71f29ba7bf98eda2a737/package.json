@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-sh-cmd": "0.0.1"
+  },
+  "name": "offline-plugin-profile-71f29ba7bf98eda2a737",
+  "private": true,
+  "version": "1.0.0"
+}

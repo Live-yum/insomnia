@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-cookie-helper": "0.0.3"
+  },
+  "name": "offline-plugin-profile-4aea0aca81458d7c3c9a",
+  "private": true,
+  "version": "1.0.0"
+}

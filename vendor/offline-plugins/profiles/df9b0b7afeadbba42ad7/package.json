@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-send-md5-sign": "1.1.0"
+  },
+  "name": "offline-plugin-profile-df9b0b7afeadbba42ad7",
+  "private": true,
+  "version": "1.0.0"
+}

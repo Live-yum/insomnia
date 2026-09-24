@@ -71,9 +71,11 @@ describe('encrypt.js', () => {
     const encrypted = encrypt(text, algorithm, key);
     const wrongKey = '12345678901234567890123456789013'; // different last character
 
-    assert.throws(() => {
-      decrypt(encrypted, algorithm, wrongKey);
-    });
+    // CBC has no authentication: a wrong key can occasionally have valid padding.
+    // It must never recover the original plaintext; authenticated rejection is tested with GCM.
+    let decrypted;
+    try { decrypted = decrypt(encrypted, algorithm, wrongKey); } catch { return; }
+    assert.notStrictEqual(decrypted, text);
   });
 
   it('should fail when decrypting with wrong algorithm', () => {
@@ -86,7 +88,9 @@ describe('encrypt.js', () => {
 
   it('should not be equal when decrypting corrupted data', () => {
     let encrypted = encrypt(text, algorithm, key);
-    const corruptedEncrypted = Buffer.concat([Buffer.from('X'), encrypted.slice(1)]);
+    const corruptedEncrypted = Buffer.from(encrypted);
+    // A constant replacement can equal the random IV byte; XOR always changes it.
+    corruptedEncrypted[0] ^= 1;
 
     const decrypted = decrypt(corruptedEncrypted, algorithm, key);
     

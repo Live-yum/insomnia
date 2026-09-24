@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-emarsys-wsse": "1.0.6"
+  },
+  "name": "offline-plugin-profile-33b8258ea5519b8ff3a8",
+  "private": true,
+  "version": "1.0.0"
+}

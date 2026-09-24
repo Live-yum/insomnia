@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-illuminate-encrypter": "1.0.0"
+  },
+  "name": "offline-plugin-profile-75e06d230e67ee68bbce",
+  "private": true,
+  "version": "1.0.0"
+}

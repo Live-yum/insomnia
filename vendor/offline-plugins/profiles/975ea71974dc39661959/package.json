@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-env-authentication": "1.0.2"
+  },
+  "name": "offline-plugin-profile-975ea71974dc39661959",
+  "private": true,
+  "version": "1.0.0"
+}

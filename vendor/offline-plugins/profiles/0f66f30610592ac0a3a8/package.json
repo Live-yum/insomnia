@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-guid-generator": "0.1.2"
+  },
+  "name": "offline-plugin-profile-0f66f30610592ac0a3a8",
+  "private": true,
+  "version": "1.0.0"
+}

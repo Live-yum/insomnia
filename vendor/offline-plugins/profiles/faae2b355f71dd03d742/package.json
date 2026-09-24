@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-mastercard": "2.7.1"
+  },
+  "name": "offline-plugin-profile-faae2b355f71dd03d742",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-hmac-tag-generator": "1.0.29"
+  },
+  "name": "offline-plugin-profile-fe78994f2e89f2894e5a",
+  "private": true,
+  "version": "1.0.0"
+}

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-postman-export": "0.8.9"
+  },
+  "name": "offline-plugin-profile-fef4735f38399b11afaf",
+  "private": true,
+  "version": "1.0.0"
+}

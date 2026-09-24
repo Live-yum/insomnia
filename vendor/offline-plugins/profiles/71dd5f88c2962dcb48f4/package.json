@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-shell-exec": "0.0.1"
+  },
+  "name": "offline-plugin-profile-71dd5f88c2962dcb48f4",
+  "private": true,
+  "version": "1.0.0"
+}

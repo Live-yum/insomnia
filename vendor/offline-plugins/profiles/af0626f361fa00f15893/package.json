@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@wulkanowy/insomnia-plugin-uonet-request-signer-hebe": "0.1.1"
+  },
+  "name": "offline-plugin-profile-af0626f361fa00f15893",
+  "private": true,
+  "version": "1.0.0"
+}

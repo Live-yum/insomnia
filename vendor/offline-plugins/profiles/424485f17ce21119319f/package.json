@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-deepwell-security-hash": "0.0.2"
+  },
+  "name": "offline-plugin-profile-424485f17ce21119319f",
+  "private": true,
+  "version": "1.0.0"
+}

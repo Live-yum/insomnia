@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-gotom-hmac": "1.0.5"
+  },
+  "name": "offline-plugin-profile-bca43772a38b7fc6db73",
+  "private": true,
+  "version": "1.0.0"
+}

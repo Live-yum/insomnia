@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-header-masker": "0.0.6"
+  },
+  "name": "offline-plugin-profile-193f5db2baa67cc29133",
+  "private": true,
+  "version": "1.0.0"
+}

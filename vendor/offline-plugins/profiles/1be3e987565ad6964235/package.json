@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-protobuf": "0.0.1"
+  },
+  "name": "offline-plugin-profile-1be3e987565ad6964235",
+  "private": true,
+  "version": "1.0.0"
+}

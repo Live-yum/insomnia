@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-response-validator": "3.0.0"
+  },
+  "name": "offline-plugin-profile-7048e3c76769274a2689",
+  "private": true,
+  "version": "1.0.0"
+}

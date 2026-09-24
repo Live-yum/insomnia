@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-holibob-auth": "1.0.7"
+  },
+  "name": "offline-plugin-profile-0560ec044ba7fb391b53",
+  "private": true,
+  "version": "1.0.0"
+}

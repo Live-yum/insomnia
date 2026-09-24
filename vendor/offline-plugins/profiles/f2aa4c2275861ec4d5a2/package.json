@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-prettyprint-request-response": "0.0.11"
+  },
+  "name": "offline-plugin-profile-f2aa4c2275861ec4d5a2",
+  "private": true,
+  "version": "1.0.0"
+}

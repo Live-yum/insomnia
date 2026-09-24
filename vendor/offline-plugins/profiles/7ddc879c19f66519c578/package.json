@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-jsonpathpp": "1.0.0"
+  },
+  "name": "offline-plugin-profile-7ddc879c19f66519c578",
+  "private": true,
+  "version": "1.0.0"
+}

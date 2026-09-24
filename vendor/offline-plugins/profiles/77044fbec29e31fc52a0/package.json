@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-allbarbos-starkbank-ecdsa": "1.0.4"
+  },
+  "name": "offline-plugin-profile-77044fbec29e31fc52a0",
+  "private": true,
+  "version": "1.0.0"
+}

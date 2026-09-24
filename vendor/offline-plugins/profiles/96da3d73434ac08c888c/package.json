@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-python-script": "0.1.1"
+  },
+  "name": "offline-plugin-profile-96da3d73434ac08c888c",
+  "private": true,
+  "version": "1.0.0"
+}

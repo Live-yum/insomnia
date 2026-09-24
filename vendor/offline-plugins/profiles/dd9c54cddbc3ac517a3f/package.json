@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@sandrocaseiro.dev/insomnia-plugin-regex-template": "1.0.2"
+  },
+  "name": "offline-plugin-profile-dd9c54cddbc3ac517a3f",
+  "private": true,
+  "version": "1.0.0"
+}

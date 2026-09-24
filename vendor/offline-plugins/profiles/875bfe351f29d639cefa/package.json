@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-google-sheets-helper": "1.0.1"
+  },
+  "name": "offline-plugin-profile-875bfe351f29d639cefa",
+  "private": true,
+  "version": "1.0.0"
+}

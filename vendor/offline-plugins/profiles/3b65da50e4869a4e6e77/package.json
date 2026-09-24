@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-better-jwt": "1.0.1"
+  },
+  "name": "offline-plugin-profile-3b65da50e4869a4e6e77",
+  "private": true,
+  "version": "1.0.0"
+}

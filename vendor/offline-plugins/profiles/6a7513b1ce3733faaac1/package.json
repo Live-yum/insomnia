@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-escher-auth": "1.1.0"
+  },
+  "name": "offline-plugin-profile-6a7513b1ce3733faaac1",
+  "private": true,
+  "version": "1.0.0"
+}

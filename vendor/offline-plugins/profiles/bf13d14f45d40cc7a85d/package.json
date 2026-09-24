@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "insomnia-plugin-jwtcreator": "1.2.1"
+  },
+  "name": "offline-plugin-profile-bf13d14f45d40cc7a85d",
+  "private": true,
+  "version": "1.0.0"
+}
