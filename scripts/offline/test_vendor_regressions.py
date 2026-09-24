@@ -12,6 +12,19 @@ import vendor_plugins as vendor
 
 
 class SnapshotRegressionTests(unittest.TestCase):
+    def test_metadata_readers_use_explicit_utf8(self):
+        import ast
+        root = Path(__file__).resolve().parent
+        for name in ('vendor_plugins.py', 'package_portable.py'):
+            tree = ast.parse((root / name).read_bytes().decode('utf-8'))
+            readers = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+                       and isinstance(node.func, ast.Attribute) and node.func.attr == 'read_text']
+            self.assertTrue(readers)
+            for reader in readers:
+                with self.subTest(file=name, line=reader.lineno):
+                    self.assertTrue(any(keyword.arg == 'encoding' and isinstance(keyword.value, ast.Constant)
+                                        and keyword.value.value == 'utf-8' for keyword in reader.keywords))
+
     def test_lock_packages_ignore_json_key_order(self):
         packages = {
             'node_modules/foo/node_modules/a': {'resolved': 'https://registry.npmjs.org/a/-/a-1.tgz', 'integrity': 'sha512-YQ=='},

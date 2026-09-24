@@ -223,7 +223,7 @@ def snapshot_one(name: str, work: Path) -> dict:
                                 cwd=directory, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=180)
         if result.returncode:
             raise ValueError('Dependency resolution failed: ' + result.stdout[-2500:])
-        lock = json.loads((directory / 'package-lock.json').read_text())
+        lock = json.loads((directory / 'package-lock.json').read_text(encoding='utf-8'))
         packages = lock_packages(lock)
         dest = VENDOR / 'profiles' / profile
         write_json(dest / 'package.json', package_json)
@@ -302,7 +302,7 @@ def snapshot(workers: int, repair: bool = False) -> None:
     names = discover(raw)
     (VENDOR / 'plugin-hub.snapshot.html').write_bytes(raw)
     if repair:
-        prior = json.loads((VENDOR / 'manifest.json').read_text())
+        prior = json.loads((VENDOR / 'manifest.json').read_text(encoding='utf-8'))
         by_name = {e['name']: e for e in prior['entries']}
         if any(name not in by_name for name in names):
             raise ValueError('Repair requires every catalog entry in the existing snapshot')
@@ -340,7 +340,7 @@ def read_archive(info: dict) -> bytes:
 
 
 def verify(require_complete: bool = False) -> dict:
-    manifest = json.loads((VENDOR / 'manifest.json').read_text())
+    manifest = json.loads((VENDOR / 'manifest.json').read_text(encoding='utf-8'))
     raw = (VENDOR / 'plugin-hub.snapshot.html').read_bytes()
     if hashlib.sha256(raw).hexdigest() != manifest['sourceSha256'] or discover(raw) != [e['name'] for e in manifest['entries']]:
         raise ValueError('Catalog contents or source hash mismatch')
@@ -359,7 +359,7 @@ def verify(require_complete: bool = False) -> dict:
             for filename, expected_hash in entry.get('profileSha256', {}).items():
                 if filename not in ('package.json', 'package-lock.json') or hashlib.sha256((directory / filename).read_bytes()).hexdigest() != expected_hash:
                     raise ValueError('Profile hash mismatch')
-            lock = json.loads((directory / 'package-lock.json').read_text())
+            lock = json.loads((directory / 'package-lock.json').read_text(encoding='utf-8'))
             expected = lock_packages(lock)
             actual = sorted([{k: p[k] for k in ('location', 'url', 'integrity')} for p in entry['dependencies']], key=lambda package: package['location'])
             if expected != actual:
@@ -428,7 +428,7 @@ def materialize(output: Path, target: str) -> None:
                 archive = package['archive']
                 unpack(VENDOR / archive['file'], dest / package['location'], target == 'win32-x64')
             package_path = dest / 'node_modules' / entry['name']
-            package_json = json.loads((package_path / 'package.json').read_text())
+            package_json = json.loads((package_path / 'package.json').read_text(encoding='utf-8'))
             if package_json.get('name') != entry['name'] or package_json.get('version') != entry['version']:
                 raise ValueError('Root package identity mismatch')
             record.update(profile=profile, path=(Path(profile) / 'node_modules' / entry['name']).as_posix(),

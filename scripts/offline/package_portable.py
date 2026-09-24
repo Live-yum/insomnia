@@ -33,7 +33,7 @@ def main():
     executable = directory / ('Insomnia.exe' if args.target == 'win32-x64' else 'insomnia')
     check_machine(executable, args.target)
     catalog_file = directory / 'resources/offline-plugins/catalog.json'
-    catalog = json.loads(catalog_file.read_text())
+    catalog = json.loads(catalog_file.read_text(encoding='utf-8'))
     if catalog['target'] != args.target or len(catalog['entries']) < 50:
         raise ValueError('Missing or incorrect target plugin catalog')
     if args.target == 'win32-x64':
