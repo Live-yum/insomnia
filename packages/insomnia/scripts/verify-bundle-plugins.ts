@@ -1,28 +1,25 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { bundlePlugins } from '../config/config.json';
 
-const isModuleInstalled = (moduleName: string) => {
-  try {
-    require.resolve(moduleName);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
+// Offline plugins are checked-in sources statically imported by offline-plugins.ts.
+// Never resolve npm packages or fetch a plugin while installing/building the app.
 export const verifyBundlePlugins = () => {
-  const executeInGithubActions = process.env.GITHUB_ACTIONS === 'true';
-  if (executeInGithubActions) {
-    console.log('[NPM Install] Verifying bundle plugins...');
-    const missingBundlePlugin = bundlePlugins.find(p => !isModuleInstalled(p.name));
-    if (missingBundlePlugin) {
-      // execute in Github Actions
-      console.error(
-        '[npm install] ERROR:',
-        `Required bundle plugin module ${missingBundlePlugin.name} is not installed.`,
-      );
-      process.exit(1);
+  const root = path.resolve(__dirname, '../src/vendor');
+  for (const { name } of bundlePlugins) {
+    if (!/^insomnia-plugin-[a-z0-9-]+$/.test(name)) throw new Error('Invalid bundled plugin name');
+    const directory = path.join(root, name);
+    const metadata = JSON.parse(fs.readFileSync(path.join(directory, 'package.json'), 'utf8'));
+    if (metadata.name !== name || Object.keys(metadata.dependencies ?? {}).length > 0) {
+      throw new Error(`Offline plugin ${name} has unresolved runtime dependencies`);
+    }
+    const entry = path.resolve(directory, metadata.main);
+    if (!entry.startsWith(directory + path.sep) || !fs.statSync(entry).isFile()) {
+      throw new Error(`Offline plugin entry is missing: ${name}`);
     }
   }
+  console.log('[offline] Bundled plugin sources are present; no plugin downloads needed.');
 };
 
 verifyBundlePlugins();

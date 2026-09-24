@@ -5,6 +5,7 @@ on:
     paths:
       - scripts/offline/source-migration.*
       - scripts/offline/vendor-plugins.py
+      - scripts/offline/integrate-plugins.py
       - .github/workflows/offline-prepare.yml
 permissions:
   contents: read
@@ -15,19 +16,29 @@ jobs:
   prepare:
     if: github.repository == 'Live-yum/insomnia'
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
+    env:
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: offline/local-crypto-pr
           persist-credentials: false
           fetch-depth: 1
-      - name: Materialize reviewed application changes and pinned plugin sources
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+      - name: Materialize reviewed application and pinned sources
         run: |
           python3 scripts/offline/source-migration.py
           python3 scripts/offline/vendor-plugins.py
+          python3 scripts/offline/integrate-plugins.py
+      - name: Remove unused cloud-bundle dependencies from lockfile without executing package scripts
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Commit actual sources (never force push)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -36,14 +47,17 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add packages/insomnia/src packages/insomnia-data/src
-          git diff --cached --check
-          git commit -m 'feat: materialize offline application and vendor pinned Crypto plugin sources'
+          git add packages/insomnia/src packages/insomnia-data/src packages/insomnia/package.json packages/insomnia/config/config.json package-lock.json .npmrc
+          # Preserve upstream vendored files byte-for-byte (their upstream whitespace is documented in UPSTREAM.json).
+          git diff --cached --check -- . ':!packages/insomnia/src/vendor'
+          git commit -m 'feat: materialize offline app and integrate vendored Crypto with locked dependencies'
           AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/local-crypto-pr
       - name: Export exact result for review
-        run: git archive --format=tar --output=offline-prepared.tar HEAD
+        if: always()
+        run: tar --exclude=.git --exclude=node_modules --exclude=offline-prepared.tar -cf offline-prepared.tar .
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
           name: offline-prepared-source
           path: offline-prepared.tar
