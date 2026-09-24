@@ -1,0 +1,30 @@
+name: Offline fork validation
+
+on:
+  push:
+    branches: [offline/intranet]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Export the exact public source revision without Git credentials
+        run: git archive --format=tar --output=offline-source.tar HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: offline-source-${{ github.sha }}
+          path: offline-source.tar
+          retention-days: 3
+          if-no-files-found: error
