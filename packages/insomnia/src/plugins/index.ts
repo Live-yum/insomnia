@@ -24,7 +24,7 @@ import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-exte
 import type { PluginTemplateTag, RenderPurpose } from '~/common/templating/types';
 import type { ActionDescriptor, PluginExportManifest } from '~/templating/sandbox/marshal';
 
-import { getAppBundlePlugins, isDevelopment } from '../common/constants';
+import { getAppBundlePlugins } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
