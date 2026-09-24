@@ -86,6 +86,8 @@ jobs:
       - name: Create unpacked native application with all local plugin resources
         working-directory: packages/insomnia
         run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir ${{ matrix.flags }} --publish never
+      - name: Preserve every reviewed plugin resource byte without packaging filters
+        run: python scripts/offline/stage_resources.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}'
       - name: Preserve the upstream Windows secure executable wrapper
         if: runner.os == 'Windows'
         run: |
@@ -98,7 +100,10 @@ jobs:
         if: runner.os == 'Linux'
         run: xvfb-run -a node scripts/offline/smoke.mjs packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
       - name: Archive validated architecture with portable launchers and checksums
-        run: python scripts/offline/package_portable.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}' --output offline-dist
+        run: |
+          python scripts/offline/package_portable.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}' --output offline-dist
+          cp offline-resource-integrity.json offline-dist/offline-resource-integrity-${{ matrix.target }}.json
+          cp offline-smoke-report.json offline-dist/offline-smoke-report-${{ matrix.target }}.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: success()
         with:
@@ -113,6 +118,7 @@ jobs:
           name: offline-validation-${{ matrix.target }}
           path: |
             offline-smoke-report.json
+            offline-resource-integrity.json
             packages/insomnia/offline-plugin-resources/catalog.json
           if-no-files-found: warn
           retention-days: 14
