@@ -1,0 +1,43 @@
+name: Reviewed offline source cleanup
+on:
+  push:
+    branches: [offline/local-crypto-pr]
+    paths: [.github/workflows/offline-source-cleanup.yml]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: offline/local-crypto-pr
+          persist-credentials: false
+      - name: Apply exactly the reviewed source cleanup
+        shell: python
+        run: |
+          import hashlib
+          from pathlib import Path
+          p = Path('packages/insomnia/src/plugins/index.ts')
+          data = p.read_bytes()
+          digest = lambda b: hashlib.sha1(b'blob ' + str(len(b)).encode() + b'\0' + b).hexdigest()
+          assert digest(data) == '1e2ec2f89296a261e19deefb89594d66af6d8e9b'
+          old = b'import { getAppBundlePlugins, isDevelopment }'
+          assert data.count(old) == 1
+          data = data.replace(old, b'import { getAppBundlePlugins }')
+          assert digest(data) == 'de2f836d02a25527124350c6feead27e11b0c573'
+          p.write_bytes(data)
+      - name: Commit source, never force push
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add packages/insomnia/src/plugins/index.ts
+          git diff --cached --check
+          git commit -m 'fix: remove obsolete development-only plugin loader import'
+          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/local-crypto-pr
