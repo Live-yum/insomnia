@@ -27,9 +27,11 @@ try {
   assert.equal(initial.updateStatus, 'idle');
   assert.deepEqual(initial.plugins.map(p => p.name).sort(), ['insomnia-plugin-crypto', 'insomnia-plugin-offline-crypto-tools']);
   await page.getByRole('button', { name: 'Create new Project', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Project name', exact: true }).fill('Offline smoke project');
-  await page.getByRole('radio', { name: 'Project Type: local', exact: true }).check();
-  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  // The empty-state page also has a project form: operate only on the active dialog.
+  const dialog = page.getByRole('dialog', { name: 'Create or update dialog', exact: true });
+  await dialog.getByRole('textbox', { name: 'Project name', exact: true }).fill('Offline smoke project');
+  await dialog.getByRole('radio', { name: 'Project Type: local', exact: true }).check();
+  await dialog.getByRole('button', { name: 'Create', exact: true }).click();
   await page.waitForURL(/\/organization\/org_offline\/project\/[^/]+/);
   const projectUrl = page.url();
   const projects = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
@@ -63,6 +65,7 @@ try {
   console.log('Packaged offline smoke passed: clean profile, no login, local project UI, persisted route, bundled plugins, HMAC bridge, blocked vendor fetch, disabled updates.');
 } catch (error) {
   await fs.mkdir('offline-test-results', { recursive: true });
+  await fs.writeFile('offline-test-results/error.txt', String(error?.stack || error));
   if (page) {
     await page.screenshot({ path: 'offline-test-results/failure.png' }).catch(() => {});
     await fs.writeFile('offline-test-results/page.txt', await page.content()).catch(() => {});
