@@ -13,11 +13,33 @@ export class OfflineModeError extends Error {
 /** Host allowlist for Electron traffic, not a replacement for a host/network firewall. */
 export function isOfflineNetworkUrlAllowed(value: string, allowedHosts: readonly string[] = []): boolean {
   let url: URL;
-  try { url = new URL(value); } catch { return false; }
-  if (['file:', 'data:', 'blob:', 'insomnia:', 'insomniadev:', 'insomnia-templating-worker-database:'].includes(url.protocol)) return true;
+  try {
+    url = new URL(value);
+  } catch {
+    return false;
+  }
+  if (
+    ['file:', 'data:', 'blob:', 'insomnia:', 'insomniadev:', 'insomnia-templating-worker-database:'].includes(
+      url.protocol,
+    )
+  )
+    return true;
   if (!['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol)) return false;
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
-  const vendorDomains = ['insomnia.rest', 'insomnia.plus', 'konghq.com', 'segment.io', 'segment.com', 'customer.io', 'customerio.com', 'gist.build', 'sentry.io'];
+  const host = url.hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '')
+    .replace(/\.$/, '');
+  const vendorDomains = [
+    'insomnia.rest',
+    'insomnia.plus',
+    'konghq.com',
+    'segment.io',
+    'segment.com',
+    'customer.io',
+    'customerio.com',
+    'gist.build',
+    'sentry.io',
+  ];
   if (vendorDomains.some(domain => host === domain || host.endsWith('.' + domain))) return false;
   if (url.protocol === 'https:' && host === 'insomnia-app.local' && !url.port) return true;
   if (host === 'localhost' || host === '::1') return true;

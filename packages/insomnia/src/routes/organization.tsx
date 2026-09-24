@@ -1,4 +1,3 @@
-import { OFFLINE_BUILD } from '~/common/offline';
 import { type CurrentPlan, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -7,6 +6,7 @@ import { Button, Link, ToggleButton, Tooltip, TooltipTrigger } from 'react-aria-
 import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import * as reactUse from 'react-use';
 
+import { OFFLINE_BUILD } from '~/common/offline';
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useRootLoaderData } from '~/root';
@@ -336,7 +336,10 @@ const Component = () => {
                         currentPlan={currentPlan}
                       />
                     ) : (
-                      <><span data-testid="offline-mode">Offline · Local only</span>{!OFFLINE_BUILD && <ScratchPadAuthActions />}</>
+                      <>
+                        <span data-testid="offline-mode">Offline · Local only</span>
+                        {!OFFLINE_BUILD && <ScratchPadAuthActions />}
+                      </>
                     )}
                   </div>
                 </header>

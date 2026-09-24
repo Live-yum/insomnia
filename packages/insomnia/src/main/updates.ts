@@ -4,7 +4,9 @@ import { ipcMainOn } from './ipc/electron';
 export const getUpdatesBaseURL = '';
 export const getUpdateUrl = (_channel: string): string | null => null;
 export const init = async () => {
-  ipcMainOn('getUpdateStatus', event => { event.returnValue = 'idle'; });
+  ipcMainOn('getUpdateStatus', event => {
+    event.returnValue = 'idle';
+  });
   ipcMainOn('manualUpdateCheck', () => {});
   ipcMainOn('applyUpdateAndRestart', () => {});
 };

@@ -1,7 +1,10 @@
 import { bundlePlugins } from '../config/config.json';
 
 const isModuleInstalled = (moduleName: string) => {
-  if (moduleName === 'insomnia-plugin-offline-toolkit') { require.resolve('../src/plugins/offline-toolkit.ts'); return true; }
+  if (moduleName === 'insomnia-plugin-offline-toolkit') {
+    require.resolve('../src/plugins/offline-toolkit.ts');
+    return true;
+  }
   try {
     require.resolve(moduleName);
     return true;

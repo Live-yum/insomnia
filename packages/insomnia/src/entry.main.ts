@@ -22,7 +22,6 @@ import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
-import { installOfflineNetworkPolicy } from './main/offline-network';
 import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
@@ -41,6 +40,7 @@ import { registerCurlHandlers } from './main/network/curl';
 import { registerMcpHandlers } from './main/network/mcp';
 import { registerSocketIOHandlers } from './main/network/socket-io';
 import { registerWebSocketHandlers } from './main/network/websocket';
+import { installOfflineNetworkPolicy } from './main/offline-network';
 import { watchProxySettings } from './main/proxy';
 import { initializeSentry, sentryWatchAnalyticsEnabled } from './main/sentry';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -51,9 +51,11 @@ import * as windowUtils from './main/window-utils';
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
 const portableDirectory = process.env.PORTABLE_EXECUTABLE_DIR || (app.isPackaged ? path.dirname(process.execPath) : '');
-const dataPath = process.env.INSOMNIA_DATA_PATH || (portableDirectory
-  ? path.join(portableDirectory, 'data')
-  : path.join(app.getPath('userData'), '../', userDataFolder));
+const dataPath =
+  process.env.INSOMNIA_DATA_PATH ||
+  (portableDirectory
+    ? path.join(portableDirectory, 'data')
+    : path.join(app.getPath('userData'), '../', userDataFolder));
 
 installOfflineNetworkPolicy();
 
@@ -299,10 +301,20 @@ async function _createModelInstances() {
   await services.stats.get();
   const offlineSettings = await services.settings.getOrCreate();
   await services.settings.update(offlineSettings, { enableAnalytics: false, updateAutomatically: false });
-  await services.userSession.update({ id: '', accountId: '', email: '', firstName: '', lastName: '', hashedAccountId: '' });
+  await services.userSession.update({
+    id: '',
+    accountId: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    hashedAccountId: '',
+  });
   const offlineProjects = await services.project.listByOrganizationIds(models.organization.OFFLINE_ORGANIZATION_ID);
   if (offlineProjects.length === 0) {
-    const project = await services.project.create({ name: 'Local Project', parentId: models.organization.OFFLINE_ORGANIZATION_ID });
+    const project = await services.project.create({
+      name: 'Local Project',
+      parentId: models.organization.OFFLINE_ORGANIZATION_ID,
+    });
     await services.workspace.create({ name: 'My Collection', scope: 'collection', parentId: project._id });
   }
 

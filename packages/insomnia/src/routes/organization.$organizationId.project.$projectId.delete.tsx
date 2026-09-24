@@ -20,7 +20,10 @@ export async function clientAction({ params }: Route.ClientActionArgs) {
 
   const user = await services.userSession.get();
   const sessionId = user.id;
-  invariant(sessionId || (organizationId === models.organization.OFFLINE_ORGANIZATION_ID && !project.remoteId), 'Only local offline projects can be deleted without an account');
+  invariant(
+    sessionId || (organizationId === models.organization.OFFLINE_ORGANIZATION_ID && !project.remoteId),
+    'Only local offline projects can be deleted without an account',
+  );
 
   try {
     await projectLock.lock();

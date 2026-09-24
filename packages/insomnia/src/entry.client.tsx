@@ -18,10 +18,7 @@ import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 import { getInitialEntry } from '~/ui/utils/router';
 
 import { configureV3ClientDefaults } from './common/configure-v3-client';
-import {
-  getSkipOnboarding,
-  HAS_SEEN_ONBOARDING_KEY,
-} from './common/constants';
+import { getSkipOnboarding, HAS_SEEN_ONBOARDING_KEY } from './common/constants';
 import { HtmlElementWrapper } from './ui/components/html-element-wrapper';
 import { showModal } from './ui/components/modals';
 import { AlertModal } from './ui/components/modals/alert-modal';
@@ -51,7 +48,6 @@ initRuntime(rendererRuntime);
 
 configureFetch(options => insomniaFetch({ ...options, onDeepLink: (uri: string) => window.main.openDeepLink(uri) }));
 configureV3ClientDefaults();
-
 
 try {
   window.showAlert = options => showModal(AlertModal, options);

@@ -53,7 +53,10 @@ export const deleteSecret = async (key: string) => {
 
 /** Do not silently store plaintext when the OS keyring is unavailable. */
 const requireSecureStorage = () => {
-  if (!safeStorage.isEncryptionAvailable() || (process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text')) {
+  if (
+    !safeStorage.isEncryptionAvailable() ||
+    (process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text')
+  ) {
     throw new Error('A working operating-system secret store is required. Plaintext secret storage is disabled.');
   }
 };

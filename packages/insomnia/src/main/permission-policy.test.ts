@@ -7,7 +7,20 @@ describe('offline permission boundary', () => {
     expect(isPermissionAllowed(permission)).toBe(true);
   });
 
-  it.each(['notifications', 'geolocation', 'media', 'audioCapture', 'videoCapture', 'midi', 'midiSysex', 'clipboard-read', 'pointerLock', 'openExternal', '', 'future-unknown-permission'])('denies unlisted permission %s', permission => {
+  it.each([
+    'notifications',
+    'geolocation',
+    'media',
+    'audioCapture',
+    'videoCapture',
+    'midi',
+    'midiSysex',
+    'clipboard-read',
+    'pointerLock',
+    'openExternal',
+    '',
+    'future-unknown-permission',
+  ])('denies unlisted permission %s', permission => {
     expect(isPermissionAllowed(permission)).toBe(false);
   });
 

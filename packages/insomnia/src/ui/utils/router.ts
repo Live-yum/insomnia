@@ -2,7 +2,6 @@ import { models, services } from 'insomnia-data';
 import { useCallback } from 'react';
 import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
-
 export const enum AsyncTask {
   MigrateProjects,
   SyncProjects,

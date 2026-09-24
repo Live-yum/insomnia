@@ -27,8 +27,8 @@ import { getAppBundlePlugins, isDevelopment } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
-import themes from './themes';
 import { offlineToolkit } from './offline-toolkit';
+import themes from './themes';
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -474,7 +474,8 @@ function getBundlePluginMap() {
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
       console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = pluginName === 'insomnia-plugin-offline-toolkit' ? offlineToolkit : getNodeRequire()(bundlePluginPath);
+      const module =
+        pluginName === 'insomnia-plugin-offline-toolkit' ? offlineToolkit : getNodeRequire()(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
         displayName: pluginName === 'insomnia-plugin-offline-toolkit' ? 'Crypto & Offline Toolkit' : '',

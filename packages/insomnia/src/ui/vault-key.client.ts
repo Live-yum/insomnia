@@ -22,7 +22,9 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
     if (type === 'create' && session.offlineVaultVerifier) return { error: 'A local vault already exists.' };
     const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
     const encoded = base64encode(JSON.stringify(await crypto.subtle.exportKey('jwk', key)));
-    const salt = Array.from(crypto.getRandomValues(new Uint8Array(32)), value => value.toString(16).padStart(2, '0')).join('');
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(32)), value =>
+      value.toString(16).padStart(2, '0'),
+    ).join('');
     // Check OS secret storage BEFORE a user-confirmed reset modifies anything.
     const encryptedVaultKey = await window.main.secretStorage.encryptString(encoded);
     const offlineVaultVerifier = await verifierFor(encoded, salt);

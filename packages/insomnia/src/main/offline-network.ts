@@ -1,4 +1,4 @@
-import { app, session, type Session, shell } from 'electron';
+import { app, type Session, session, shell } from 'electron';
 
 import { isOfflineNetworkUrlAllowed } from '../common/offline';
 
