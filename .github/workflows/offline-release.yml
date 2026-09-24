@@ -1,0 +1,158 @@
+name: Offline candidate release
+
+on:
+  push:
+    tags: ['offline-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: New candidate tag, for example offline-v13.3.0-rc.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  source:
+    if: github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
+      tag: ${{ steps.source.outputs.tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require reviewed source already merged into this fork's develop
+        id: source
+        env:
+          REQUESTED_TAG: ${{ inputs.tag || github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$REQUESTED_TAG" =~ ^offline-v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$ ]]
+          git merge-base --is-ancestor HEAD origin/develop
+          sha=$(git rev-parse HEAD)
+          if git show-ref --verify --quiet "refs/tags/$REQUESTED_TAG"; then
+            test "$(git rev-parse "$REQUESTED_TAG^{commit}")" = "$sha"
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=$REQUESTED_TAG" >> "$GITHUB_OUTPUT"
+
+  application-tests:
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PYTHONUTF8: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      SCARF_ANALYTICS: 'false'
+      DO_NOT_TRACK: '1'
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      NODE_OPTIONS: --max_old_space_size=6144
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint -w insomnia
+      - run: npm run type-check -w insomnia
+      - run: npm run app-build
+      - name: Use Node ABI for the complete application unit suite
+        run: npm run install-libcurl-node
+      - run: npm test -w insomnia
+      - run: python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+      - run: python3 scripts/offline/vendor_plugins.py verify
+
+  portable:
+    needs: source
+    uses: ./.github/workflows/offline-build.yml
+    with:
+      source_sha: ${{ needs.source.outputs.sha }}
+    permissions:
+      contents: read
+
+  publish:
+    needs: [source, application-tests, portable]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: offline-portable-*
+          path: release-assets
+          merge-multiple: true
+      - name: Verify both architectures, provenance, actual smoke and archive checksums
+        env:
+          SOURCE_SHA: ${{ needs.source.outputs.sha }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re, shutil
+          root = pathlib.Path('release-assets')
+          manifest = json.loads(pathlib.Path('vendor/offline-plugins/manifest.json').read_text(encoding='utf-8'))
+          expected_count = sum(e['status'] == 'dependency-complete-unreviewed' for e in manifest['entries'])
+          for target, extension in [('win32-x64', '.zip'), ('linux-arm64', '.tar.gz')]:
+              archive = root / ('Insomnia-Offline-' + target + '-portable' + extension)
+              if not archive.is_file() or archive.stat().st_size == 0:
+                  raise SystemExit('Missing native archive: ' + str(archive))
+              checksum = pathlib.Path(str(archive) + '.sha256')
+              digest = checksum.read_text(encoding='utf-8').split()[0]
+              with archive.open('rb') as stream:
+                  if not re.fullmatch('[0-9a-f]{64}', digest) or hashlib.file_digest(stream, 'sha256').hexdigest() != digest:
+                      raise SystemExit('Native archive checksum mismatch')
+              integrity = json.loads((root / ('offline-resource-integrity-' + target + '.json')).read_text(encoding='utf-8'))
+              smoke = json.loads((root / ('offline-smoke-report-' + target + '.json')).read_text(encoding='utf-8'))
+              for report in (integrity, smoke):
+                  if report['sourceCommit'] != os.environ['SOURCE_SHA'] or report['target'] != target:
+                      raise SystemExit('Artifact source revision or architecture mismatch')
+                  if report['catalogEntries'] != len(manifest['entries']) or report['materializedPlugins'] != expected_count:
+                      raise SystemExit('Artifact contains a partial plugin catalog')
+              if integrity['allSourceFilesPreserved'] is not True or smoke['passed'] is not True or smoke['liveLoopbackControlPassed'] is not True:
+                  raise SystemExit('Real packaged application and resource checks did not pass')
+          shutil.copy2('vendor/offline-plugins/EXCEPTIONS.json', root / 'PLUGIN-EXCEPTIONS.json')
+          shutil.copy2('vendor/offline-plugins/REPORT.md', root / 'PLUGIN-CATALOG.md')
+          notes = '''# Offline review candidate / 离线候选版
+
+          Source commit: {sha}
+
+          Both Windows x64 and Linux ARM64 passed native packaging, fresh-profile startup, local plugin enumeration and byte-preservation checks. The complete application unit suite passed in this release workflow.
+
+          本次发布是候选版，不是“所有插件均已审核且所有功能完全离线”的认证。
+          Catalog entries: {entries}; dependency-complete profiles: {complete}; unresolved exceptions: {exceptions}.
+          插件源代码已随包附带，未审核插件默认禁用。下载完整不等于插件功能测试通过；云服务不会因下载客户端代码变为本地服务。请阅读 PLUGIN-EXCEPTIONS.json 和插件清单。
+
+          Windows: 解压完整 ZIP 后运行便携启动脚本。Linux: 解压 tar.gz 后运行 start-insomnia.sh；需要兼容系统 GUI/运行库，不使用 --no-sandbox。
+          数据存储在便携目录的 data/ 下；不得将含真实内网数据的 data/ 上传到公开仓库。
+          在生产内网使用前仍需进程树出站白名单、所需插件功能回归和真实抓包验收。
+          '''.format(sha=os.environ['SOURCE_SHA'], entries=len(manifest['entries']), complete=expected_count, exceptions=len(manifest['entries'])-expected_count)
+          pathlib.Path('release-notes.md').write_text(notes, encoding='utf-8')
+          PY
+      - name: Publish a candidate only after every required job passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.source.outputs.tag }}
+          SOURCE_SHA: ${{ needs.source.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" release-assets/* --repo Live-yum/insomnia --target "$SOURCE_SHA" --prerelease --latest=false --title "$RELEASE_TAG — Offline review candidate" --notes-file release-notes.md
