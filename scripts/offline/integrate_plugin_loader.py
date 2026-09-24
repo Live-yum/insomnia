@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
-"""One-time source integration; CI commits the resulting TypeScript to the PR."""
+"""One-time source integration; CI commits the resulting source files to the PR.
+
+Also stages two narrowly scoped build fixes: an obsolete shell import and exclusion
+of separately reviewed third-party plugin resources from the app TypeScript project.
+No third-party entrypoint is executed by this script.
+"""
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGET = ROOT / 'packages/insomnia/src/plugins/index.ts'
@@ -38,11 +44,26 @@ def main():
         if text.count(old) != count:
             raise ValueError('Plugin loader integration anchor mismatch: ' + old[:100])
         text = text.replace(old, new)
+    ipc_path = ROOT / 'packages/insomnia/src/main/ipc/main.ts'
+    ipc = ipc_path.read_text()
+    if ipc.count('  shell,\n') != 1 or 'openOfflineExternal(href)' not in ipc:
+        raise ValueError('Offline shell replacement is not present')
+    ipc = ipc.replace('  shell,\n', '')
+    tsconfig_path = ROOT / 'packages/insomnia/tsconfig.json'
+    tsconfig = tsconfig_path.read_text()
+    if tsconfig.count('    "node_modules",') != 1:
+        raise ValueError('Unexpected TypeScript exclude configuration')
+    tsconfig = tsconfig.replace('    "node_modules",', '    "node_modules",\n    "offline-plugin-resources",')
     TARGET.write_text(text, encoding='utf-8')
+    ipc_path.write_text(ipc, encoding='utf-8')
+    tsconfig_path.write_text(tsconfig, encoding='utf-8')
     MARKER.parent.mkdir(parents=True, exist_ok=True)
     MARKER.write_text(json.dumps({'baseBlob': EXPECTED, 'sha256': hashlib.sha256(text.encode()).hexdigest(),
                                  'defaultEnabled': False, 'entrypointExecutionWhileDisabled': False,
                                  'runtimeValidated': False}, indent=2) + '\n')
+    # These are application files, never downloaded third-party files. Stage them
+    # alongside the loader so the workflow commits all related changes together.
+    subprocess.run(['git', 'add', '--', str(ipc_path.relative_to(ROOT)), str(tsconfig_path.relative_to(ROOT))], cwd=ROOT, check=True)
     print('Offline plugin loader source integration complete.')
 
 
