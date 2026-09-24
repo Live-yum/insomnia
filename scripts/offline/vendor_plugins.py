@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Vendor the entire public Plugin Hub snapshot without executing plugin code.
+"""Vendor the complete public Plugin Hub snapshot without executing plugin code.
 
-snapshot/repair require network access; verify/materialize are strictly local.
-A complete dependency closure is not a compatibility or security certification.
+snapshot/repair require network; verify/materialize use committed local bytes only.
+Complete dependencies do not establish compatibility, security or cloud independence.
 """
 from __future__ import annotations
-
 import argparse
 import base64
 from concurrent.futures import ThreadPoolExecutor
@@ -51,7 +50,7 @@ def fetch(url: str, limit: int = MAX_ARCHIVE) -> bytes:
     checked_url(url)
     for attempt in range(3):
         try:
-            req = Request(url, headers={'User-Agent': 'Live-yum-insomnia-offline-vendor/2'})
+            req = Request(url, headers={'User-Agent': 'Live-yum-insomnia-offline-vendor/3'})
             with build_opener(SafeRedirect()).open(req, timeout=40) as response:
                 checked_url(response.url)
                 data = response.read(limit + 1)
@@ -134,12 +133,10 @@ def safe_parts(name: str, windows: bool = False) -> tuple[str, ...]:
 
 
 def archive_info(data: bytes) -> dict:
-    # Old npm packages, notably @types/*, use a package-name prefix rather than package/.
+    # Legacy npm archives use their package name instead of a package/ prefix.
     with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
         found = []
-        count = 0
-        for member in archive:
-            count += 1
+        for count, member in enumerate(archive, 1):
             if count > 100000:
                 raise ValueError('Too many archive entries')
             parts = safe_parts(member.name)
@@ -169,7 +166,8 @@ def store_archive(url: str, integrity: str) -> dict:
         raise ValueError('Redistribution review required for explicitly private/unlicensed package')
     path = VENDOR / 'blobs' / (digest + '.tgz')
     path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
+    # A matching filename is not proof its contents survived git newline conversion.
+    if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
         temporary = path.with_name(path.name + '.' + str(time.time_ns()) + '.tmp')
         temporary.write_bytes(data)
         os.replace(temporary, path)
@@ -195,7 +193,8 @@ def lock_packages(lock: dict) -> list[dict]:
             raise ValueError('Unpinned or non-registry dependency: ' + location)
         checked_url(url)
         packages.append({'location': location, 'url': url, 'integrity': pkg['integrity']})
-    return packages
+    # JSON key order and npm's locale ordering are not dependency semantics.
+    return sorted(packages, key=lambda package: package['location'])
 
 
 def snapshot_one(name: str, work: Path) -> dict:
@@ -260,6 +259,7 @@ def finish_snapshot(raw: bytes, entries: list[dict], workers: int) -> None:
         used_profiles.add(entry['profile'])
         profile = VENDOR / 'profiles' / entry['profile']
         entry['profileSha256'] = {f: hashlib.sha256((profile / f).read_bytes()).hexdigest() for f in ('package.json', 'package-lock.json')}
+        entry['dependencies'].sort(key=lambda package: package['location'])
         missing, scripts = [], []
         for package in entry.get('dependencies', []):
             key = package['url'], package['integrity']
@@ -281,7 +281,6 @@ def finish_snapshot(raw: bytes, entries: list[dict], workers: int) -> None:
                 'compatibilityVerified': False, 'securityAudited': False}
     write_json(VENDOR / 'manifest.json', manifest)
     write_json(VENDOR / 'catalog-names.json', discover(raw))
-    # Remove false-positive URL fragments and their now-unreferenced blobs from the working tree.
     for file in (VENDOR / 'blobs').glob('*.tgz'):
         if file.relative_to(VENDOR).as_posix() not in used_files:
             file.unlink()
@@ -306,8 +305,22 @@ def snapshot(workers: int, repair: bool = False) -> None:
         prior = json.loads((VENDOR / 'manifest.json').read_text())
         by_name = {e['name']: e for e in prior['entries']}
         if any(name not in by_name for name in names):
-            raise ValueError('Repair requires all catalog entries in the existing snapshot')
+            raise ValueError('Repair requires every catalog entry in the existing snapshot')
         entries = [by_name[name] for name in names]
+        # Verify cached bytes; re-fetch anything missing or corrupted, never trust its name.
+        for entry in entries:
+            if 'rootArchive' in entry:
+                archive = entry['rootArchive']
+                try:
+                    read_archive(archive)
+                except (OSError, ValueError):
+                    entry['rootArchive'] = store_archive(archive['url'], archive['integrity'])
+            for package in entry.get('dependencies', []):
+                if 'archive' in package:
+                    try:
+                        read_archive(package['archive'])
+                    except (OSError, ValueError):
+                        package.pop('archive')
     else:
         with tempfile.TemporaryDirectory(prefix='insomnia-plugin-snapshot-') as temporary:
             with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -343,12 +356,12 @@ def verify(require_complete: bool = False) -> dict:
             if entry['profile'] != hashlib.sha256(entry['name'].encode()).hexdigest()[:20]:
                 raise ValueError('Invalid plugin profile path')
             directory = VENDOR / 'profiles' / entry['profile']
-            for filename, expected in entry.get('profileSha256', {}).items():
-                if filename not in ('package.json', 'package-lock.json') or hashlib.sha256((directory / filename).read_bytes()).hexdigest() != expected:
+            for filename, expected_hash in entry.get('profileSha256', {}).items():
+                if filename not in ('package.json', 'package-lock.json') or hashlib.sha256((directory / filename).read_bytes()).hexdigest() != expected_hash:
                     raise ValueError('Profile hash mismatch')
             lock = json.loads((directory / 'package-lock.json').read_text())
             expected = lock_packages(lock)
-            actual = [{k: p[k] for k in ('location', 'url', 'integrity')} for p in entry['dependencies']]
+            actual = sorted([{k: p[k] for k in ('location', 'url', 'integrity')} for p in entry['dependencies']], key=lambda package: package['location'])
             if expected != actual:
                 raise ValueError('Dependency manifest differs from lockfile: ' + entry['name'])
             if entry['status'] == 'dependency-complete-unreviewed' and any('archive' not in p for p in entry['dependencies']):
