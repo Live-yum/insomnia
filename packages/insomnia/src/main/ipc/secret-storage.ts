@@ -51,22 +51,23 @@ export const deleteSecret = async (key: string) => {
   }
 };
 
-export const encryptString = (raw: string) => {
-  if (safeStorage.isEncryptionAvailable()) {
-    return safeStorage.encryptString(raw).toString('hex');
+/** Do not silently store plaintext when the OS keyring is unavailable. */
+const requireSecureStorage = () => {
+  if (!safeStorage.isEncryptionAvailable() || (process.platform === 'linux' && safeStorage.getSelectedStorageBackend() === 'basic_text')) {
+    throw new Error('A working operating-system secret store is required. Plaintext secret storage is disabled.');
   }
-  return raw;
+};
+
+export const encryptString = (raw: string) => {
+  requireSecureStorage();
+  return safeStorage.encryptString(raw).toString('hex');
 };
 
 export const decryptString = (cipherText: string) => {
-  const buffer = Buffer.from(cipherText, 'hex');
-  if (safeStorage.isEncryptionAvailable()) {
-    try {
-      return safeStorage.decryptString(buffer);
-    } catch (error) {
-      console.error(`Can not decrypt secret ${error.toString()}`);
-      return cipherText;
-    }
+  requireSecureStorage();
+  try {
+    return safeStorage.decryptString(Buffer.from(cipherText, 'hex'));
+  } catch {
+    throw new Error('Unable to decrypt this secret on this machine. Restore it using your securely saved vault key.');
   }
-  return cipherText;
 };

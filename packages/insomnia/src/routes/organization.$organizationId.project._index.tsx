@@ -29,7 +29,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   const { id: sessionId, accountId } = await services.userSession.get();
 
-  if (!sessionId) {
+  if (!sessionId && organizationId !== models.organization.OFFLINE_ORGANIZATION_ID) {
     await logout();
     throw redirect(href('/auth/login'));
   }

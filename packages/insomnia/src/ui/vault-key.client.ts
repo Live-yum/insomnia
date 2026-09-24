@@ -1,85 +1,46 @@
-import * as srp from '@getinsomnia/srp-js';
-import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-api';
 import type { UserSession } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
+import { OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { base64encode, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 
-const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
+async function verifierFor(key: string, salt: string) {
+  // Keys are randomly generated 256-bit AES keys, not low-entropy passwords.
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${salt}:${key}`));
+  return Array.from(new Uint8Array(hash), value => value.toString(16).padStart(2, '0')).join('');
+}
 
-export const vaultKeyParams = params[2048];
 export const saveVaultKey = async (accountId: string, vaultKey: string) => {
-  // save encrypted vault key and vault salt to session
   const encryptedVaultKey = await window.main.secretStorage.encryptString(vaultKey);
   await services.userSession.update({ vaultKey: encryptedVaultKey });
-
   await saveVaultKeyIfNecessary(accountId, vaultKey);
 };
 
 export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
-  const userSession = await services.userSession.get();
-  const { accountId, id: sessionId } = userSession;
-
-  const vaultSalt = await getRandomHex();
-  const newVaultKey = await generateAES256Key();
-  const base64encodedVaultKey = base64encode(JSON.stringify(newVaultKey));
-
   try {
-    // Compute the verifier
-    const verifier = srp
-      .computeVerifier(
-        vaultKeyParams,
-        Buffer.from(vaultSalt, 'hex'),
-        Buffer.from(accountId, 'utf8'),
-        Buffer.from(base64encodedVaultKey, 'base64'),
-      )
-      .toString('hex');
-    // send or reset saltAuth & verifier to server
-    await (type === 'create'
-      ? createVault({ sessionId, salt: vaultSalt, verifier })
-      : resetVault({ sessionId, salt: vaultSalt, verifier }));
-
-    // save encrypted vault key and vault salt to session
-    await services.userSession.update({ vaultSalt: vaultSalt });
-    await saveVaultKey(accountId, base64encodedVaultKey);
-    return {
-      key: base64encodedVaultKey,
-    };
+    const session = await services.userSession.get();
+    if (type === 'create' && session.offlineVaultVerifier) return { error: 'A local vault already exists.' };
+    const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+    const encoded = base64encode(JSON.stringify(await crypto.subtle.exportKey('jwk', key)));
+    const salt = Array.from(crypto.getRandomValues(new Uint8Array(32)), value => value.toString(16).padStart(2, '0')).join('');
+    // Check OS secret storage BEFORE a user-confirmed reset modifies anything.
+    const encryptedVaultKey = await window.main.secretStorage.encryptString(encoded);
+    const offlineVaultVerifier = await verifierFor(encoded, salt);
+    if (type === 'reset') await services.environment.removeAllSecrets([OFFLINE_ORGANIZATION_ID]);
+    await services.userSession.update({ vaultSalt: salt, vaultKey: encryptedVaultKey, offlineVaultVerifier });
+    await saveVaultKeyIfNecessary(session.accountId, encoded);
+    return { key: encoded };
   } catch (error) {
-    return { error: error.toString() };
+    return { error: error instanceof Error ? error.message : 'Failed to create local vault' };
   }
 };
 
 export const validateVaultKey = async (session: UserSession, vaultKey: string, vaultSalt: string) => {
-  const { id: sessionId, accountId } = session;
-  const secret1 = await srpGenKey();
-  const srpClient = new Client(
-    vaultKeyParams,
-    Buffer.from(vaultSalt, 'hex'),
-    Buffer.from(accountId, 'utf8'),
-    Buffer.from(vaultKey, 'base64'),
-    Buffer.from(secret1, 'hex'),
-  );
-  try {
-    // ~~~~~~~~~~~~~~~~~~~~~ //
-    // Compute and Submit A  //
-    // ~~~~~~~~~~~~~~~~~~~~~ //
-    const srpA = srpClient.computeA().toString('hex');
-    const { sessionStarterId, srpB } = await verifyVaultA({ sessionId, srpA });
-    // ~~~~~~~~~~~~~~~~~~~~~ //
-    // Compute and Submit M1 //
-    // ~~~~~~~~~~~~~~~~~~~~~ //
-    srpClient.setB(Buffer.from(srpB, 'hex'));
-    const srpM1 = srpClient.computeM1().toString('hex');
-    const { srpM2 } = await verifyVaultM1({ sessionId, srpM1, sessionStarterId });
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
-    // Verify Server Identity M2 //
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~ //
-    srpClient.checkM2(Buffer.from(srpM2, 'hex'));
-    const srpK = srpClient.computeK().toString('hex');
-    return srpK;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
+  if (!session.offlineVaultVerifier || session.vaultSalt !== vaultSalt) return false;
+  const actual = await verifierFor(vaultKey, vaultSalt);
+  const expected = session.offlineVaultVerifier;
+  if (actual.length !== expected.length) return false;
+  let difference = 0;
+  for (let index = 0; index < actual.length; index++) difference |= actual.charCodeAt(index) ^ expected.charCodeAt(index);
+  return difference === 0;
 };

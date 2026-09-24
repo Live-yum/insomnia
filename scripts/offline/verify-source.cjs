@@ -1,5 +1,3 @@
-OFFLINE_FILE {"path":"scripts/offline/verify-source.cjs","old":null,"new":"5d4da673e1416bd8a0445852bfd19f12b0f5a7473db66cd79d71a470e99b736e"}
-OFFLINE_EDIT [0,0,true]
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const read = file => fs.readFileSync(file, 'utf8');
@@ -17,4 +15,3 @@ assert(read(root + 'main/window-security.ts').includes('contextIsolation: true')
 assert.deepEqual(JSON.parse(read('packages/insomnia/config/config.json')).bundlePlugins, [{ name: 'insomnia-plugin-offline-toolkit' }]);
 assert(!read(root + 'ui/vault-key.client.ts').includes("from 'insomnia-api'"));
 console.log('Offline source invariants passed.');
-OFFLINE_END_EDIT

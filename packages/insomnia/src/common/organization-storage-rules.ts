@@ -6,7 +6,7 @@ import { invariant } from '~/common/utils/invariant';
 const inMemoryStorageRuleCache: Map<string, StorageRules> = new Map<string, StorageRules>();
 
 export const DEFAULT_STORAGE_RULES = {
-  enableCloudSync: true,
+  enableCloudSync: false,
   enableLocalVault: true,
   enableGitSync: true,
   isOverridden: false,
@@ -22,7 +22,7 @@ export async function fetchAndCacheOrganizationStorageRule(
     return {
       enableCloudSync: false,
       enableLocalVault: true,
-      enableGitSync: false,
+      enableGitSync: organizationId === models.organization.OFFLINE_ORGANIZATION_ID,
       isOverridden: false,
     };
   }

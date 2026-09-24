@@ -6,8 +6,8 @@ import { useParams } from 'react-router';
 import { useServerQuery } from '~/ui/hooks/use-query';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
-  bulkImport: { enabled: false, reason: 'Insomnia API unreachable' },
-  gitSync: { enabled: false, reason: 'Insomnia API unreachable' },
+  bulkImport: { enabled: true },
+  gitSync: { enabled: true },
   orgBasicRbac: { enabled: false, reason: 'Insomnia API unreachable' },
   aiMockServers: { enabled: false, reason: 'Insomnia API unreachable' },
   aiCommitMessages: { enabled: false, reason: 'Insomnia API unreachable' },

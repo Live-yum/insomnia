@@ -1,5 +1,3 @@
-OFFLINE_FILE {"path":"packages/insomnia/src/plugins/offline-toolkit.ts","old":null,"new":"cd0f5e8916640a7ca9821de21548b539e9aac6432e1205e27f75fc306803ae9c"}
-OFFLINE_EDIT [0,0,true]
 import { createCipheriv, createDecipheriv, createHash, createHmac, getHashes, randomBytes, randomUUID } from 'node:crypto';
 
 import type { Plugin } from '~/common/plugins/types';
@@ -93,4 +91,3 @@ export const offlineToolkit: Plugin['module'] = {
     tag('offlineJson', 'Offline JSON Format', 'Validate and format JSON without external services.', [text('JSON', '{}')], (_context, input) => JSON.stringify(JSON.parse(input), null, 2)),
   ],
 };
-OFFLINE_END_EDIT

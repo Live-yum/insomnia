@@ -28,5 +28,5 @@ export function useServerQuery<
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 >(options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>): UseQueryResult<TData, TError> {
-  return useQuery(options, useServerDataQueryClient());
+  return useQuery({ ...options, enabled: false, retry: false, refetchOnWindowFocus: false, refetchOnReconnect: false }, useServerDataQueryClient());
 }

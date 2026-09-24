@@ -240,7 +240,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      {isLoggedIn && <VaultKeyPanel />}
+      <VaultKeyPanel />
 
       <div className="form-row pad-top-sm">
         <TextArraySetting
@@ -295,7 +295,7 @@ export const General: FC = () => {
       {!isLoggedIn && (
         <>
           <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Network Activity</h2>
-          <BooleanSetting label="Send Anonymous Usage Statistics" setting="enableAnalytics" disabled={isLoggedIn} />
+          <BooleanSetting label="Usage statistics (disabled in offline build)" setting="enableAnalytics" disabled />
           <div className="py-2 pl-5 text-sm opacity-50">
             Help Kong improve its products by sending anonymous data about features and plugins used, hardware and
             software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()},{' '}

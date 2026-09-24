@@ -1,3 +1,4 @@
+import { OFFLINE_BUILD } from '../common/offline';
 import { execFile } from 'node:child_process';
 import { cp, lstat, mkdir, mkdtemp, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -64,6 +65,7 @@ interface InsomniaPlugin {
  * @param pluginName - The npm package name of the plugin to install
  */
 export default async function installPlugin(pluginName: string, allowScopedPackageNames = false): Promise<void> {
+  if (OFFLINE_BUILD) throw new Error('Online plugin installation is disabled. Use the bundled offline toolkit or an audited, fully vendored local plugin.');
   const validationError = validatePluginName(pluginName, allowScopedPackageNames);
 
   if (validationError) {

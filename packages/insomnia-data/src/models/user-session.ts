@@ -16,6 +16,8 @@ export interface BaseUserSession {
   publicKey: JsonWebKey;
   encPrivateKey: AESMessage;
   vaultSalt?: string;
+  /** Local verifier for a randomly generated offline vault key; never sent to a server. */
+  offlineVaultVerifier?: string;
   vaultKey?: string;
 }
 

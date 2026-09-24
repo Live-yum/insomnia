@@ -1,5 +1,3 @@
-OFFLINE_FILE {"path":"packages/insomnia/src/plugins/offline-toolkit.test.ts","old":null,"new":"6c59d370aa774251fe1105d9ee7a0da1d542d83241ef173c78ac83e238d44dfc"}
-OFFLINE_EDIT [0,0,true]
 import { createHmac } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
@@ -35,4 +33,3 @@ describe('bundled offline toolkit', () => {
     expect(totp('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', Number(seconds), 8)).toBe(expected);
   });
 });
-OFFLINE_END_EDIT

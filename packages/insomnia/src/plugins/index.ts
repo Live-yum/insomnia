@@ -28,6 +28,7 @@ import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
 import themes from './themes';
+import { offlineToolkit } from './offline-toolkit';
 
 let plugins: Plugin[] | null | undefined = null;
 
@@ -465,7 +466,7 @@ function getBundlePluginMap() {
       const isExecutedInInso = !process.type;
       // In Insomnia, the packagePath is just the pluginName
       let bundlePluginPath = pluginName;
-      if (isExecutedInInso) {
+      if (isExecutedInInso && pluginName !== 'insomnia-plugin-offline-toolkit') {
         // When executed in Inso, the __dirname points to <packageRoot>/packages/insomnia-inso/dist
         // The bundle plugin module is placed under <packageRoot>/node_module
         const rootNodeModuleDir = path.resolve(__dirname, '..', '..', '..', 'node_modules');
@@ -473,10 +474,10 @@ function getBundlePluginMap() {
         bundlePluginPath = require.resolve(pluginName, { paths: [rootNodeModuleDir] });
       }
       console.log('[plugin] Loading bundled plugin %s from %s', pluginName, bundlePluginPath);
-      const module = getNodeRequire()(bundlePluginPath);
+      const module = pluginName === 'insomnia-plugin-offline-toolkit' ? offlineToolkit : getNodeRequire()(bundlePluginPath);
       bundlePluginMap[pluginName] = {
         name: pluginName,
-        displayName: '',
+        displayName: pluginName === 'insomnia-plugin-offline-toolkit' ? 'Crypto & Offline Toolkit' : '',
         description: `Insomnia bundled plugin for ${pluginName}`,
         version: 'unknown',
         directory: '',

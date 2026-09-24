@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
 import {
   href,
+  redirect,
   isRouteErrorResponse,
   Link as RouterLink,
   Links,
@@ -69,6 +70,10 @@ export const links: Route.LinksFunction = () => {
 };
 
 const locationHistoryMiddleware: Route.ClientMiddlewareFunction = async ({ request }, next) => {
+  const offlinePath = new URL(request.url).pathname;
+  if (/^\/(?:onboarding(?:\/|$)|auth\/(?:login|authorize|logout|default-browser-redirect)(?:\/|$)|trial(?:\/|$))/.test(offlinePath)) {
+    throw redirect('/organization/org_offline/project');
+  }
   await next();
 
   try {

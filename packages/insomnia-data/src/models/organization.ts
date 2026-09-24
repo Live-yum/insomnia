@@ -1,5 +1,12 @@
 import type { Organization, PersonalPlanType } from 'insomnia-api';
 
+export const OFFLINE_ORGANIZATION_ID = 'org_offline';
+export const buildOfflineOrganization = (): Organization => ({
+  id: OFFLINE_ORGANIZATION_ID, name: 'Local Workspace', picture: null,
+  owner_first_name: null, owner_last_name: null, owner_email: null,
+  total_members: 1, total_invites: 0, total_admins: 1, is_owner: true, can_leave: false,
+});
+
 export const SCRATCHPAD_ORGANIZATION_ID = 'org_scratchpad';
 export const isScratchpadOrganizationId = (organizationId: string) => organizationId === SCRATCHPAD_ORGANIZATION_ID;
 
@@ -14,7 +21,7 @@ export const isKonnectOrganizationId = (organizationId: string) =>
 
 /** Organizations that exist only on this machine and must never be used for organization-scoped API calls. */
 export const isLocalOrganizationId = (organizationId: string) =>
-  isScratchpadOrganizationId(organizationId) || isKonnectOrganizationId(organizationId);
+  organizationId === OFFLINE_ORGANIZATION_ID || isScratchpadOrganizationId(organizationId) || isKonnectOrganizationId(organizationId);
 
 export const buildKonnectOrganization = (accountId: string): Organization => ({
   id: getKonnectOrganizationId(accountId),

@@ -5,7 +5,6 @@ import path from 'node:path';
 
 import electron, { app, BrowserWindow, net, session } from 'electron';
 import contextMenu from 'electron-context-menu';
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { configureFetch } from 'insomnia-api';
 import type { Stats } from 'insomnia-data';
 import { initDatabase, initServices, models, services } from 'insomnia-data';
@@ -23,6 +22,7 @@ import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
 
 import { userDataFolder } from '../config/config.json';
+import { installOfflineNetworkPolicy } from './main/offline-network';
 import { configureV3ClientDefaults } from './common/configure-v3-client';
 import { getAppVersion, getProductName, isDevelopment } from './common/constants';
 import { AnalyticsEvent, trackAnalyticsEvent } from './main/analytics';
@@ -50,11 +50,15 @@ import * as windowUtils from './main/window-utils';
 // Override the Electron userData path
 // This makes Chromium use this folder for eg localStorage
 // ensure userData dir change is made before configure sentry SDK (https://docs.sentry.io/platforms/javascript/guides/electron/#app-userdata-directory)
-const dataPath =
-  process.env.INSOMNIA_DATA_PATH ||
-  path.join(app.getPath('userData'), '../', isDevelopment() ? 'insomnia-app' : userDataFolder);
+const portableDirectory = process.env.PORTABLE_EXECUTABLE_DIR || (app.isPackaged ? path.dirname(process.execPath) : '');
+const dataPath = process.env.INSOMNIA_DATA_PATH || (portableDirectory
+  ? path.join(portableDirectory, 'data')
+  : path.join(app.getPath('userData'), '../', userDataFolder));
+
+installOfflineNetworkPolicy();
 
 app.setPath('userData', dataPath);
+app.setPath('sessionData', dataPath);
 
 initializeLogging();
 initElectronStorage(dataPath);
@@ -118,7 +122,7 @@ app.on('ready', async () => {
    * This API is a no-op on macOS.
    */
   const disableSpellcheckerDownload = () => {
-    electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
+    electron.session.defaultSession.setSpellCheckerEnabled(false);
   };
   disableSpellcheckerDownload();
 
@@ -127,17 +131,6 @@ app.on('ready', async () => {
     callback(isPermissionAllowed(permission)),
   );
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(permission));
-
-  if (isDevelopment()) {
-    try {
-      const extensions = [REACT_DEVELOPER_TOOLS];
-      const extensionsPlural = extensions.length > 0 ? 's' : '';
-      const names = await Promise.all(extensions.map(extension => installExtension(extension)));
-      console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
-    } catch (err) {
-      console.log('[electron-extensions] An error occurred:', err);
-    }
-  }
 
   // Init some important things first
   await initDatabase(mainDatabase);
@@ -167,49 +160,7 @@ app.on('ready', async () => {
   await fs.mkdir(path.join(dataPath, 'responses'), { recursive: true });
 });
 
-// Set as default protocol
-const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
-const fullDefaultProtocol = `${defaultProtocol}://`;
-let defaultProtocolSuccessful: boolean;
-if (isDevelopment()) {
-  // In development, we start the app by running `electron --inspect=5858 .`
-  // So here we register the default protocol client the same way
-
-  // replace `.` with the absolute path
-  const restArgv = process.argv.slice(1).map(arg => (arg === '.' ? path.resolve('.') : arg));
-  defaultProtocolSuccessful = app.setAsDefaultProtocolClient(
-    defaultProtocol,
-    process.execPath, // This is the path to the Electron executable
-    restArgv, // This is the rest of the arguments passed to the Electron app
-  );
-} else {
-  defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
-}
-if (defaultProtocolSuccessful) {
-  console.log(`[electron client protocol] successfully set default protocol '${fullDefaultProtocol}'`);
-} else {
-  console.error(`[electron client protocol] FAILED to set default protocol '${fullDefaultProtocol}'`);
-  const isDefaultAlready = app.isDefaultProtocolClient(defaultProtocol);
-  if (isDefaultAlready) {
-    console.log(
-      `[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`,
-    );
-  } else {
-    console.log(
-      `[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`,
-    );
-  }
-
-  // Note: `getApplicationInfoForProtocol` is not available on Linux, so we use `getApplicationNameForProtocol` instead
-  const applicationName = app.getApplicationNameForProtocol(fullDefaultProtocol);
-  if (applicationName) {
-    console.log(
-      `[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`,
-    );
-  } else {
-    console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
-  }
-}
+// Portable builds intentionally do not register system-wide protocol handlers.
 app.on('quit', () => {
   // stop the inspector if active to unblock electron app exit in development mode
   if (isDevelopment() && inspector.url()) {
@@ -346,7 +297,14 @@ const _launchApp = async () => {
  */
 async function _createModelInstances() {
   await services.stats.get();
-  await services.settings.getOrCreate();
+  const offlineSettings = await services.settings.getOrCreate();
+  await services.settings.update(offlineSettings, { enableAnalytics: false, updateAutomatically: false });
+  await services.userSession.update({ id: '', accountId: '', email: '', firstName: '', lastName: '', hashedAccountId: '' });
+  const offlineProjects = await services.project.listByOrganizationIds(models.organization.OFFLINE_ORGANIZATION_ID);
+  if (offlineProjects.length === 0) {
+    const project = await services.project.create({ name: 'Local Project', parentId: models.organization.OFFLINE_ORGANIZATION_ID });
+    await services.workspace.create({ name: 'My Collection', scope: 'collection', parentId: project._id });
+  }
 
   try {
     const scratchpadProject = await services.project.getById(models.project.SCRATCHPAD_PROJECT_ID);

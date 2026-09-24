@@ -62,9 +62,10 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
   const user = await services.userSession.get();
   const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
+  invariant(sessionId || organizationId === models.organization.OFFLINE_ORGANIZATION_ID, 'Only the local offline workspace is available without an account');
+  invariant(newProjectData.storageType !== 'remote', 'Cloud projects are disabled in the offline build');
   invariant(
-    newProjectData.storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
+    newProjectData.storageType === 'local' || organizationId === models.organization.OFFLINE_ORGANIZATION_ID || !models.organization.isLocalOrganizationId(organizationId),
     'Only local projects can be created in this organization',
   );
 

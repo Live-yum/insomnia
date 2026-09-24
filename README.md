@@ -1,3 +1,5 @@
+> **Offline fork / 内网便携版**：免 Insomnia 登录的本地工作区，预置 Crypto & Offline Toolkit，禁用供应商云服务与自动更新。Windows x64 / Linux ARM64 构建和安全边界见 [离线版说明](docs/OFFLINE.md)。以下保留上游 README 作为历史参考，其账户和云服务说明不适用于离线发行包。
+
 # Insomnia API Client
 
 [![Website](https://img.shields.io/badge/Get%20started%20for%20free-8A2BE2)](https://insomnia.rest)

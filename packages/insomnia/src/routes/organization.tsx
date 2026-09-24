@@ -1,3 +1,4 @@
+import { OFFLINE_BUILD } from '~/common/offline';
 import { type CurrentPlan, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -46,10 +47,10 @@ interface IndicatorProps {
 }
 
 const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorProps) => {
-  const [status, setStatus] = useState<'online' | 'offline'>('online');
+  const [status, setStatus] = useState<'online' | 'offline'>('offline');
 
   useEffect(() => {
-    const handleOnline = () => setStatus('online');
+    const handleOnline = () => setStatus('offline');
     const handleOffline = () => setStatus('offline');
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -111,7 +112,7 @@ const NetworkAndSyncIndicator = ({ asyncTaskStatus, settings, sync }: IndicatorP
               ? 'You have connectivity to the Internet' +
                 (settings.proxyEnabled ? ' via the configured proxy' : '') +
                 '.'
-              : 'You are offline. Connect to sync your data.'}
+              : 'Cloud sync is disabled in this offline build.'}
           </Tooltip>
         </TooltipTrigger>
       )}
@@ -308,7 +309,7 @@ const Component = () => {
                     <div className="flex w-12.5 shrink-0 justify-center py-2">
                       <InsomniaLogo />
                     </div>
-                    {!isScratchPad && (
+                    {!isScratchPad && !OFFLINE_BUILD && (
                       <div ref={setOrgSelectNode}>
                         <OrganizationSelect
                           organizationId={organizationId}
@@ -335,7 +336,7 @@ const Component = () => {
                         currentPlan={currentPlan}
                       />
                     ) : (
-                      <ScratchPadAuthActions />
+                      <><span data-testid="offline-mode">Offline · Local only</span>{!OFFLINE_BUILD && <ScratchPadAuthActions />}</>
                     )}
                   </div>
                 </header>

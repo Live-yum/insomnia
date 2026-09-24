@@ -15,7 +15,7 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const userSession = await services.userSession.get();
   const { id: sessionId, accountId } = userSession;
 
-  if (!models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
+  if (organizationId !== models.organization.OFFLINE_ORGANIZATION_ID && !models.project.isScratchpadProject({ _id: projectId }) && !sessionId) {
     await logout();
     throw redirect(href('/auth/login'));
   }

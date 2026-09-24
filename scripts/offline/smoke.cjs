@@ -1,5 +1,3 @@
-OFFLINE_FILE {"path":"scripts/offline/smoke.cjs","old":null,"new":"aa9f3984d040b517fbfdc1be94a8849d97ed6dc479d76f93bdf9c03310cd34ce"}
-OFFLINE_EDIT [0,0,true]
 // Packaged-app smoke check: no login, local CRUD, bundled tags, and the native HTTP transport.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -101,4 +99,3 @@ async function main() {
   }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
-OFFLINE_END_EDIT
