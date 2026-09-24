@@ -62,8 +62,8 @@ jobs:
                   else:
                       assert edit is not None
                       replacement.append(line)
-              assert len(items) == 47
-              assert hashlib.sha256(json.dumps(items, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest() == '374503f93b717be3f24363f2b39a382e0be24ecbc89d95ee0d8613340d292fcf'
+              assert len(items) == 2
+              assert hashlib.sha256(json.dumps(items, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest() == '7903d7cb7853f51673b99fb1063d7044855ac3da8cc7702935faccf2881c0d9e'
               updates = []
               for item in items:
                   name = item['path']
@@ -93,7 +93,7 @@ jobs:
         run: |
           if test -n "$(git status --porcelain)"; then
             git add --all
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'feat: offline source, local vault, bundled crypto and portable packaging'
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'fix: connect bundled offline templates to the authenticated execution bridge'
             AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
             git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/intranet
           fi
@@ -126,7 +126,7 @@ jobs:
         run: |
           if test -n "$(git status --porcelain)"; then
             git add --all
-            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'feat: account-free offline client, bundled crypto toolkit and portable profiles'
+            git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'style: apply repository formatting to offline source'
             AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
             git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/intranet
           fi
@@ -228,5 +228,5 @@ jobs:
           test "$(find release-assets -name '*.tar.gz' | wc -l)" -eq 1
           (cd release-assets && sha256sum -c *.sha256)
           TAG="offline-${SOURCE_SHA:0:12}"
-          printf 'Source commit: `%s`\n\nWindows x64 ZIP and Linux ARM64 tar.gz, with statically bundled Crypto & Offline Toolkit. No Insomnia cloud login, telemetry or updater.\n\nNative packaged startup, local project creation, bundled tags and loopback HTTP smoke tests passed on both runners. This is an unsigned pre-release, not an air-gap security certification. Review docs/OFFLINE.md and validate on your own intranet image before production deployment.\n' "$SOURCE_SHA" > notes.md
+          printf 'Source commit: `%s`\n\nWindows x64 ZIP and Linux ARM64 tar.gz, with statically bundled Crypto & Offline Toolkit. No Insomnia cloud login, telemetry or updater.\n\nNative packaged startup, local project creation, bundled tag execution and loopback HTTP smoke tests passed on both runners. This is an unsigned pre-release, not an air-gap security certification. Review docs/OFFLINE.md and validate on your own intranet image before production deployment.\n' "$SOURCE_SHA" > notes.md
           gh release create "$TAG" release-assets/* --target "$SOURCE_SHA" --title 'Insomnia Offline — Windows x64 / Linux ARM64' --notes-file notes.md --prerelease
