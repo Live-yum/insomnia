@@ -30,6 +30,9 @@ jobs:
     if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -40,16 +43,16 @@ jobs:
           cache: npm
       - name: Install locked application dependencies and their required build patches
         run: npm ci --no-audit --no-fund
-      - name: Apply reviewed type and lint fixes to application source only
+      - name: Apply reviewed type, lint and encoding fixes to owned source only
         run: python3 scripts/offline/repair_ci_source.py
       - name: Require application lint without autofix
-        run: npm run lint -w insomnia
+        run: npm run lint -w insomnia 2>&1 | tee "$RUNNER_TEMP/offline-lint.log"
       - name: Require full application and route type checks
-        run: npm run type-check -w insomnia
+        run: npm run type-check -w insomnia 2>&1 | tee "$RUNNER_TEMP/offline-typecheck.log"
       - name: Require offline policy and archive regression tests
         run: |
-          npm run test -w insomnia -- src/common/__tests__/offline-origin-policy.test.ts
-          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          npm run test -w insomnia -- src/common/__tests__/offline-origin-policy.test.ts 2>&1 | tee "$RUNNER_TEMP/offline-policy-tests.log"
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/offline-archive-tests.log"
           python3 scripts/offline/vendor_plugins.py verify
       - name: Export reviewed source patch
         run: |
@@ -61,6 +64,13 @@ jobs:
           name: offline-ci-reviewed-repair
           path: offline-ci-repair.patch
           if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-ci-diagnostics
+          path: ${{ runner.temp }}/offline-*.log
+          if-no-files-found: warn
           retention-days: 7
 
   commit:
@@ -91,14 +101,22 @@ jobs:
             git apply --index "$patch"
             python3 - <<'PY'
           import subprocess
+          permitted = {
+              'packages/insomnia/scripts/verify-bundle-plugins.ts',
+              'docs/OFFLINE-SOURCE-STATUS.json',
+              'docs/OFFLINE-PLUGIN-LOADER-STATUS.json',
+              'scripts/offline/vendor_plugins.py',
+              'scripts/offline/package_portable.py',
+              'scripts/offline/test_vendor_regressions.py',
+          }
           names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
           for name in names:
-              if not (name.startswith('packages/insomnia/src/') or name == 'packages/insomnia/scripts/verify-bundle-plugins.ts' or name in {'docs/OFFLINE-SOURCE-STATUS.json', 'docs/OFFLINE-PLUGIN-LOADER-STATUS.json'}):
+              if not (name.startswith('packages/insomnia/src/') or name in permitted):
                   raise SystemExit('Unexpected repair path: ' + name)
           PY
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'fix: apply CI-verified offline types, imports and policy regression repairs'
+            git commit -m 'fix: apply CI-verified offline types, imports, policy and UTF-8 repairs'
             git fetch origin offline/standalone-vendored
             git rebase origin/offline/standalone-vendored
             git push origin HEAD:offline/standalone-vendored
