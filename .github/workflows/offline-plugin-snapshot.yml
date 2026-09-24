@@ -33,7 +33,18 @@ jobs:
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
         with:
           node-version-file: .nvmrc
-      - name: Download all catalog packages and dependency closures without executing them
+          package-manager-cache: false
+      - name: Test catalog and archive protections without executing plugins
+        run: python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+      - name: Replace prior snapshot cache before downloading verified bytes
+        run: |
+          rm -rf vendor/offline-plugins/blobs vendor/offline-plugins/profiles
+          test -f vendor/offline-plugins/.gitattributes
+      - name: Download the exact full catalog and dependencies without lifecycle or Git execution
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: protocol.allow
+          GIT_CONFIG_VALUE_0: never
         run: python3 scripts/offline/vendor_plugins.py snapshot --workers 8
       - name: Verify downloaded archive integrity
         run: python3 scripts/offline/vendor_plugins.py verify
@@ -41,6 +52,7 @@ jobs:
         with:
           name: offline-plugin-snapshot
           path: vendor/offline-plugins/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
@@ -57,21 +69,50 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: offline/standalone-vendored
+          fetch-depth: 0
+      - name: Replace rather than overlay the previous catalog
+        run: |
+          rm -rf vendor/offline-plugins/blobs vendor/offline-plugins/profiles
+          rm -f vendor/offline-plugins/manifest.json vendor/offline-plugins/catalog-names.json vendor/offline-plugins/REPORT.md vendor/offline-plugins/EXCEPTIONS.json vendor/offline-plugins/plugin-hub.snapshot.html
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: offline-plugin-snapshot
           path: vendor/offline-plugins/
-      - name: Commit data archives only; never execute downloaded plugin code in this job
+      - name: Materialize the reviewed plugin-loader source (never load plugin code here)
+        run: python3 scripts/offline/integrate_plugin_loader.py
+      - name: Commit source and verified package bytes without force-pushing
         id: commit
         shell: bash
         run: |
           set -euo pipefail
           test -s vendor/offline-plugins/manifest.json
+          test -f vendor/offline-plugins/.gitattributes
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add --force -- vendor/offline-plugins
+          git add --force --all -- vendor/offline-plugins
+          git add -- packages/insomnia/src/plugins/index.ts docs/OFFLINE-PLUGIN-LOADER-STATUS.json
           if ! git diff --cached --quiet; then
-            git commit -m 'vendor: add complete Plugin Hub snapshot and pinned dependency archives'
-            git push origin HEAD:offline/standalone-vendored
+            git commit -m 'feat: vendor full catalog bytes and integrate offline plugin activation'
+            for attempt in 1 2 3; do
+              git fetch origin offline/standalone-vendored
+              git rebase origin/offline/standalone-vendored
+              if git push origin HEAD:offline/standalone-vendored; then break; fi
+              if [ "$attempt" = 3 ]; then exit 1; fi
+            done
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git archive --format=tar --output=offline-source-review.tar HEAD scripts/offline docs packages package.json package-lock.json .nvmrc .npmrc .github
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-source-review
+          path: offline-source-review.tar
+          if-no-files-found: error
+          retention-days: 7
+
+  portable:
+    needs: commit-snapshot
+    uses: ./.github/workflows/offline-build.yml
+    with:
+      source_sha: ${{ needs.commit-snapshot.outputs.commit }}
+    permissions:
+      contents: read
