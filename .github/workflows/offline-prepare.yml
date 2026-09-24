@@ -1,7 +1,7 @@
 name: Prepare reviewed offline sources
 on:
   push:
-    branches: [offline/standalone-vendored]
+    branches: [offline/local-crypto-pr]
     paths:
       - scripts/offline/source-migration.*
       - scripts/offline/vendor-plugins.py
@@ -9,7 +9,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: offline-prepare
+  group: offline-prepare-local-crypto
   cancel-in-progress: false
 jobs:
   prepare:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: offline/standalone-vendored
+          ref: offline/local-crypto-pr
           persist-credentials: false
           fetch-depth: 1
       - name: Materialize reviewed application changes and pinned plugin sources
@@ -40,7 +40,7 @@ jobs:
           git diff --cached --check
           git commit -m 'feat: materialize offline application and vendor pinned Crypto plugin sources'
           AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/standalone-vendored
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" push origin HEAD:refs/heads/offline/local-crypto-pr
       - name: Export exact result for review
         run: git archive --format=tar --output=offline-prepared.tar HEAD
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
