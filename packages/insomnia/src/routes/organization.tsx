@@ -7,7 +7,6 @@ import { href, NavLink, Outlet, useLocation, useNavigate, useParams } from 'reac
 import * as reactUse from 'react-use';
 
 import { OFFLINE_BUILD } from '~/common/offline-policy';
-
 import type { KonnectMigrationGroup } from '~/konnect/migrate-konnect-organization';
 import { detectKonnectOrgMigration } from '~/konnect/migrate-konnect-organization';
 import { useRootLoaderData } from '~/root';

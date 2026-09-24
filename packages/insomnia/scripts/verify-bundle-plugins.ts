@@ -1,4 +1,6 @@
-import { bundlePlugins } from '../config/config.json';
+import appConfig from '../config/config.json';
+
+const bundlePlugins: { name: string }[] = appConfig.bundlePlugins;
 
 const isModuleInstalled = (moduleName: string) => {
   try {

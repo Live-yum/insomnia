@@ -25,8 +25,8 @@ import { docsBase } from '../common/documentation';
 import { getElectronStorage } from './electron-storage';
 import { ipcMainOn } from './ipc/electron';
 import { getLogDirectory } from './log';
-import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
 import { openOfflineExternal } from './offline-network';
+import { createPluginWindow, destroyPluginWindow, getPluginWindow } from './plugin-window';
 import { isTrustedAppOrigin } from './trusted-origin';
 import { MAIN_WINDOW_SECURITY } from './window-security';
 

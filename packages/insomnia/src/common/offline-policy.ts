@@ -8,8 +8,8 @@ const networkProtocols = new Set(['http:', 'https:', 'ws:', 'wss:']);
 /** Reject characters URL parsing could silently normalize before origin validation. */
 const hasForbiddenOriginCharacter = (value: string) =>
   [...value].some(character => {
-    const code = character.charCodeAt(0);
-    return code <= 32 || code === 127 || character === '\\';
+    const code = character.codePointAt(0);
+    return (code !== undefined && code <= 32) || code === 127 || character === '\\';
   });
 
 /** Parse an administrator-managed list of EXACT origins; never accept host wildcards. */

@@ -6,7 +6,7 @@ describe('offline browser origin validation', () => {
   it('rejects every ASCII control character, space, DEL and backslash', () => {
     const codes = [...Array.from({ length: 33 }, (_, index) => index), 127, 92];
     for (const code of codes) {
-      const character = String.fromCharCode(code);
+      const character = String.fromCodePoint(code);
       const origins = [
         `${character}https://api.internal`,
         `https://api${character}.internal`,

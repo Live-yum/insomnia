@@ -64,11 +64,11 @@
     },
     {
       "path": "packages/insomnia/src/routes/organization.tsx",
-      "sha256": "3c19865defbb04e98fd9317e4e98ae63293dc58be6e2644123eeb3d8ec288a24"
+      "sha256": "0b16e1c737fa8645363282ce0515de63edce14937d3a1144280b271a8c882657"
     },
     {
       "path": "packages/insomnia/src/root.tsx",
-      "sha256": "9cd85edcd4d531b377d25b93a345642cea783b7eaf64adbdd3e78f7d5848e19f"
+      "sha256": "eb6593bc5708189a5651d65306d048e2ea2ec1c1088cc2cfb9a21508310182c4"
     },
     {
       "path": "packages/insomnia/src/entry.client.tsx",
@@ -76,11 +76,11 @@
     },
     {
       "path": "packages/insomnia/src/entry.main.ts",
-      "sha256": "d9e9850c163fe94642f51f55e0c56c84a6f1610fb4fc4badbd81399c364fffcb"
+      "sha256": "32762c9345bc686e7819d4e0a235b29ca70c2f8c49081df74cb56e81294274c4"
     },
     {
       "path": "packages/insomnia/src/main/window-utils.ts",
-      "sha256": "14bf3be4e43d9c869fc95732f4bcec6d2f549b9d50dbf725001cf753d4a566e1"
+      "sha256": "58bb58612da897f35f4f1f732d1da970c117f07375409005e04560a1edc3e5b0"
     },
     {
       "path": "packages/insomnia/config/config.json",
@@ -88,7 +88,7 @@
     },
     {
       "path": "packages/insomnia/src/main/ipc/main.ts",
-      "sha256": "f22f07a27709d3a2623736e4cbb84b2c40012660cc28b96ce8852d88cd46bf86"
+      "sha256": "23ce271205949b478386967e56af9e4951e38ef0c017caca393d905efd7bd7d4"
     },
     {
       "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.tsx",
@@ -100,7 +100,7 @@
     },
     {
       "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.delete.tsx",
-      "sha256": "cc490d163728efb9cf42a8a5df040f163adb987eb3d627008c50c38ed3b05365"
+      "sha256": "3f76058803255ac83d21cd1d45f96166bc509489bd477633ca758f9d700af496"
     },
     {
       "path": "packages/insomnia/src/entry.hidden-window.ts",
@@ -116,7 +116,7 @@
     },
     {
       "path": "packages/insomnia/src/main/bundle-spectral-ruleset.ts",
-      "sha256": "e1bc330bef6e6e37e9c076f9e082a342858dde17287d5dce4b3f8b4d63025e6b"
+      "sha256": "7205a64c0abace5d6282fc5460277b6e6744f3015a64af48d961594c840d7ab9"
     },
     {
       "path": "packages/insomnia/src/main/lint-process.mjs",
@@ -132,7 +132,7 @@
     },
     {
       "path": "packages/insomnia/src/common/offline-policy.ts",
-      "sha256": "96815ff9c242c4727538e00ba7fdd40af0eb1088b48ece8eb10e0cb5f0c43b96"
+      "sha256": "ca373aa608b626b9578da78481c768ffa0eed322ac196f71daa4945f59a97b1a"
     },
     {
       "path": "packages/insomnia/src/common/offline.ts",
@@ -140,7 +140,7 @@
     },
     {
       "path": "packages/insomnia/src/main/offline-network.ts",
-      "sha256": "3f66c11b7d02e668323fff8ef26537b07db529c62729d37c2ad76cd21744c6ad"
+      "sha256": "2b950a88bc6167f3efe3076f458ccdb3c2bdf4383b8f39e54aa9a60c75b05a55"
     }
   ]
 }
