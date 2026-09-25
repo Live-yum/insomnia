@@ -239,8 +239,9 @@ export class ProjectPage extends BasePage {
     // Use the reachable git test server URL so remote branches can be listed.
     // deriveRepoName() still yields "git-server" from this URL.
     await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
-    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
-    await this.page.getByRole('option', { name: 'master' }).click();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toBeEnabled();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toHaveValue('master');
+    await expect.poll(() => this.page.getByRole('form', { name: 'Git Setup Form' }).evaluate(form => new FormData(form as HTMLFormElement).get('branch'))).toBe('master');
     // Pick the custom clone destination before scanning.
     await this.page.getByRole('button', { name: 'Choose folder' }).click();
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
@@ -260,8 +261,9 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
-    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
-    await this.page.getByRole('option', { name: 'master' }).click();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toBeEnabled();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toHaveValue('master');
+    await expect.poll(() => this.page.getByRole('form', { name: 'Git Setup Form' }).evaluate(form => new FormData(form as HTMLFormElement).get('branch'))).toBe('master');
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
     await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
     const projectModalCloseButton = this.page.locator('[data-test-id="project-modal-close-button"]');
@@ -285,10 +287,8 @@ export class ProjectPage extends BasePage {
     // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
     // a bare role locator matching both is a Playwright strict-mode violation.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
-    await this.page.getByRole('option', { name: /Magic/ }).click();
-    await this.page.getByRole('button', { name: /Magic/ }).click();
-    await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
+    // A local project must appear without switching to a cloud organization.
+    await this.page.getByRole('grid', { name: 'Project Navigation Tree' }).getByRole('row', { name, exact: true }).waitFor();
     await this.sidebar.selectProject(name);
   }
 

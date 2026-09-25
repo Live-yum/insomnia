@@ -1,8 +1,10 @@
+
 import { type FC, useCallback } from 'react';
 import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
@@ -39,7 +41,7 @@ export const PlaceholderRequestPane: FC = () => {
           <table className="table--fancy">
             <tbody>
               <tr>
-                <td>New Request</td>
+                <td>{translateOfflineUi("New Request")}</td>
                 <td className="text-right">
                   <code>
                     <Hotkey keyBindings={hotKeyRegistry.request_createHTTP} useFallbackMessage />

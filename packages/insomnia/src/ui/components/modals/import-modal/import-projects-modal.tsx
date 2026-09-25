@@ -1,3 +1,4 @@
+
 import classnames from 'classnames';
 import { services } from 'insomnia-data';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -16,6 +17,7 @@ import { ModalHeader } from '~/ui/components/base/modal-header';
 import { Icon } from '~/ui/components/icon';
 import { Button } from '~/ui/components/themed-button';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { showModal } from '..';
@@ -236,9 +238,7 @@ export const ImportProjectsResourceForm = ({
           bg="surprise"
           className="gap-(--padding-sm)"
         >
-          <i className="fa fa-file-import" />
-          Import
-        </Button>
+          <i className="fa fa-file-import" />{translateOfflineUi("Import")}</Button>
       </div>
     </>
   );
@@ -298,15 +298,13 @@ const ProjectImportStatus = ({ status }: { status: ImportStatus }) => {
       case ImportStatus.SUCCESS: {
         return (
           <>
-            <i className="fa fa-check mr-2" /> Success
-          </>
+            <i className="fa fa-check mr-2" /> {translateOfflineUi("Success")}</>
         );
       }
       case ImportStatus.FAILED: {
         return (
           <>
-            <i className="fa fa-exclamation-triangle mr-2" /> Failed
-          </>
+            <i className="fa fa-exclamation-triangle mr-2" /> {translateOfflineUi("Failed")}</>
         );
       }
       default: {
@@ -418,9 +416,7 @@ const ImportProjectsList = ({
         </div>
 
         <div className="mt-4 flex justify-end">
-          <Button variant="contained" bg="surprise" onClick={() => onComplete([])} className="h-10 gap-(--padding-sm)">
-            Confirm
-          </Button>
+          <Button variant="contained" bg="surprise" onClick={() => onComplete([])} className="h-10 gap-(--padding-sm)">{translateOfflineUi("Confirm")}</Button>
         </div>
       </>
     );
@@ -470,9 +466,7 @@ const ImportProjectsList = ({
               });
             }}
             className="h-10 gap-(--padding-sm)"
-          >
-            Cancel
-          </Button>
+          >{translateOfflineUi("Cancel")}</Button>
         )}
         <Button
           variant="contained"
@@ -480,9 +474,7 @@ const ImportProjectsList = ({
           disabled={uiStatus === 'importing'}
           onClick={() => onComplete(projectItems)}
           className="h-10 gap-(--padding-sm)"
-        >
-          Confirm
-        </Button>
+        >{translateOfflineUi("Confirm")}</Button>
       </div>
     </>
   );

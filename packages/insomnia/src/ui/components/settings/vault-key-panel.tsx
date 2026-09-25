@@ -1,8 +1,12 @@
+
+import { services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
+import { useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { getProductName } from '~/common/constants';
+import { OFFLINE_BUILD } from '~/common/offline';
 import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 import { useRootLoaderData } from '~/root';
 import { useCreateVaultKeyFetcher } from '~/routes/auth.create-vault-key';
@@ -13,6 +17,7 @@ import { Icon } from '~/ui/components/icon';
 import { showError, showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { InputVaultKeyModal } from '~/ui/components/modals/input-vault-key-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { BooleanSetting } from './boolean-setting';
 
@@ -75,6 +80,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 export const VaultKeyPanel = () => {
   const { userSession, settings } = useRootLoaderData()!;
   const { saveVaultKeyLocally } = settings;
+  const { revalidate } = useRevalidator();
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
   const [showInputVaultKeyModal, setShowModal] = useState(false);
@@ -160,22 +166,33 @@ export const VaultKeyPanel = () => {
             className="btn btn--outlined btn--super-compact width-auto flex items-center justify-center gap-2"
             onPress={generateVaultKey}
             isDisabled={isGenerating}
-            aria-label="Generate Vault Key"
+            aria-label={translateOfflineUi("Generate Vault Key")}
           >
-            {isGenerating && <Icon icon="spinner" className="inline-block animate-spin text-(--color-font)" />}
-            Generate Vault Key
-            <HelpTooltip>
+            {isGenerating && <Icon icon="spinner" className="inline-block animate-spin text-(--color-font)" />}{translateOfflineUi("Generate Vault Key")}<HelpTooltip>
               Generate an encryption key to save secrets in private environment. This ensures all secrets are securely
               stored and encrypted locally.
             </HelpTooltip>
           </Button>
         </div>
       )}
+      {OFFLINE_BUILD && vaultSaltExists && vaultKeyExists && (
+        <Button
+          className="btn btn--outlined btn--super-compact"
+          onPress={async () => {
+            await deleteVaultKeyFromStorage(accountId);
+            await services.userSession.update({ vaultKey: '' });
+            setVaultKeyValue('');
+            await revalidate();
+          }}
+        >
+          Lock Vault
+        </Button>
+      )}
       {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' && (
         <>
           <div className="form-row pad-top-sm flex-col">
             <div className="mb-(--padding-xs)">
-              <span className="font-semibold">Vault Key</span>
+              <span className="font-semibold">{translateOfflineUi("Vault Key")}</span>
               <HelpTooltip className="space-left">The vault key will be needed when you login again.</HelpTooltip>
             </div>
             <VaultKeyDisplayInput vaultKey={vaultKeyValue} />

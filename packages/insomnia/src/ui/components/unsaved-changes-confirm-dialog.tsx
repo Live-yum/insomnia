@@ -1,5 +1,8 @@
+
 import React, { type RefObject, useLayoutEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface Props {
   /** Whether the confirm dialog is visible. */
@@ -46,9 +49,7 @@ export const UnsavedChangesConfirmDialog = ({ isOpen, onConfirm, onDismiss, pare
     >
       <Modal className="flex w-full max-w-sm flex-col rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) p-6 text-(--color-font) shadow-xl">
         <Dialog className="flex flex-col gap-4 outline-hidden" aria-describedby="unsaved-description">
-          <Heading slot="title" className="text-lg font-semibold">
-            Unsaved changes
-          </Heading>
+          <Heading slot="title" className="text-lg font-semibold">{translateOfflineUi("Unsaved changes")}</Heading>
           <p id="unsaved-description" className="text-sm">
             You will lose any unsaved changes. Are you sure you want to cancel?
           </p>
@@ -57,15 +58,11 @@ export const UnsavedChangesConfirmDialog = ({ isOpen, onConfirm, onDismiss, pare
               autoFocus
               onPress={onDismiss}
               className="rounded-md border border-solid border-(--hl-md) px-3 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs)"
-            >
-              No
-            </Button>
+            >{translateOfflineUi("No")}</Button>
             <Button
               onPress={onConfirm}
               className="rounded-md border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-sm text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90"
-            >
-              Yes
-            </Button>
+            >{translateOfflineUi("Yes")}</Button>
           </div>
         </Dialog>
       </Modal>

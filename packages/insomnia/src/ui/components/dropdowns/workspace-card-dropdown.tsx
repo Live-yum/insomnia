@@ -1,3 +1,4 @@
+
 import {
   exportGlobalEnvironmentToFile,
   exportMcpClientToFile,
@@ -14,6 +15,7 @@ import { useWorkspaceDeleteActionFetcher } from '~/routes/organization.$organiza
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getProductName } from '../../../common/constants';
@@ -144,9 +146,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
             <ItemContent label="Duplicate / Move" icon="copy" onClick={() => setIsDuplicateModalOpen(true)} />
           </DropdownItem>
         )}
-        <DropdownItem aria-label="Rename">
+        <DropdownItem aria-label={translateOfflineUi("Rename")}>
           <ItemContent
-            label="Rename"
+            label={translateOfflineUi("Rename")}
             icon="pen-to-square"
             onClick={() => {
               showModal(PromptModal, {
@@ -170,9 +172,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
         </DropdownItem>
         <DropdownSection aria-label="Meta section">
           {!models.workspace.isMcp(workspace) ? (
-            <DropdownItem aria-label="Import">
+            <DropdownItem aria-label={translateOfflineUi("Import")}>
               <ItemContent
-                label="Import"
+                label={translateOfflineUi("Import")}
                 icon="file-import"
                 onClick={() => {
                   window.main.trackAnalyticsEvent({
@@ -187,9 +189,9 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               />
             </DropdownItem>
           ) : null}
-          <DropdownItem aria-label="Export">
+          <DropdownItem aria-label={translateOfflineUi("Export")}>
             <ItemContent
-              label="Export"
+              label={translateOfflineUi("Export")}
               icon="file-export"
               onClick={() => {
                 window.main.trackAnalyticsEvent({
@@ -212,16 +214,16 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
               }}
             />
           </DropdownItem>
-          <DropdownItem aria-label="Settings">
-            <ItemContent label="Settings" icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
+          <DropdownItem aria-label={translateOfflineUi("Settings")}>
+            <ItemContent label={translateOfflineUi("Settings")} icon="gear" onClick={() => setIsSettingsModalOpen(true)} />
           </DropdownItem>
         </DropdownSection>
         {renderPluginDropdownItems()}
 
         <DropdownSection aria-label="Delete section">
-          <DropdownItem aria-label="Delete">
+          <DropdownItem aria-label={translateOfflineUi("Delete")}>
             <ItemContent
-              label="Delete"
+              label={translateOfflineUi("Delete")}
               icon="trash-o"
               className="danger"
               onClick={() => {
@@ -277,7 +279,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
                     <Heading className="text-2xl">
-                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                      {project.konnectControlPlaneId ? translateOfflineUi("Remove") : translateOfflineUi("Delete")} {getWorkspaceLabel(workspace).singular}
                     </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -351,7 +353,7 @@ export const WorkspaceCardDropdown: FC<Props> = props => {
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
+                        {project.konnectControlPlaneId ? translateOfflineUi("Remove") : translateOfflineUi("Delete")}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

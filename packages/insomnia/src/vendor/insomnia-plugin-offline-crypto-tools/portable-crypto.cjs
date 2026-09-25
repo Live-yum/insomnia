@@ -4,7 +4,7 @@
 const crypto = require('node:crypto');
 const { Buffer } = require('node:buffer');
 const primitives = require('./primitives.generated.cjs');
-const ORDER = BigInt('0xfffffffeffffffffffffffffffffffff7203df6b21c6052b53bbf40939d54123');
+const ORDER = 0xff_ff_ff_fe_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_ff_72_03_df_6b_21_c6_05_2b_53_bb_f4_09_39_d5_41_23n;
 const error = () => { throw new Error('国密参数、密钥或完整性校验失败 / Invalid SM parameters, key or integrity'); };
 const supportsHash = name => name === 'sm3' || Object.hasOwn(primitives.sha3, name);
 function digest(name, bytes) {
@@ -143,7 +143,7 @@ function sm2Operation(options, decode, encode) {
     for (let attempt = 0; attempt < 128; attempt++) {
       const raw = Buffer.from('04' + primitives.sm2.doEncrypt(Uint8Array.from(input), key, mode), 'hex');
       if (raw.length !== input.length + 97) return error();
-      const c2 = mode === 1 ? raw.subarray(97) : raw.subarray(65, raw.length - 32);
+      const c2 = mode === 1 ? raw.subarray(97) : raw.subarray(65, -32);
       // GM/T0003: retry a fresh ephemeral key when KDF returns all-zero bytes.
       if (crypto.timingSafeEqual(c2, input)) continue;
       return { algorithm: 'SM2', cipherMode: layout, pointPrefix: '04', output: encode(raw, encoding), encoding };
@@ -158,7 +158,7 @@ function sm2Operation(options, decode, encode) {
   // Upstream returns a plain [] on C3 mismatch, never a successful Uint8Array.
   // Do not mistake it for a valid empty plaintext or return partially decrypted data.
   if (!(plain instanceof Uint8Array) || plain.length !== input.length - 97) return error();
-  const c2 = mode === 1 ? input.subarray(97) : input.subarray(65, input.length - 32);
+  const c2 = mode === 1 ? input.subarray(97) : input.subarray(65, -32);
   if (crypto.timingSafeEqual(c2, plain)) { plain.fill(0); return error(); }
   const output = encode(plain, encoding); plain.fill(0);
   return { algorithm: 'SM2', cipherMode: layout, output, encoding, integrityVerified: true };

@@ -1,3 +1,4 @@
+
 import { services } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -5,6 +6,7 @@ import * as reactUse from 'react-use';
 
 import { useRootLoaderData } from '~/root';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getMockServiceBinURL } from '../../../common/constants';
 import { useTimeoutWhen } from '../../hooks/use-timeout-when';
@@ -76,8 +78,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
           window.clipboard.writeText(getMockServiceBinURL(mockServer, pathInput));
         }}
       >
-        <Icon icon="copy" /> Copy
-      </Button>
+        <Icon icon="copy" /> {translateOfflineUi("Copy")}</Button>
 
       <div className="flex shrink-0">
         <Button
@@ -91,7 +92,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
             onSend(pathInput);
           }}
         >
-          {isCancellable ? 'Stop' : 'Test'}
+          {isCancellable ? translateOfflineUi("Stop") : translateOfflineUi("Test")}
         </Button>
         <Dropdown
           key="dropdown"
@@ -115,7 +116,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
             <DropdownItem aria-label="send-now">
               <ItemContent
                 icon="arrow-circle-o-right"
-                label="Send Now"
+                label={translateOfflineUi("Send Now")}
                 hint={hotKeyRegistry.request_send}
                 onClick={send}
               />
@@ -134,7 +135,7 @@ export const MockUrlBar = ({ onSend }: { onSend: (path: string) => void }) => {
               />
             </DropdownItem>
           </DropdownSection>
-          <DropdownSection aria-label="Advanced Section" title="Advanced">
+          <DropdownSection aria-label="Advanced Section" title={translateOfflineUi("Advanced")}>
             <DropdownItem aria-label="Send After Delay">
               <ItemContent
                 icon="clock-o"

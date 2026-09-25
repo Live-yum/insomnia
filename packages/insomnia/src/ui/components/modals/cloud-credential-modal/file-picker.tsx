@@ -1,6 +1,9 @@
+
 import type { OpenDialogOptions } from 'electron';
 import React from 'react';
 import { Button, Input } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../../icon';
 
@@ -40,7 +43,7 @@ export const FilePicker = (props: FilePickerProps) => {
         onPress={handleSelectFile}
       >
         <Icon icon="file" className="mr-2" />
-        <span>Select File</span>
+        <span>{translateOfflineUi("Select File")}</span>
       </Button>
     </>
   );

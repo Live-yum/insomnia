@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitRepository } from 'insomnia-data';
 import type { MergeConflict } from 'insomnia-vcs';
@@ -23,6 +24,7 @@ import { useGitProjectRepoFetcher } from '~/routes/git.repo';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { useGitProjectStatusActionFetcher } from '~/routes/git.status';
 import { getOauth2FormatName } from '~/sync/git/get-oauth2-format-name';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { ConfigLink } from '../github-app-config-link';
 import { Icon } from '../icon';
@@ -400,7 +402,7 @@ export const GitSyncDropdown: FC<Props> = ({ gitRepository, isInsomniaSyncEnable
         <div className="flex h-(--line-height-sm) w-full items-center text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
           <Button
             data-testid="git-dropdown"
-            aria-label="Git Sync"
+            aria-label={translateOfflineUi("Git Sync")}
             className="flex h-full flex-1 items-center gap-2 truncate px-(--padding-md)"
           >
             <Icon icon={isLoading ? 'refresh' : iconClassName} className={`w-5 ${isLoading ? 'animate-spin' : ''}`} />

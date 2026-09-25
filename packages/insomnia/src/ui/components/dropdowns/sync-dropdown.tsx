@@ -1,3 +1,4 @@
+
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Project, Workspace } from 'insomnia-data';
 import React, { type FC, Fragment, useCallback, useEffect, useState } from 'react';
@@ -24,6 +25,7 @@ import {
   useInsomniaSyncDataActionFetcher,
   useInsomniaSyncDataLoaderFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.sync-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 import { SyncBranchesModal } from '../modals/sync-branches-modal';
@@ -339,7 +341,7 @@ export const SyncDropdown: FC<Props> = () => {
           <Button
             isDisabled={isGitDropdownDisabled}
             data-testid="git-dropdown"
-            aria-label="Git Sync"
+            aria-label={translateOfflineUi("Git Sync")}
             className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)"
           >
             <Icon icon="earth-americas" className="size-4" />

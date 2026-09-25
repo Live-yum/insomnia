@@ -1,9 +1,11 @@
+
 import { fuzzyMatch } from 'insomnia-data/common';
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
 
 import { useGitProviderRepositoriesLoaderFetcher } from '~/routes/git-provider.repositories';
 import type { GitRemoteProviderType } from '~/sync/git/providers/types';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 
@@ -96,7 +98,7 @@ export const GitRepositorySelect = ({
             type="button"
             disabled={loading || !credentialsId}
             className="mr-0 flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm)"
-            aria-label="Refresh repositories"
+            aria-label={translateOfflineUi("Refresh repositories")}
             onClick={() => {
               if (credentialsId) {
                 getGitProviderRepositoriesFetcher.load({ credentialsId, refresh: true });

@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import type { RunnerTestResult } from 'insomnia-data';
 import React, { type FC } from 'react';
@@ -12,6 +13,8 @@ import {
   TableHeader,
   TooltipTrigger,
 } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -100,24 +103,22 @@ export const RunnerResultHistoryPane: FC<Props> = ({
     <>
       <div className="mb-12 flex h-full flex-col divide-y divide-solid divide-(--hl-md) overflow-y-auto">
         <ResizableTableContainer className="mt-3">
-          <Table aria-label="Results" selectionMode="multiple" className="w-full text-center">
+          <Table aria-label={translateOfflineUi("Results")} selectionMode="multiple" className="w-full text-center">
             <TableHeader>
               {/* <Column className="leading-9" isRowHeader>Start Time</Column> */}
-              <Column className="leading-9" isRowHeader>
-                Source
-                <ColumnResizer />
+              <Column className="leading-9" isRowHeader>{translateOfflineUi("Source")}<ColumnResizer />
               </Column>
               <Column className="leading-9">
                 Iterations
                 <ColumnResizer />
               </Column>
-              <Column className="leading-9">Duration</Column>
+              <Column className="leading-9">{translateOfflineUi("Duration")}</Column>
               {/* <Column className="leading-9">Avg. Resp. Time</Column> */}
               <Column className="leading-9">Total</Column>
-              <Column className="leading-9">Passed</Column>
-              <Column className="leading-9">Failed</Column>
+              <Column className="leading-9">{translateOfflineUi("Passed")}</Column>
+              <Column className="leading-9">{translateOfflineUi("Failed")}</Column>
               <Column className="leading-9">Skipped</Column>
-              <Column className="leading-9">Delete</Column>
+              <Column className="leading-9">{translateOfflineUi("Delete")}</Column>
             </TableHeader>
             <TableBody>{rows}</TableBody>
           </Table>

@@ -1,3 +1,4 @@
+
 import classnames from 'classnames';
 import clone from 'clone';
 import type { BaseModel, CloudProviderCredential, PluginData, Request, RequestGroup, Workspace } from 'insomnia-data';
@@ -14,6 +15,7 @@ import { init as initPluginStore } from '~/plugins/context/store';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { plugins } from '~/ui/plugins/renderer-bridge';
 import * as templating from '~/ui/templating/renderer-safe';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { database as db } from '../../../common/database';
 import { docsAfterResponseScript } from '../../../common/documentation';
@@ -470,7 +472,7 @@ export const TagEditor: FC<Props> = props => {
             }
             argInput = state.loadingDocs ? (
               <select disabled={state.loadingDocs}>
-                <option>Loading...</option>
+                <option>{translateOfflineUi("Loading...")}</option>
               </select>
             ) : (
               <select

@@ -1,3 +1,4 @@
+
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { StorageRules } from 'insomnia-api';
 import type { CollectionWorkspaceChildren, RequestGroup, Workspace } from 'insomnia-data';
@@ -44,6 +45,7 @@ import { useDBQueryClient } from '~/ui/context/app/insomnia-app-data-context';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { useRemoteFilesByProjectId } from '~/ui/hooks/use-remote-files';
 import { useSettingsPatcher } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import { Icon } from '../../icon';
@@ -825,7 +827,7 @@ const ProjectNavigationSidebarInner = (
               >
                 <TooltipTrigger delay={300}>
                   <BasicButton
-                    aria-label="Back to all projects"
+                    aria-label={translateOfflineUi("Back to all projects")}
                     onPress={exitFocus}
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs px-1 text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   >
@@ -834,9 +836,7 @@ const ProjectNavigationSidebarInner = (
                   <Tooltip
                     placement="bottom"
                     className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-3 py-1.5 text-xs text-(--color-font) shadow-lg select-none"
-                  >
-                    Back to all projects
-                  </Tooltip>
+                  >{translateOfflineUi("Back to all projects")}</Tooltip>
                 </TooltipTrigger>
                 <div
                   className={`${scopeToBgColorMap[focusedWorkspaceScope]} ${scopeToTextColorMap[focusedWorkspaceScope]} flex h-5 w-5 shrink-0 items-center justify-center rounded-sm`}
@@ -950,7 +950,7 @@ const ProjectNavigationSidebarInner = (
               }
             >
               <GridList
-                aria-label="Project Navigation Tree"
+                aria-label={translateOfflineUi("Project Navigation Tree")}
                 items={virtualizer.getVirtualItems()}
                 style={{ height: virtualizer.getTotalSize(), position: 'relative' }}
                 className="outline-hidden"

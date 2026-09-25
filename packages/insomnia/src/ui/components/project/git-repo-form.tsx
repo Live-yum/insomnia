@@ -1,3 +1,4 @@
+
 import type { GitCredentials, ProviderEmail } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { type FC, Fragment, useEffect, useState } from 'react';
@@ -27,6 +28,7 @@ import { GitCredentialSetup } from '~/ui/components/git-credentials/credential-s
 import { GitRemoteBranchSelect } from '~/ui/components/git-credentials/git-remote-branch-select';
 import { GitRepositorySelect } from '~/ui/components/git-credentials/git-repository-select';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { ErrorBoundary } from '../error-boundary';
@@ -122,15 +124,13 @@ export const GitRepoForm: FC<Props> = ({
         isSelected={projectData.connectRepositoryLater}
         onChange={isSelected => setProjectData(prev => ({ ...prev, connectRepositoryLater: isSelected }))}
         className="w-fit"
-      >
-        Connect repository later
-      </Checkbox>
+      >{translateOfflineUi("Connect repository later")}</Checkbox>
 
       {needToSetupCredentials && !projectData.connectRepositoryLater && <GitCredentialSetup providers={providers} />}
 
       {!needToSetupCredentials && !projectData.connectRepositoryLater && (
         <Form
-          aria-label="Git Setup Form"
+          aria-label={translateOfflineUi("Git Setup Form")}
           id={formId}
           className="flex flex-col gap-3"
           onSubmit={async e => {
@@ -321,7 +321,7 @@ export const GitRepoForm: FC<Props> = ({
                 />
               ) : (
                 <Input
-                  label="Repository URL"
+                  label={translateOfflineUi("Repository URL")}
                   description={'Enter the URL to the remote repo that includes ".git" at the end.'}
                   key={selectedCredentialsId}
                   defaultValue={projectData.uri}
@@ -349,7 +349,7 @@ export const GitRepoForm: FC<Props> = ({
 
           <div className={isCredentialInvalid ? 'hidden' : 'flex flex-col gap-3 px-0.5'}>
             <div className="flex flex-col gap-2">
-              <Label className="text-sm text-(--color-font)">Clone location</Label>
+              <Label className="text-sm text-(--color-font)">{translateOfflineUi("Clone location")}</Label>
               <div className="flex items-center gap-2">
                 {projectData.cloneParentDir ? (
                   <MiddleTruncate
@@ -360,9 +360,7 @@ export const GitRepoForm: FC<Props> = ({
                     className="h-(--line-height-xs) flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)"
                   />
                 ) : (
-                  <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">
-                    Managed by Insomnia (default location)
-                  </div>
+                  <div className="flex h-(--line-height-xs) flex-1 items-center truncate rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) px-2 text-(--color-font)">{translateOfflineUi("Managed by Insomnia (default location)")}</div>
                 )}
                 <Button
                   type="button"
@@ -382,9 +380,7 @@ export const GitRepoForm: FC<Props> = ({
                     setProjectData(prev => ({ ...prev, cloneParentDir: filePath }));
                   }}
                   className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-                >
-                  Choose folder…
-                </Button>
+                >{translateOfflineUi("Choose folder…")}</Button>
                 {projectData.cloneParentDir && (
                   <Button
                     type="button"

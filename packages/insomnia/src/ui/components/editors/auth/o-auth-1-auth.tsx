@@ -1,3 +1,4 @@
+
 import type { AuthTypeOAuth1 } from 'insomnia-data';
 import React, { type FC } from 'react';
 
@@ -8,6 +9,7 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '~/common/constants';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   type RequestLoaderData,
@@ -51,7 +53,7 @@ export const OAuth1Auth: FC = () => {
   const { signatureMethod } = authentication;
   return (
     <AuthTableBody>
-      <AuthToggleRow label="Enabled" property="disabled" invert />
+      <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert />
       <AuthInputRow label="Consumer Key" property="consumerKey" />
       <AuthInputRow label="Consumer Secret" property="consumerSecret" mask />
       <AuthInputRow label="Token Key" property="tokenKey" />

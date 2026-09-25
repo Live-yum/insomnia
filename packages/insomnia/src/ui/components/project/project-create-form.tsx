@@ -1,3 +1,4 @@
+
 import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials } from 'insomnia-data';
 import type { FC } from 'react';
@@ -22,6 +23,7 @@ import {
   useActiveView,
 } from '~/ui/components/project/utils';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
@@ -253,7 +255,7 @@ export const ProjectCreateForm: FC<Props> = ({
               onChange={name => setProjectData({ ...projectData, name })}
               className="group relative flex flex-col gap-2 px-0.5"
             >
-              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+              <Label className="pt-0 text-sm text-(--color-font)">{translateOfflineUi("Project name")}</Label>
               <Input
                 ref={nameInputRef}
                 placeholder={defaultProjectName}
@@ -285,7 +287,7 @@ export const ProjectCreateForm: FC<Props> = ({
                     }`}
                   >
                     <Icon icon={mode === 'clone' ? 'cloud-arrow-down' : 'folder-open'} />
-                    {mode === 'clone' ? 'Clone from Remote' : 'Open local folder'}
+                    {mode === 'clone' ? translateOfflineUi("Clone from Remote") : translateOfflineUi("Open local folder")}
                   </Button>
                 ))}
               </div>
@@ -304,7 +306,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 />
               ) : (
                 <div className="flex flex-col gap-2 px-0.5">
-                  <Label className="text-sm text-(--color-font)">Folder</Label>
+                  <Label className="text-sm text-(--color-font)">{translateOfflineUi("Folder")}</Label>
                   <p className="text-xs">
                     Insomnia will open this folder as a Git project. If it isn't a git repository yet, one will be
                     initialized.
@@ -323,9 +325,7 @@ export const ProjectCreateForm: FC<Props> = ({
                     <Button
                       onPress={onChooseExistingFolder}
                       className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-                    >
-                      Choose folder…
-                    </Button>
+                    >{translateOfflineUi("Choose folder…")}</Button>
                   </div>
                   {existingFolderProject && (
                     <div className="flex flex-col gap-1 text-sm text-(--color-danger)">
@@ -377,9 +377,7 @@ export const ProjectCreateForm: FC<Props> = ({
               <Button
                 onPress={onCancel}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Cancel
-              </Button>
+              >{translateOfflineUi("Cancel")}</Button>
             )}
             {isUpsertPrimaryAction ? (
               <Button
@@ -389,7 +387,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {newProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                <span>{isGitOpen ? 'Open' : 'Create'}</span>
+                <span>{isGitOpen ? translateOfflineUi("Open") : translateOfflineUi("Create")}</span>
               </Button>
             ) : (
               <Button
@@ -398,7 +396,7 @@ export const ProjectCreateForm: FC<Props> = ({
                 isDisabled={!canScanForFiles}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                <span>Scan for files</span>
+                <span>{translateOfflineUi("Scan for files")}</span>
               </Button>
             )}
           </div>
@@ -423,9 +421,7 @@ export const ProjectCreateForm: FC<Props> = ({
               isDisabled={true}
               type="button"
               className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-            >
-              Create
-            </Button>
+            >{translateOfflineUi("Create")}</Button>
           ) : (
             <Button
               ref={cloneButtonRef}

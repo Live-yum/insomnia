@@ -20,6 +20,7 @@ import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
 import { installOfflineNetworkPolicy } from '~/main/offline-network';
+import { getNativeOfflineLocale } from '~/main/offline-ui-locale';
 import { isPermissionAllowed } from '~/main/permission-policy';
 import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';
@@ -64,6 +65,8 @@ installOfflineNetworkPolicy();
 
 initializeLogging();
 initElectronStorage(dataPath);
+// Engine/native controls follow the persisted explicit choice; first launch is zh-CN.
+app.commandLine.appendSwitch('lang', getNativeOfflineLocale());
 
 initializeSentry();
 

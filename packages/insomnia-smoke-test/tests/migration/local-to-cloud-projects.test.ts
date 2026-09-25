@@ -1,78 +1,50 @@
-import { copyFixtureDatabase } from '../../playwright/paths';
+import fs from 'node:fs/promises';
+
+import { expect } from '@playwright/test';
+
+import { copyFixtureDatabase, getFixturePath } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
 const testWithLegacyDatabase = test.extend({
   dataPath: async ({ dataPath }, use) => {
     await copyFixtureDatabase('insomnia-legacy-db', dataPath);
-
     await use(dataPath);
   },
   userConfig: async ({ userConfig }, use) => {
-    await use({
-      ...userConfig,
-      session: undefined,
-    });
+    await use({ ...userConfig, session: undefined, skipOnboarding: false });
   },
 });
 
-// tests new cloud project create but not the vcs part as its too complex to stub the gql endpoint
-testWithLegacyDatabase('Run data migration to version 8', async ({ page, userConfig }) => {
-  // Migration takes a while, adding this to avoid test timeout before it ends
-  test.slow();
+// This is a migration test, not a simulated cloud login. Compare original
+// fixture content against the live migrated data API and require no account.
+testWithLegacyDatabase('migrates legacy local data without adopting or synchronizing cloud projects', async ({ page }) => {
+  const requests = (await fs.readFile(getFixturePath('insomnia-legacy-db/insomnia.Request.db'), 'utf8'))
+    .split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const environments = (await fs.readFile(getFixturePath('insomnia-legacy-db/insomnia.Environment.db'), 'utf8'))
+    .split('\n').filter(Boolean).map(line => JSON.parse(line));
+  const originalRequest = requests.find(request => request.name === 'Get list of rockets');
+  const originalEnvironment = environments.find(environment => environment.name === 'Mars');
+  expect.soft(originalRequest).toBeTruthy();
+  expect.soft(originalEnvironment).toBeTruthy();
 
-  (await page.getByLabel('Continue with Google').click(), await page.locator('input[name="code"]').click());
-  await page.locator('input[name="code"]').fill(userConfig.code);
-
-  await page.getByRole('button', { name: 'Log in' }).click();
-
-  // Open migrated Project (Local before migration)
-  await page.getByLabel('Insomnia').click();
-
-  // Open migrated local migrated collection that should have Git Sync
-  await page.getByLabel('Local Collection').click();
-  await page.getByLabel('Select an API Collection Environment').click();
-  await page.getByLabel('Select a Collection').getByRole('option', { name: 'Mars' }).press('Enter');
-  await page.locator('body').click();
-  // The collection is moved to a local project
-  await page.getByLabel('Git Sync').isVisible();
-  await page.getByText('Get list of rockets').click();
-  await page.getByTestId('workspace-breadcrumb-level-0').click();
-
-  // @TODO Re-enable this test
-  // // Open migrated local migrated collection that should have Git Sync - TODO - Fix this
-  // await page.getByLabel('Local Project (GIT)').click();
-  // await page.getByLabel('OpenAPI').click();
-  // await page.getByTestId('workspace-debug').click();
-
-  // await page.getByText('Delete user').click({ force: true });
-  // await page.getByLabel('Git Sync').isVisible();
-  // await page.getByTestId('project').click();
-
-  // await page.getByLabel('Personal Workspace', { exact: true }).click();
-
-  // // Open Team that is migrated to Organization
-  // await page.getByRole('link', { name: '🦄' }).click();
-
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Personal Workspace', { exact: true }).click();
-  // await page.getByLabel('Remote Design Document', { exact: true }).click();
-  // await page.getByText('Updated user').click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
-  // await page.getByTestId('project').click();
-
-  // // Open remote migrated collection that should have GIT Sync
-  // await page.getByLabel('(GIT) Remote Design Document').click();
-  // await page.getByText('Updated user').click();
-  // await page.getByLabel('Git Sync').isVisible();
-  // await page.getByTestId('project').click();
-
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Remote Collection', { exact: true }).click();
-  // await page.getByText('New Request').click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
-  // await page.getByTestId('project').click();
-
-  // // Open remote migrated collection that should have Insomnia Sync
-  // await page.getByLabel('Remote Collection', { exact: true }).click();
-  // await page.getByLabel('Insomnia Sync').isVisible();
+  // Legacy repositories have no fixture working tree. Use the same local IPC
+  // operation as the required migration UI, then exercise the normal startup.
+  await page.evaluate(() => window.main.git.runAllGitRepoMigrations());
+  await page.reload();
+  await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+  await expect.soft(page.getByLabel('Continue with Google')).toHaveCount(0);
+  const migrated = await page.evaluate(async ({ requestId, environmentId }) => ({
+    project: await window._dataServicesInvoke('project', 'getById', 'proj_default-project'),
+    cloud: await window._dataServicesInvoke('project', 'getById', 'proj_team_195a6ce0edb1427eb2e8ba7b986072e4'),
+    request: await window._dataServicesInvoke('request', 'getById', requestId),
+    environment: await window._dataServicesInvoke('environment', 'getById', environmentId),
+    session: await window._dataServicesInvoke('userSession', 'get'),
+  }), { requestId: originalRequest._id, environmentId: originalEnvironment._id });
+  expect.soft(migrated.project).toMatchObject({ _id: 'proj_default-project', name: 'Insomnia', parentId: 'org_offline', remoteId: null });
+  expect.soft(migrated.cloud).toMatchObject({ remoteId: 'team_195a6ce0edb1427eb2e8ba7b986072e4' });
+  expect.soft(migrated.cloud?.parentId).not.toBe('org_offline');
+  expect.soft(migrated.request).toMatchObject({ _id: originalRequest._id, name: originalRequest.name, method: originalRequest.method, url: originalRequest.url });
+  expect.soft(migrated.environment?.data).toEqual(originalEnvironment.data);
+  expect.soft(migrated.session.id).toBe('');
+  expect.soft(migrated.session.accountId).toBe('');
 });

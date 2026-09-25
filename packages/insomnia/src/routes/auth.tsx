@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { Button, Link, Tooltip, TooltipTrigger } from 'react-aria-components';
 import { Outlet } from 'react-router';
@@ -8,6 +9,7 @@ import { Icon } from '~/ui/components/icon';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const Component = () => {
   const { settings } = useRootLoaderData()!;
@@ -54,15 +56,12 @@ const Component = () => {
                 className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => showSettingsModal()}
               >
-                <Icon icon="gear" /> Preferences
-              </Button>
+                <Icon icon="gear" /> {translateOfflineUi("Preferences")}</Button>
               <Tooltip
                 placement="top"
                 offset={8}
                 className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-              >
-                Preferences
-                <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
+              >{translateOfflineUi("Preferences")}<Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
               </Tooltip>
             </TooltipTrigger>
           </div>

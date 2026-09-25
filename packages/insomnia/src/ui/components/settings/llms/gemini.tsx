@@ -1,8 +1,10 @@
+
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Button, Input, Text } from 'react-aria-components';
 
 import type { LLMBackend, LLMConfig } from '~/main/llm-config-service';
 import { Icon } from '~/ui/components/icon';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface GeminiModelData {
   name: string;
@@ -121,9 +123,7 @@ export const Gemini = ({
           >
             {isLoadingModels ? (
               <span className="flex items-center gap-2">
-                <Icon icon="refresh" className="animate-spin" />
-                Loading...
-              </span>
+                <Icon icon="refresh" className="animate-spin" />{translateOfflineUi("Loading...")}</span>
             ) : (
               'Load Models'
             )}
@@ -147,9 +147,7 @@ export const Gemini = ({
             >
               {isLoadingModels ? (
                 <span className="flex items-center gap-2">
-                  <Icon icon="refresh" className="animate-spin" />
-                  Loading...
-                </span>
+                  <Icon icon="refresh" className="animate-spin" />{translateOfflineUi("Loading...")}</span>
               ) : (
                 'Change'
               )}

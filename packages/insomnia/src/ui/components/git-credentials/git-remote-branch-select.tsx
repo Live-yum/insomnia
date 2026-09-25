@@ -1,3 +1,4 @@
+
 import { fuzzyMatch } from 'insomnia-data/common';
 import React, { useDeferredValue } from 'react';
 import { Button, ComboBox, FieldError, Input, Label, ListBox, ListBoxItem, Popover } from 'react-aria-components';
@@ -5,6 +6,7 @@ import * as reactUse from 'react-use';
 import { z } from 'zod/v4';
 
 import { useGitRemoteBranchesActionFetcher } from '~/routes/git.remote-branches';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 
@@ -56,7 +58,7 @@ export const GitRemoteBranchSelect = ({
       isRequired
       isInvalid={!!remoteBranchesFetchErrors}
       key={`${url}:${remoteBranches[0]}:branch-select`}
-      aria-label="Branch to clone"
+      aria-label={translateOfflineUi("Branch to clone")}
       allowsCustomValue={false}
       className="w-full"
       defaultSelectedKey={remoteBranches[0]}
@@ -74,12 +76,12 @@ export const GitRemoteBranchSelect = ({
         Boolean(fuzzyMatch(inputValue, branch, { splitSpace: true, loose: false })?.indexes)
       }
     >
-      <Label className="mb-1 pt-0 text-sm">Branch</Label>
+      <Label className="mb-1 pt-0 text-sm">{translateOfflineUi("Branch")}</Label>
       <div className="flex w-full items-start gap-2">
         <div className="group flex h-(--line-height-xs) flex-1 items-center gap-2 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
           <Input
-            aria-label="Search branches"
-            placeholder={isLoadingRemoteBranches ? 'Fetching remote branches...' : 'Default branch'}
+            aria-label={translateOfflineUi("Search branches")}
+            placeholder={isLoadingRemoteBranches ? translateOfflineUi("Fetching remote branches...") : translateOfflineUi("Default branch")}
             className="w-full py-1 pr-7 pl-2 placeholder:italic"
           />
           <Button
@@ -93,7 +95,7 @@ export const GitRemoteBranchSelect = ({
           type="button"
           disabled={isRefetchButtonDisabled}
           className="flex aspect-square size-(--line-height-xs) items-center justify-center gap-2 truncate rounded-xs border border-solid border-(--hl-sm) p-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset active:bg-(--hl-sm) disabled:opacity-30"
-          aria-label="Refresh repositories"
+          aria-label={translateOfflineUi("Refresh repositories")}
           onClick={() => {
             if (uri && !isLoadingRemoteBranches) {
               remoteBranchesFetcher.submit({

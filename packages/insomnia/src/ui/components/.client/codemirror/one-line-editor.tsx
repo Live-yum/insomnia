@@ -357,7 +357,8 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
     reactUse.useMount(() => {
       initEditor();
       if (autoFocus && !readOnly) {
-        onAutoFocus?.();
+        const initiatingControl = document.activeElement;
+        let focusedOnce = false;
         // An enclosing React Aria ListBox (params/headers/environment grids) restores DOM focus to
         // the row right after we focus the editor, and a single deferred focus loses that race on
         // slower/headless machines. So we re-assert focus across a short window, re-grabbing only when
@@ -398,11 +399,17 @@ export const OneLineEditor = forwardRef<OneLineEditorHandle, OneLineEditorProps>
                 role === 'menuitemradio' ||
                 role === 'checkbox' ||
                 role === 'tab');
-            if (userMovedToAnotherControl) {
+            // The Add button is still focused when its newly created editor mounts.
+            // Allow the first focus handoff from that initiating control, but respect later input.
+            if (userMovedToAnotherControl && (focusedOnce || active !== initiatingControl)) {
               return;
             }
             cm.focus();
             cm.getDoc().setCursor(cm.getDoc().lineCount(), 0);
+          }
+          if (!focusedOnce && cm.hasFocus()) {
+            focusedOnce = true;
+            onAutoFocus?.();
           }
           if (Date.now() < deadline) {
             requestAnimationFrame(ensureFocus);

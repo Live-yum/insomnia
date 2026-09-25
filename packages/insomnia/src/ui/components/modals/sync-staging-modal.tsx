@@ -1,3 +1,4 @@
+
 import { models } from 'insomnia-data';
 import type { StageEntry, Status, StatusCandidate } from 'insomnia-vcs';
 import { useEffect, useState } from 'react';
@@ -21,6 +22,7 @@ import { stringify } from 'yaml';
 import { useInsomniaSyncCreateSnapshotActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.create-snapshot';
 import { useInsomniaSyncStageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.stage';
 import { useInsomniaSyncUnstageActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.unstage';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { DiffEditor } from '../diff-view-editor';
 import { Icon } from '../icon';
@@ -198,7 +200,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                     className="flex flex-col gap-2"
                   >
                     <TextField className="flex shrink-0 flex-col gap-2">
-                      <Label className="font-bold">Message</Label>
+                      <Label className="font-bold">{translateOfflineUi("Message")}</Label>
                       <TextArea
                         rows={3}
                         name="message"
@@ -218,9 +220,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         <Icon
                           icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'check'}
                           className={`w-5 ${createSnapshotFetcher.state === 'idle' ? '' : 'animate-spin'}`}
-                        />{' '}
-                        Commit
-                      </Button>
+                        />{' '}{translateOfflineUi("Commit")}</Button>
                       <Button
                         type="submit"
                         isDisabled={createSnapshotFetcher.state !== 'idle'}
@@ -231,9 +231,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                         <Icon
                           icon={createSnapshotFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-up'}
                           className={`w-5 ${createSnapshotFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-                        />{' '}
-                        Commit and push
-                      </Button>
+                        />{' '}{translateOfflineUi("Commit and push")}</Button>
                     </div>
                     {createSnapshotFetcher.data?.error && (
                       <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
@@ -245,7 +243,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                   <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
                       <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
-                        <span className="flex-1">Staged changes</span>
+                        <span className="flex-1">{translateOfflineUi("Staged changes")}</span>
                         <Button
                           className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                           slot={null}
@@ -268,7 +266,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             key: entry.id,
                             textValue: entry.name || entry.document?.type || '',
                           }))}
-                          aria-label="Unstaged changes"
+                          aria-label={translateOfflineUi("Unstaged changes")}
                           onAction={key => {
                             setSelectedItemId(key.toString());
                           }}
@@ -339,7 +337,7 @@ export const SyncStagingModal = ({ onClose, status, syncItems }: Props) => {
                             key: entry.id,
                             textValue: entry.name || entry.document?.type || '',
                           }))}
-                          aria-label="Unstaged changes"
+                          aria-label={translateOfflineUi("Unstaged changes")}
                           onAction={key => {
                             setSelectedItemId(key.toString());
                           }}

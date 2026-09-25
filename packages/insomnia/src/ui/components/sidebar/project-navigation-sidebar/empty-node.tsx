@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { WorkspaceScope } from 'insomnia-data';
@@ -11,6 +12,7 @@ import { showModal } from '~/ui/components/modals';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { PromptModal } from '~/ui/components/modals/prompt-modal';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../../icon';
 import { GUIDE_LINE_CSS, ROW_CLASS } from './styles';
@@ -242,7 +244,7 @@ export const EmptyNode = ({ item, storageRules, depthOffset = 0 }: EmptyNodeProp
           aria-label={`Create in ${getAriaLabel()}`}
           className="flex items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-md) bg-(--hl-xxs) p-1.5 px-2 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
-          <Icon icon="plus" /> <span className="hidden md:block">Create</span>
+          <Icon icon="plus" /> <span className="hidden md:block">{translateOfflineUi("Create")}</span>
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
           <Menu

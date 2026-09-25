@@ -1,3 +1,4 @@
+
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { getOnboardingState, type UserOnboarding } from 'insomnia-api';
 import type { Request } from 'insomnia-data';
@@ -19,6 +20,7 @@ import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { showToast } from '~/ui/components/toast-notification';
 import { getBadgeClassName } from '~/ui/components/workspace/resource-icon';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { maybeLatchRequestThreshold } from '~/ui/utils/first-request-latch';
 import {
   FIRST_REQUEST_EXPERIMENT_NAME,
@@ -554,14 +556,14 @@ export const FirstRequestCreation = ({
     <>
       <div className="rounded-sm bg-[radial-gradient(95.72%_95.72%_at_-0.32%_2.6%,var(--hl-md)_0%,var(--hl-xs)_100%),radial-gradient(100%_100.41%_at_100%_99.92%,var(--hl-md)_0%,var(--hl-xs)_100%)] p-px">
         <div className="flex w-full flex-col gap-2 rounded-sm bg-(--color-bg) bg-[linear-gradient(180deg,rgba(var(--color-surprise-rgb),0.2)_0%,color-mix(in_srgb,var(--color-bg)_0%,transparent)_72.8%)] px-5 pt-4 pb-2">
-          <h2 className="text-lg font-semibold">New request</h2>
+          <h2 className="text-lg font-semibold">{translateOfflineUi("New request")}</h2>
           <div className="flex h-(--line-height-sm) items-center gap-1.5 rounded-md border border-(--hl-md) bg-(--color-bg) p-1 focus-within:shadow-[0_0_0_4px_#0044F433]">
             <MethodSelector method={method} onChange={setMethod} className="h-full" placement="bottom start" />
             <input
               ref={inputRef}
-              aria-label="Request endpoint or cURL input"
+              aria-label={translateOfflineUi("Request endpoint or cURL input")}
               className="h-6.5 min-w-0 flex-1 bg-transparent px-1 text-[12px]/[18px] font-normal outline-none"
-              placeholder="Enter a URL or paste cURL"
+              placeholder={translateOfflineUi("Enter a URL or paste cURL")}
               value={requestInput}
               onChange={event => applyRequestInput(event.target.value)}
               onPaste={event => {
@@ -616,7 +618,7 @@ export const FirstRequestCreation = ({
               )}
             />
             <Button
-              aria-label="Create request"
+              aria-label={translateOfflineUi("Create request")}
               primary
               size="md"
               className="h-full rounded-sm px-2 text-[12px]/[18px] font-[590]"

@@ -1,3 +1,4 @@
+
 import fs from 'node:fs';
 import * as os from 'node:os';
 import path from 'node:path';
@@ -19,6 +20,7 @@ import { isLinux, isMac } from 'insomnia-data/common';
 
 import { invariant } from '~/common/utils/invariant';
 import { AnalyticsEvent, trackAnalyticsEvent } from '~/main/analytics';
+import { translateNativeOfflineUi } from '~/main/offline-ui-locale';
 
 import { getAppBuildDate, getAppVersion, getProductName, isDevelopment, MNEMONIC_SYM } from '../common/constants';
 import { docsBase } from '../common/documentation';
@@ -283,10 +285,10 @@ export function createWindow(): ElectronBrowserWindow {
   });
 
   const applicationMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Application`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Application`),
     submenu: [
       {
-        label: `${MNEMONIC_SYM}Preferences`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Preferences`),
         click: () => {
           trackAnalyticsEvent(AnalyticsEvent.AppMenuPreferencesClicked);
           mainBrowserWindow.webContents?.send('toggle-preferences');
@@ -310,7 +312,7 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `${MNEMONIC_SYM}Quit`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Quit`),
         accelerator: 'CmdOrCtrl+Q',
         click: () => app.quit(),
       },
@@ -318,20 +320,20 @@ export function createWindow(): ElectronBrowserWindow {
   };
 
   const editMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Edit`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Edit`),
     submenu: [
       {
         // Route through the renderer (see editor-undo.ts) instead of role: 'undo'
         // so a single app-level handler reconciles CodeMirror's history with the
         // native undo stack; role: 'undo' only drove the latter.
-        label: `${MNEMONIC_SYM}Undo`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Undo`),
         accelerator: 'CmdOrCtrl+Z',
         click: () => {
           BrowserWindow.getFocusedWindow()?.webContents.send('edit:undo');
         },
       },
       {
-        label: `${MNEMONIC_SYM}Redo`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Redo`),
         accelerator: 'Shift+CmdOrCtrl+Z',
         click: () => {
           BrowserWindow.getFocusedWindow()?.webContents.send('edit:redo');
@@ -341,22 +343,22 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `Cu${MNEMONIC_SYM}t`,
+        label: translateNativeOfflineUi(`Cu${MNEMONIC_SYM}t`),
         accelerator: 'CmdOrCtrl+X',
         role: 'cut',
       },
       {
-        label: `${MNEMONIC_SYM}Copy`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Copy`),
         accelerator: 'CmdOrCtrl+C',
         role: 'copy',
       },
       {
-        label: `${MNEMONIC_SYM}Paste`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Paste`),
         accelerator: 'CmdOrCtrl+V',
         role: 'paste',
       },
       {
-        label: `Select ${MNEMONIC_SYM}All`,
+        label: translateNativeOfflineUi(`Select ${MNEMONIC_SYM}All`),
         accelerator: 'CmdOrCtrl+A',
         role: 'selectAll',
       },
@@ -364,29 +366,29 @@ export function createWindow(): ElectronBrowserWindow {
   };
 
   const viewMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}View`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}View`),
     submenu: [
       {
-        label: `Toggle ${MNEMONIC_SYM}Full Screen`,
+        label: translateNativeOfflineUi(`Toggle ${MNEMONIC_SYM}Full Screen`),
         role: 'togglefullscreen',
       },
       {
-        label: `${MNEMONIC_SYM}Actual Size`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Actual Size`),
         accelerator: 'CmdOrCtrl+0',
         click: setZoom(() => 1),
       },
       {
-        label: `Zoom ${MNEMONIC_SYM}In`,
+        label: translateNativeOfflineUi(`Zoom ${MNEMONIC_SYM}In`),
         accelerator: 'CmdOrCtrl+=',
         click: setZoom(zoom => zoom * 1.2),
       },
       {
-        label: `Zoom ${MNEMONIC_SYM}Out`,
+        label: translateNativeOfflineUi(`Zoom ${MNEMONIC_SYM}Out`),
         accelerator: 'CmdOrCtrl+-',
         click: setZoom(zoom => zoom * 0.8),
       },
       {
-        label: 'Specific Zoom Level',
+        label: translateNativeOfflineUi('Specific Zoom Level'),
         submenu: [25, 50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 500].map(item => ({
           label: `${item}%`,
           click: setZoom(() => item / 100),
@@ -396,7 +398,7 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `Resize to ${MNEMONIC_SYM}Small (qHD 540)`,
+        label: translateNativeOfflineUi(`Resize to ${MNEMONIC_SYM}Small (qHD 540)`),
         click: () =>
           mainBrowserWindow.setBounds({
             width: 960,
@@ -404,7 +406,7 @@ export function createWindow(): ElectronBrowserWindow {
           }),
       },
       {
-        label: `Resize to Defaul${MNEMONIC_SYM}t (HD 720)`,
+        label: translateNativeOfflineUi(`Resize to Defaul${MNEMONIC_SYM}t (HD 720)`),
         click: () =>
           mainBrowserWindow.setBounds({
             width: DEFAULT_WIDTH,
@@ -412,7 +414,7 @@ export function createWindow(): ElectronBrowserWindow {
           }),
       },
       {
-        label: `Resize to ${MNEMONIC_SYM}Large (FHD 1080)`,
+        label: translateNativeOfflineUi(`Resize to ${MNEMONIC_SYM}Large (FHD 1080)`),
         click: () =>
           mainBrowserWindow.setBounds({
             width: 1920,
@@ -423,7 +425,7 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: 'Toggle Sidebar',
+        label: translateNativeOfflineUi('Toggle Sidebar'),
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
 
@@ -435,7 +437,7 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: `Toggle ${MNEMONIC_SYM}DevTools`,
+        label: translateNativeOfflineUi(`Toggle ${MNEMONIC_SYM}DevTools`),
         accelerator: 'Alt+CmdOrCtrl+I',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -449,24 +451,24 @@ export function createWindow(): ElectronBrowserWindow {
   };
 
   const windowMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Window`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Window`),
     role: 'window',
     submenu: [
       {
-        label: `${MNEMONIC_SYM}New`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}New`),
         click: () => {
           createWindow();
         },
       },
       {
-        label: `${MNEMONIC_SYM}Minimize`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Minimize`),
         role: 'minimize',
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
       ...(isMac
         ? [
             {
-              label: `${MNEMONIC_SYM}Close`,
+              label: translateNativeOfflineUi(`${MNEMONIC_SYM}Close`),
               role: 'close',
             },
           ]
@@ -475,12 +477,12 @@ export function createWindow(): ElectronBrowserWindow {
   };
 
   const helpMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Help`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Help`),
     role: 'help',
     id: 'help',
     submenu: [
       {
-        label: `${MNEMONIC_SYM}Help and Support`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Help and Support`),
         ...(isMac ? {} : { accelerator: 'F1' }),
         click: () => {
           const { protocol } = new URL(docsBase);
@@ -490,7 +492,7 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Keyboard Shortcuts`),
         accelerator: 'CmdOrCtrl+Shift+?',
         click: () => {
           mainBrowserWindow.webContents.send('toggle-preferences-shortcuts');
@@ -500,14 +502,14 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Data Folder`,
+        label: translateNativeOfflineUi(`Show App ${MNEMONIC_SYM}Data Folder`),
         click: () => {
           const directory = process.env['INSOMNIA_DATA_PATH'] || app.getPath('userData');
           shell.showItemInFolder(directory);
         },
       },
       {
-        label: `Show App ${MNEMONIC_SYM}Logs Folder`,
+        label: translateNativeOfflineUi(`Show App ${MNEMONIC_SYM}Logs Folder`),
         click: () => {
           const directory = getLogDirectory();
           shell.showItemInFolder(directory);
@@ -517,13 +519,13 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: 'Show Software Bill of Materials',
+        label: translateNativeOfflineUi('Show Software Bill of Materials'),
         click: () => {
           openOfflineExternal('https://github.com/Kong/insomnia/releases');
         },
       },
       {
-        label: 'Show Software License',
+        label: translateNativeOfflineUi('Show Software License'),
         click: () => {
           openOfflineExternal('https://insomnia.rest/license');
         },
@@ -570,7 +572,7 @@ export function createWindow(): ElectronBrowserWindow {
         click: aboutMenuClickHandler,
       },
       {
-        label: 'Check for updates',
+        label: translateNativeOfflineUi('Check for updates'),
         click: () => {
           ipcMain.emit('manualUpdateCheck');
         },
@@ -586,25 +588,25 @@ export function createWindow(): ElectronBrowserWindow {
         type: 'separator',
       },
       {
-        label: 'Check for updates',
+        label: translateNativeOfflineUi('Check for updates'),
         click: () => {
           ipcMain.emit('manualUpdateCheck');
         },
       },
       {
-        label: `${MNEMONIC_SYM}About`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}About`),
         click: aboutMenuClickHandler,
       },
     );
   }
 
   const developerMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Developer`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Developer`),
     // @ts-expect-error -- TSCONVERSION missing in official electron types
     position: 'before=help',
     submenu: [
       {
-        label: `${MNEMONIC_SYM}Reload`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Reload`),
         accelerator: 'Shift+F5',
         click: () => {
           const window = BrowserWindow.getFocusedWindow();
@@ -614,7 +616,7 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: `Take ${MNEMONIC_SYM}Screenshot`,
+        label: translateNativeOfflineUi(`Take ${MNEMONIC_SYM}Screenshot`),
         click: () => {
           // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
           mainBrowserWindow.capturePage(image => {
@@ -625,7 +627,7 @@ export function createWindow(): ElectronBrowserWindow {
         },
       },
       {
-        label: `R${MNEMONIC_SYM}estart`,
+        label: translateNativeOfflineUi(`R${MNEMONIC_SYM}estart`),
         click: () => {
           app.relaunch();
           app.exit();
@@ -674,7 +676,7 @@ export function createWindow(): ElectronBrowserWindow {
       {
         // Simulates the OS "Open folder in Insomnia" flow without a packaged build
         // (Finder association / protocol handler only register for an installed app).
-        label: `${MNEMONIC_SYM}Open folder in Insomnia…`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Open folder in Insomnia…`),
         click: async () => {
           const window = BrowserWindow.getFocusedWindow() || mainBrowserWindow;
           if (!window) {
@@ -682,7 +684,7 @@ export function createWindow(): ElectronBrowserWindow {
           }
           const { canceled, filePaths } = await dialog.showOpenDialog(window, {
             title: 'Open folder in Insomnia',
-            buttonLabel: 'Open',
+            buttonLabel: translateNativeOfflineUi('Open'),
             properties: ['openDirectory'],
           });
           if (canceled || !filePaths[0]) {
@@ -694,10 +696,10 @@ export function createWindow(): ElectronBrowserWindow {
     ],
   };
   const toolsMenu: MenuItemConstructorOptions = {
-    label: `${MNEMONIC_SYM}Tools`,
+    label: translateNativeOfflineUi(`${MNEMONIC_SYM}Tools`),
     submenu: [
       {
-        label: `${MNEMONIC_SYM}Reload Plugins`,
+        label: translateNativeOfflineUi(`${MNEMONIC_SYM}Reload Plugins`),
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
 
@@ -714,10 +716,10 @@ export function createWindow(): ElectronBrowserWindow {
   template.push(
     applicationMenu,
     {
-      label: `${MNEMONIC_SYM}File`,
+      label: translateNativeOfflineUi(`${MNEMONIC_SYM}File`),
       submenu: [
         {
-          label: `${MNEMONIC_SYM}New Window`,
+          label: translateNativeOfflineUi(`${MNEMONIC_SYM}New Window`),
           click: () => {
             createWindow();
           },

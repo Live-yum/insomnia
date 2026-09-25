@@ -1,9 +1,11 @@
+
 import type { SettingsOfType } from 'insomnia-data/common';
 import React, { type FC, type InputHTMLAttributes, useCallback, useState } from 'react';
 import { ListBox, ListBoxItem } from 'react-aria-components';
 
 import { invariant } from '~/common/utils/invariant';
 import { useRootLoaderData } from '~/root';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { PromptButton } from '../base/prompt-button';
@@ -74,9 +76,7 @@ export const TextArraySetting: FC<{
             data-testid={`${setting}-btn`}
             disabled={disabled}
             onClick={onAddDataFolder}
-          >
-            Add
-          </button>
+          >{translateOfflineUi("Add")}</button>
         </div>
         {validationError && (
           <p className="margin-top-xs text-sm" style={{ color: 'var(--color-danger)' }}>

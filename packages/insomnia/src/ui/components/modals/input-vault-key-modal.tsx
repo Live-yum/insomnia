@@ -1,3 +1,4 @@
+
 import { services } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Input, Modal, ModalOverlay } from 'react-aria-components';
@@ -9,6 +10,7 @@ import { PromptButton } from '~/ui/components/base/prompt-button';
 import { Icon } from '~/ui/components/icon';
 import { VaultKeyDisplayInput } from '~/ui/components/settings/vault-key-panel';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 export interface InputVaultKeyModalProps {
   onClose: (vaultKey?: string) => void;
@@ -129,9 +131,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                     >
                       {isLoading && (
                         <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />
-                      )}
-                      Unlock
-                    </Button>
+                      )}{translateOfflineUi("Unlock")}</Button>
                   </div>
                 </>
               ) : (
@@ -142,9 +142,7 @@ export const InputVaultKeyModal = (props: InputVaultKeyModalProps) => {
                     <Button
                       className="ml-4 flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                       onPress={() => onClose(vaultKey)}
-                    >
-                      OK
-                    </Button>
+                    >{translateOfflineUi("OK")}</Button>
                   </div>
                 </>
               )}

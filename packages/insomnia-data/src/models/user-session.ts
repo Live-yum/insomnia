@@ -17,6 +17,8 @@ export interface BaseUserSession {
   encPrivateKey: AESMessage;
   vaultSalt?: string;
   vaultKey?: string;
+  /** Versioned local AES-GCM key proof; never synchronized to a server. */
+  offlineVaultProof?: string;
 }
 
 export interface HashedUserSession {
@@ -42,5 +44,6 @@ export function init(): BaseUserSession {
     encPrivateKey: {} as AESMessage,
     vaultKey: '',
     vaultSalt: '',
+    offlineVaultProof: '',
   };
 }

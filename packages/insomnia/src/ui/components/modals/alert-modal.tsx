@@ -1,5 +1,8 @@
+
 import classnames from 'classnames';
 import React, { forwardRef, type ReactNode, useImperativeHandle, useRef, useState } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -57,9 +60,7 @@ export const AlertModal = forwardRef<AlertModalHandle, ModalProps>((_, ref) => {
       <ModalFooter>
         <div>
           {addCancel ? (
-            <button className="btn" onClick={() => modalRef.current?.hide()}>
-              Cancel
-            </button>
+            <button className="btn" onClick={() => modalRef.current?.hide()}>{translateOfflineUi("Cancel")}</button>
           ) : null}
           <button
             className="btn"

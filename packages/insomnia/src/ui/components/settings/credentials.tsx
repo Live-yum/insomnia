@@ -1,3 +1,4 @@
+
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitCredentials, GitCredentialsV2, GitRemoteProviderType, ProviderEmail } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -37,6 +38,7 @@ import { GitCustomCredentialForm } from '~/ui/components/git-credentials/git-cus
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { CloudServiceCredentialList } from '~/ui/components/settings/cloud-service-credentials';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const { isGitCredentialsV2, isOAuthCredential } = models.gitCredentials;
 
@@ -221,7 +223,7 @@ const GitEditProviderOAuthForm = ({
             <BasicButton primary type="submit">
               Update Credential
             </BasicButton>
-            <BasicButton onPress={onCancel}>Cancel</BasicButton>
+            <BasicButton onPress={onCancel}>{translateOfflineUi("Cancel")}</BasicButton>
           </div>
         </form>
       )}
@@ -428,7 +430,7 @@ export const GitCredentialModal = ({
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between gap-2">
                 <Heading className="text-2xl">
-                  {gitCredentialToEdit ? 'Edit' : 'Add a new'} {provider?.displayName} Credential
+                  {gitCredentialToEdit ? translateOfflineUi("Edit") : 'Add a new'} {provider?.displayName} Credential
                 </Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -668,8 +670,7 @@ const GitCredentialsList = () => {
                         setIsCredentialModalOpen(true);
                       }}
                     >
-                      <Icon icon="edit" /> Edit
-                    </Button>
+                      <Icon icon="edit" /> {translateOfflineUi("Edit")}</Button>
                   )}
                   {item.provider !== 'native' && (
                     <Button
@@ -679,8 +680,7 @@ const GitCredentialsList = () => {
                       }}
                       className="h-7 rounded-xs px-2 py-1 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) disabled:opacity-50 aria-pressed:bg-(--hl-sm)"
                     >
-                      <Icon icon="trash" /> Delete
-                    </Button>
+                      <Icon icon="trash" /> {translateOfflineUi("Delete")}</Button>
                   )}
                 </div>
               </div>

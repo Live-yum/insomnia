@@ -1,47 +1,26 @@
 import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
-import { getUserEmail } from './test-utils';
 
-const testUser = getUserEmail();
-
-test('Can invite users in app', async ({ page }) => {
-  await page.getByLabel('Invite collaborators').filter({ visible: true }).click();
-
-  // invite a new member
-  await page.getByPlaceholder('Enter emails, separated by').click();
-  await page.getByPlaceholder('Enter emails, separated by').fill(testUser);
-
-  const organizationMembersSelector = page.getByLabel('Organization members');
-  // Iterate through the first five options and click each one
-  for (let i = 0; i < 5; i++) {
-    // Get each option of the listbox
-    await organizationMembersSelector.getByRole('option').nth(i).click();
-  }
-
-  await page.locator('.app').press('Escape');
-  await page.getByRole('dialog').getByRole('button', { name: 'Invite' }).click();
-
-  const invitationListLocator = page.getByLabel('Invitation list');
-  // Check that the new member is in the list
-  await expect.soft(invitationListLocator.getByRole('option')).toHaveCount(15);
-
-  // Change the role
-  const thirdMemberInTheListLocator = invitationListLocator.getByRole('option').nth(2);
-  await thirdMemberInTheListLocator.getByLabel('Menu').click();
-  await page.getByLabel('admin').click();
-
-  // @TODO Bring this back when we fix the Prompt button api to be testable
-  // // Revoke the invitation
-  // const fourthMemberInTheListLocator = invitationListLocator.getByRole('option').nth(3);
-  // await fourthMemberInTheListLocator.getByLabel('Revoke').click();
-  // // Confirm the revokation
-  // await fourthMemberInTheListLocator.getByLabel('Revoke').click();
-
-  // // Unlink the team. The team is showing as the first option in the list
-  // const firstMemberInTheListLocator = invitationListLocator.getByRole('option').nth(0);
-  // // Remove the team
-  // await firstMemberInTheListLocator.getByLabel('Remove').click();
-  // // Confirm the deletion
-  // await firstMemberInTheListLocator.getByLabel('Remove').click();
+// Invitations require the deliberately absent vendor service. Verify this
+// boundary rather than simulating cloud login in an account-free local build.
+test('local workspaces do not offer cloud invitations or acquire a vendor session', async ({ page, insomnia }) => {
+  await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+  await expect.soft(page.getByLabel('Invite collaborators')).toHaveCount(0);
+  await expect.soft(page.getByPlaceholder('Enter emails, separated by')).toHaveCount(0);
+  await insomnia.projectPage.createProject('Private offline project');
+  const before = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
+  await page.reload();
+  await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+  await expect.soft(page.getByLabel('Invite collaborators')).toHaveCount(0);
+  const state = await page.evaluate(async () => ({
+    session: await window._dataServicesInvoke('userSession', 'get'),
+    projects: await window._dataServicesInvoke('project', 'list'),
+  }));
+  expect.soft(state.session.id).toBe('');
+  expect.soft(state.session.accountId).toBe('');
+  expect.soft(state.projects.map(project => project._id).sort()).toEqual(before.map(project => project._id).sort());
+  expect.soft(state.projects.find(project => project.name === 'Private offline project')).toMatchObject({
+    parentId: 'org_offline', remoteId: null,
+  });
 });

@@ -20,6 +20,14 @@ try {
   page = await app.firstWindow({ timeout: 60000 });
   page.setDefaultTimeout(30000);
   await page.getByTestId('offline-mode').waitFor();
+  assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');
+  await page.getByRole('button', { name: '新建项目', exact: true }).waitFor();
+  await page.evaluate(async () => {
+    await window.main.electronStorage.setItem('insomnia.offline.ui-locale', 'en-US');
+    localStorage.setItem('insomnia.offline.ui-locale', 'en-US');
+  });
+  await page.reload();
+  await page.getByTestId('offline-mode').waitFor();
   assert.match(page.url(), /organization\/org_offline\/project/);
   const initial = await page.evaluate(async () => ({
     session: await window._dataServicesInvoke('userSession', 'get'),

@@ -1,3 +1,4 @@
+
 import { type CurrentPlan, type User } from 'insomnia-api';
 import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
@@ -8,6 +9,7 @@ import { Icon } from '~/ui/components/icon';
 import { showModal } from '~/ui/components/modals';
 import { LogoutModal } from '~/ui/components/modals/logout-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface UserButtonProps {
   user: User;
@@ -53,7 +55,7 @@ export const HeaderUserButton = ({ user, isMinimal = false }: UserButtonProps) =
             aria-label="preferences"
           >
             <Icon icon="gear" />
-            <span>Preferences</span>
+            <span>{translateOfflineUi("Preferences")}</span>
           </MenuItem>
           <MenuItem
             id="my-profile"

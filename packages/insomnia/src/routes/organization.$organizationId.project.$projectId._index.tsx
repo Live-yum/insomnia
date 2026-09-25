@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -60,6 +61,7 @@ import { useOrganizationData } from '~/ui/hooks/use-organization-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useUnsyncedFilesForProject } from '~/ui/hooks/use-remote-files';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId._index';
@@ -415,9 +417,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   <Button
                     onPress={() => setIsUpdateProjectModalOpen(true)}
                     className="flex items-center justify-center rounded-xs border border-solid border-white px-2 py-1"
-                  >
-                    Update
-                  </Button>
+                  >{translateOfflineUi("Update")}</Button>
                 </div>
               </div>
             )}
@@ -436,7 +436,7 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                   }}
                 >
                   <Input
-                    placeholder="Filter"
+                    placeholder={translateOfflineUi("Filter")}
                     className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                   <div className="absolute top-0 right-0 flex h-full items-center px-2">
@@ -490,10 +490,10 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
 
                 <MenuTrigger>
                   <Button
-                    aria-label="Create in project"
+                    aria-label={translateOfflineUi("Create in project")}
                     className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   >
-                    <Icon icon="plus-circle" /> <span className="hidden md:block">Create</span>
+                    <Icon icon="plus-circle" /> <span className="hidden md:block">{translateOfflineUi("Create")}</span>
                   </Button>
                   <Popover className="flex min-w-max flex-col overflow-y-hidden">
                     <Menu
@@ -537,17 +537,17 @@ const Component = ({ loaderData }: Route.ComponentProps) => {
                     });
                     setImportModalType('file');
                   }}
-                  aria-label="Import"
+                  aria-label={translateOfflineUi("Import")}
                   className="flex h-full items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
-                  <Icon icon="file-import" /> <span className="hidden md:block">Import</span>
+                  <Icon icon="file-import" /> <span className="hidden md:block">{translateOfflineUi("Import")}</span>
                 </Button>
               </div>
             )}
 
             <div className="flex-1 overflow-y-auto">
               <GridList
-                aria-label="Files"
+                aria-label={translateOfflineUi("Files")}
                 data-testid="workspace-grid"
                 className="grid grid-cols-[repeat(auto-fit,200px)] grid-rows-[repeat(auto-fit,200px)] gap-4 p-(--padding-md) data-empty:flex data-empty:justify-center"
                 items={filesWithPresence}

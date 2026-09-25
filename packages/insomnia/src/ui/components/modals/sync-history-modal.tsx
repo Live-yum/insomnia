@@ -1,3 +1,4 @@
+
 import type { Snapshot } from 'insomnia-vcs';
 import {
   Button,
@@ -16,6 +17,7 @@ import { useParams } from 'react-router';
 
 import { useRootLoaderData } from '~/root';
 import { useInsomniaSyncRestoreActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.restore';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { PromptButton } from '../base/prompt-button';
 import { HelpTooltip } from '../help-tooltip';
@@ -87,7 +89,7 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
-                <Heading className="text-2xl">History</Heading>
+                <Heading className="text-2xl">{translateOfflineUi("History")}</Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
@@ -106,9 +108,7 @@ export const SyncHistoryModal = ({ history, onClose }: Props) => {
                     <Column
                       isRowHeader
                       className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden"
-                    >
-                      Message
-                    </Column>
+                    >{translateOfflineUi("Message")}</Column>
                     <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">
                       When
                     </Column>

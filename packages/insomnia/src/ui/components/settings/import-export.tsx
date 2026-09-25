@@ -1,3 +1,4 @@
+
 import { format } from 'date-fns';
 import {
   convertApiSpecSyntax,
@@ -33,6 +34,7 @@ import { ImportProjectsModal } from '~/ui/components/modals/import-modal/import-
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { usePlanData } from '~/ui/hooks/use-plan';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const VALUE_YAML = 'yaml';
 const VALUE_JSON = 'json';
@@ -596,9 +598,7 @@ const UntrackedProject = ({
           isDisabled={organizations.length === 0 || !selectedOrganizationId || moveProjectFetcher.state !== 'idle'}
           type="submit"
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all group-invalid:opacity-30 hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
-        >
-          Move
-        </Button>
+        >{translateOfflineUi("Move")}</Button>
       </moveProjectFetcher.Form>
     </div>
   );
@@ -690,9 +690,7 @@ const UntrackedWorkspace = ({
           isDisabled={projects.length === 0 || !selectedProjectId || moveWorkspaceFetcher.state !== 'idle'}
           type="submit"
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all group-invalid:opacity-30 hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:cursor-not-allowed disabled:bg-(--hl-xs) aria-pressed:bg-(--hl-sm)"
-        >
-          Move
-        </Button>
+        >{translateOfflineUi("Move")}</Button>
       </moveWorkspaceFetcher.Form>
     </div>
   );
@@ -814,10 +812,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
             event: AnalyticsEvent.exportAllCollections,
           });
         }}
-        aria-label="Export all data"
+        aria-label={translateOfflineUi("Export all data")}
       >
         <Icon icon="file-export" />
-        <span>Export all data {`(${workspaceCount} files)`}</span>
+        <span>{translateOfflineUi("Export all data")} {`(${workspaceCount} files)`}</span>
       </Button>
     );
   }
@@ -827,8 +825,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
       <div data-testid="import-export-tab" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
           <Heading className="flex items-center gap-2 text-lg font-bold">
-            <Icon icon="file-export" /> Export
-          </Heading>
+            <Icon icon="file-export" /> {translateOfflineUi("Export")}</Heading>
           <div className="flex flex-wrap gap-2">
             {activeProject &&
               (workspaceData?.activeWorkspace ? (
@@ -883,10 +880,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
                   event: AnalyticsEvent.exportAllCollections,
                 });
               }}
-              aria-label="Export all data"
+              aria-label={translateOfflineUi("Export all data")}
             >
               <Icon icon="file-export" />
-              <span>Export all data {`(${workspaceCount} files)`}</span>
+              <span>{translateOfflineUi("Export all data")} {`(${workspaceCount} files)`}</span>
             </Button>
 
             <Button
@@ -902,8 +899,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal, onModalChange }) =>
         {showImportButtons && (
           <div className="flex flex-col gap-2 rounded-md border border-solid border-(--hl-md) p-4">
             <Heading className="flex items-center gap-2 text-lg font-bold">
-              <Icon icon="file-import" /> Import
-            </Heading>
+              <Icon icon="file-import" /> {translateOfflineUi("Import")}</Heading>
             <div className="flex flex-wrap gap-2">
               {activeProject && (
                 <Button

@@ -1,5 +1,8 @@
+
 import type { FC } from 'react';
 import { Button, Separator, Tooltip, TooltipTrigger } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 
@@ -8,7 +11,7 @@ export const LocalProjectBar: FC = () => {
     <div className="flex h-(--line-height-sm) w-full items-center justify-between gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all">
       <Icon icon="laptop" className="size-4" />
       <Separator orientation="vertical" className="h-5 border border-solid border-(--hl-sm) bg-(--color-bg)" />
-      <span className="flex-1 truncate">Local Vault project</span>
+      <span className="flex-1 truncate">{translateOfflineUi("Local Vault project")}</span>
       <TooltipTrigger delay={0}>
         <Button className="cursor-default">
           <Icon icon="question-circle" />

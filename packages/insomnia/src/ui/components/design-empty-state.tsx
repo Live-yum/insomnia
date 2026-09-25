@@ -1,8 +1,10 @@
+
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import React, { type FC } from 'react';
 import { Button, Heading, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-components';
 
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { documentationLinks } from '../../common/documentation';
@@ -119,7 +121,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
                     className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   >
                     <Icon icon="plus" />
-                    <span>Create</span>
+                    <span>{translateOfflineUi("Create")}</span>
                     <Icon icon="caret-down" />
                   </Button>
                   <Popover className="flex min-w-max flex-col overflow-y-hidden">
@@ -160,7 +162,7 @@ export const DesignEmptyState: FC<Props> = ({ onImport, onCreateRequest, onCreat
                     className="pointer-events-auto flex aspect-square h-6 items-center justify-center gap-2 rounded-xs bg-(--hl-xs) p-4 text-sm text-(--color-font) ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                   >
                     <Icon icon="file-import" />
-                    <span>Import</span>
+                    <span>{translateOfflineUi("Import")}</span>
                     <Icon icon="caret-down" />
                   </Button>
                   <Popover className="flex min-w-max flex-col overflow-y-hidden">

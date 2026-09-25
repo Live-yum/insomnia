@@ -1,4 +1,7 @@
+
 import React, { type FC } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthTableBody } from './components/auth-table-body';
@@ -6,9 +9,9 @@ import { AuthToggleRow } from './components/auth-toggle-row';
 
 export const BasicAuth: FC<{ disabled?: boolean }> = ({ disabled = false }) => (
   <AuthTableBody>
-    <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
-    <AuthInputRow label="Username" property="username" disabled={disabled} />
-    <AuthInputRow label="Password" property="password" mask disabled={disabled} />
+    <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert disabled={disabled} />
+    <AuthInputRow label={translateOfflineUi("Username")} property="username" disabled={disabled} />
+    <AuthInputRow label={translateOfflineUi("Password")} property="password" mask disabled={disabled} />
     <AuthToggleRow
       label="Use ISO 8859-1"
       help="Check this to use ISO-8859-1 encoding instead of default UTF-8"

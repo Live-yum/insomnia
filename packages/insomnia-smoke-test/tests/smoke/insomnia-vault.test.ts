@@ -28,6 +28,16 @@ test.describe('Vault key actions', () => {
     },
   });
 
+  test.beforeEach(async ({ page }) => {
+    // Exercise a real local key and proof, not a mocked vendor SRP session.
+    await page.getByTestId('settings-button').click();
+    await page.getByRole('button', { name: 'Generate Vault Key' }).click();
+    await expect.soft(page.getByTestId('VaultKeyDisplayPanel')).not.toHaveText('');
+    await page.getByRole('button', { name: 'Lock Vault', exact: true }).click();
+    await expect.soft(page.getByRole('button', { name: 'Enter Vault Key' })).toBeVisible();
+    await page.keyboard.press('Escape');
+  });
+
   test('check reset and validate vault key', async ({ page }) => {
     // check vault key validation
     await page.getByTestId('settings-button').click();

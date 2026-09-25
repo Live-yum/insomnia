@@ -1,3 +1,4 @@
+
 import type { SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
 import { useParams } from 'react-router';
@@ -8,6 +9,7 @@ import {
   useRequestConnectActionFetcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.connect';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
@@ -202,9 +204,7 @@ export const WebSocketActionBar = forwardRef<WebSocketActionBarHandle, ActionBar
               <button
                 className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
                 type="submit"
-              >
-                Connect
-              </button>
+              >{translateOfflineUi("Connect")}</button>
             )}
           </div>
         </form>

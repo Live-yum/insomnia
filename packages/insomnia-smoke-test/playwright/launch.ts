@@ -1,10 +1,12 @@
 import type { ElectronApplication, PlaywrightWorkerArgs } from '@playwright/test';
 
+import { createOfflineVaultProof } from '../../insomnia/src/common/utils/offline-vault-proof';
 import { createOfflineTestProject } from './offline-project';
 import { bundleType, cwd, executablePath, mainPath } from './paths';
 
 export interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
+  INSOMNIA_OFFLINE_BROWSER_ORIGINS?: string;
   INSOMNIA_API_URL: string;
   INSOMNIA_APP_WEBSITE_URL: string;
   INSOMNIA_AI_URL: string;
@@ -56,6 +58,16 @@ export async function launchInsomnia(
   app.on('close', () => liveApps.delete(app));
 
   try {
+    const languagePage = await app.firstWindow();
+    await languagePage.waitForURL(url => url.protocol !== 'about:');
+    await languagePage.waitForLoadState('domcontentloaded');
+    await languagePage.waitForFunction(() => Boolean(window.main?.electronStorage));
+    await languagePage.evaluate(async () => {
+      const key = 'insomnia.offline.ui-locale';
+      await window.main.electronStorage.setItem(key, 'en-US');
+      window.localStorage.setItem(key, 'en-US');
+    });
+    await languagePage.reload();
     // The legacy build-based smoke suite expects an initial Personal Workspace.
     // Create a real LOCAL project through the UI instead of relying on cloud login
     // side effects. Fresh-profile package tests create their own projects explicitly.
@@ -66,6 +78,23 @@ export async function launchInsomnia(
       const projects = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
       if (!projects.some(project => project.parentId === 'org_offline')) {
         await createOfflineTestProject(app, page);
+      }
+      if (envOptions.INSOMNIA_VAULT_KEY && envOptions.INSOMNIA_VAULT_SALT) {
+        // Legacy encrypted-data fixtures need a matching, real LOCAL key proof.
+        // Seed fixture state through the normal data/secret-storage APIs, never
+        // invent a vendor session or relax the application's verifier.
+        const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+        const proof = await createOfflineVaultProof(
+          envOptions.INSOMNIA_VAULT_KEY, envOptions.INSOMNIA_VAULT_SALT, session.accountId,
+        );
+        await page.evaluate(async ({ key, salt, proof }) => {
+          const encrypted = await window.main.secretStorage.encryptString(key);
+          await window._dataServicesInvoke('userSession', 'update', {
+            vaultKey: encrypted, vaultSalt: salt, offlineVaultProof: proof,
+          });
+        }, { key: envOptions.INSOMNIA_VAULT_KEY, salt: envOptions.INSOMNIA_VAULT_SALT, proof });
+        await page.reload();
+        await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
       }
       preparedBuildProfiles.add(dataPath);
     }

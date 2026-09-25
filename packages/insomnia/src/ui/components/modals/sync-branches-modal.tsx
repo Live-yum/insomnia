@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   Button,
@@ -18,6 +19,7 @@ import { useInsomniaSyncBranchCreateActionFetcher } from '~/routes/organization.
 import { useInsomniaSyncBranchDeleteActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.delete';
 import { useInsomniaSyncBranchMergeActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.branch.merge';
 import { useInsomniaSyncFetchActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.insomnia-sync.fetch';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -109,9 +111,7 @@ const LocalBranchItem = ({
             <Icon
               icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
               className={`w-5 text-(--color-danger) ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-            />
-            Delete
-          </PromptButton>
+            />{translateOfflineUi("Delete")}</PromptButton>
         )}
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -148,9 +148,7 @@ const LocalBranchItem = ({
           <Icon
             icon={mergeBranchFetcher.state !== 'idle' ? 'spinner' : 'code-merge'}
             className={`w-5 ${mergeBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-          />
-          Merge
-        </PromptButton>
+          />{translateOfflineUi("Merge")}</PromptButton>
       </div>
     </div>
   );
@@ -224,9 +222,7 @@ const RemoteBranchItem = ({
             <Icon
               icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
               className={`w-5 text-(--color-danger) ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-            />
-            Delete
-          </PromptButton>
+            />{translateOfflineUi("Delete")}</PromptButton>
         )}
         <Button
           className="flex min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -242,9 +238,7 @@ const RemoteBranchItem = ({
           <Icon
             icon={pullBranchFetcher.state !== 'idle' ? 'spinner' : 'cloud-arrow-down'}
             className={`w-5 ${pullBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-          />
-          Fetch
-        </Button>
+          />{translateOfflineUi("Fetch")}</Button>
       </div>
     </div>
   );
@@ -294,9 +288,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex shrink-0 items-center justify-between gap-2">
-                <Heading slot="title" className="text-2xl">
-                  Branches
-                </Heading>
+                <Heading slot="title" className="text-2xl">{translateOfflineUi("Branches")}</Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
@@ -317,7 +309,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                 className="flex shrink-0 flex-col gap-2"
               >
                 <TextField className="flex flex-col gap-2">
-                  <Label className="col-span-4">New branch name:</Label>
+                  <Label className="col-span-4">{translateOfflineUi("New branch name:")}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       required
@@ -334,9 +326,7 @@ export const SyncBranchesModal = ({ onClose, branches, remoteBranches, currentBr
                       <Icon
                         className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
                         icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'}
-                      />{' '}
-                      Create
-                    </Button>
+                      />{' '}{translateOfflineUi("Create")}</Button>
                   </div>
                 </TextField>
               </createBranchFetcher.Form>

@@ -1,3 +1,4 @@
+
 import type {
   GrpcRequest,
   McpRequest,
@@ -25,6 +26,7 @@ import { getMethodShortHand, getRequestMethodShortHand } from '~/ui/components/t
 import { useExecutionState } from '~/ui/hooks/use-execution-state';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
 import { useRequestGroupPatcher, useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../../icon';
 import { ACTIVE_BORDER_CLASS, GUIDE_LINE_CSS, ICON_CLASS, ROW_CLASS, TOGGLE_BTN_CLASS } from './styles';
@@ -185,7 +187,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
       {!models.requestGroup.isRequestGroup(doc) && pinned && !isPinnedRequest && (
         <TooltipTrigger>
           <Button
-            aria-label="Unpin request"
+            aria-label={translateOfflineUi("Unpin request")}
             className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-sm) focus:bg-(--hl-xs) focus:ring-(--hl-md) focus:outline-hidden focus:ring-inset aria-pressed:bg-(--hl-sm)"
             onPress={() => patchRequestMeta(item.doc._id, { pinned: false })}
           >
@@ -194,9 +196,7 @@ export const RequestNode = ({ item, onToggleFolder, className, depthOffset = 0 }
           <Tooltip
             offset={8}
             className="rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-2 py-1 text-base text-(--color-font) shadow-lg select-none focus:outline-hidden"
-          >
-            Unpin Request
-          </Tooltip>
+          >{translateOfflineUi("Unpin Request")}</Tooltip>
         </TooltipTrigger>
       )}
       {models.requestGroup.isRequestGroup(doc) && !isEditable && (

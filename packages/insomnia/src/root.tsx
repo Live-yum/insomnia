@@ -1,3 +1,4 @@
+
 import { config } from '@fortawesome/fontawesome-svg-core';
 import type { IpcRendererEvent } from 'electron';
 import type { Settings, UserSession } from 'insomnia-data';
@@ -52,9 +53,11 @@ import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
+import { getOfflineLocale } from '~/ui/offline-locale';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { confirmOpenFolderTrust } from '~/ui/utils/git-folder-trust';
 
 import type { Route } from './+types/root';
@@ -156,8 +159,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 overflow-hidden">
       <h1 className="flex items-center gap-2 text-2xl text-(--color-font)">
-        <Icon className="text-(--color-danger)" icon="exclamation-triangle" /> Application Error
-      </h1>
+        <Icon className="text-(--color-danger)" icon="exclamation-triangle" /> {translateOfflineUi("Application Error")}</h1>
       <p className="text-(--color-font)">
         Failed to render. Please report to{' '}
         <button
@@ -177,9 +179,7 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
           reloadDocument
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           to="/organization"
-        >
-          Try to reload the app
-        </RouterLink>
+        >{translateOfflineUi("Try to reload the app")}</RouterLink>
         <Button
           className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-base font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
           onPress={() => logoutFetcher.submit()}
@@ -218,7 +218,7 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <html lang="en" className="size-full overflow-hidden">
+    <html lang={getOfflineLocale()} suppressHydrationWarning className="size-full overflow-hidden">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -430,7 +430,7 @@ const Root = () => {
           return;
         }
         const userSession = await services.userSession.get();
-        if (!userSession.id) {
+        if (!OFFLINE_BUILD && !userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to open a folder in Insomnia.');
           return navigate(href('/auth/login'));
@@ -476,7 +476,7 @@ const Root = () => {
           );
         }
         const userSession = await services.userSession.get();
-        if (!userSession.id) {
+        if (!OFFLINE_BUILD && !userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
           trackImportEvent(AnalyticsEvent.importLoginRequired);
@@ -744,9 +744,7 @@ const Root = () => {
                   <Button
                     onClick={() => window.main.openInBrowser('https://insomnia.rest/breaking-changes')}
                     className="cursor-pointer border-0 bg-transparent p-0 text-(--color-link) underline"
-                  >
-                    Learn more
-                  </Button>
+                  >{translateOfflineUi("Learn more")}</Button>
                 </>
               ),
               status: 'info',

@@ -1,3 +1,4 @@
+
 import type { WorkspaceScope } from 'insomnia-data';
 import React, { type FC } from 'react';
 import {
@@ -16,6 +17,7 @@ import {
 import { useParams } from 'react-router';
 
 import { useGitProjectMigrateLegacyInsomniaFolderActionFetcher } from '~/routes/git.migrate-legacy-insomnia-folder-to-file';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   scopeToBgColorMap,
@@ -85,15 +87,9 @@ export const GitProjectMigrationModal: FC<{
                       <Column
                         isRowHeader
                         className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden"
-                      >
-                        Name
-                      </Column>
-                      <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">
-                        Type
-                      </Column>
-                      <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">
-                        File path
-                      </Column>
+                      >{translateOfflineUi("Name")}</Column>
+                      <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">{translateOfflineUi("Type")}</Column>
+                      <Column className="sticky top-0 z-10 border-b border-(--hl-sm) bg-(--hl-xs) px-2 py-2 text-left text-xs font-semibold backdrop-blur-sm backdrop-filter focus:outline-hidden">{translateOfflineUi("File path")}</Column>
                     </TableHeader>
                     <TableBody
                       className="divide divide-solid divide-(--hl-sm)"

@@ -1,3 +1,4 @@
+
 import { type IRuleResult } from '@stoplight/spectral-core';
 import CodeMirror from 'codemirror';
 import { type ApiSpec, models } from 'insomnia-data';
@@ -59,6 +60,7 @@ import { showToast } from '~/ui/components/toast-notification';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 const SwaggerUIDiv = ({ text }: { text: string }) => {
@@ -641,10 +643,10 @@ export const SpecView = ({
       <span className="flex-1" />
       <MenuTrigger>
         <Button
-          aria-label="Generate"
+          aria-label={translateOfflineUi("Generate")}
           className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-2.5 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
         >
-          <span>Generate</span>
+          <span>{translateOfflineUi("Generate")}</span>
           <Icon icon="chevron-down" className="w-2.5 text-(--hl)" />
         </Button>
         <Popover className="flex min-w-max flex-col overflow-y-hidden">
@@ -766,7 +768,7 @@ export const SpecView = ({
           <>
             <TooltipTrigger delay={0}>
               <Button
-                aria-label="View selected ruleset content"
+                aria-label={translateOfflineUi("View selected ruleset content")}
                 className="underline"
                 onPress={() => setIsViewRulesetModalOpen(true)}
               >
@@ -805,7 +807,7 @@ export const SpecView = ({
             )}
             <TooltipTrigger delay={0}>
               <Button
-                aria-label="Remove custom ruleset"
+                aria-label={translateOfflineUi("Remove custom ruleset")}
                 onPress={handleUnselectSpectralFile}
                 className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
@@ -823,7 +825,7 @@ export const SpecView = ({
         )}
         {!selectedRulesetPath && (
           <>
-            <span>Default OAS Ruleset</span>
+            <span>{translateOfflineUi("Default OAS Ruleset")}</span>
             {isRulesetInvalid && (
               <TooltipTrigger delay={0}>
                 <Button
@@ -846,7 +848,7 @@ export const SpecView = ({
             )}
             <TooltipTrigger delay={0}>
               <Button
-                aria-label="Upload custom ruleset"
+                aria-label={translateOfflineUi("Upload custom ruleset")}
                 onPress={handleSelectSpectralFile}
                 className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
               >
@@ -890,7 +892,7 @@ export const SpecView = ({
           <div className="flex items-center gap-2 select-none">
             {lintMessages.length === 0 && <Icon icon="check-square" className="text-(--color-success)" />}
             {lintMessages.length === 0 ? (
-              'No lint problems'
+              translateOfflineUi("No lint problems")
             ) : (
               <Button
                 data-testid="lint-panel-toggle"
@@ -986,7 +988,7 @@ export const SpecView = ({
                       : setExpandedKeys([...expandedKeys, 'info']);
                   }}
                 >
-                  <span className="truncate">Info</span>
+                  <span className="truncate">{translateOfflineUi("Info")}</span>
                   <Icon icon={expandedKeys.includes('info') ? 'minus' : 'plus'} className="text-xs" />
                 </Button>
                 {/* Info */}
@@ -1225,7 +1227,7 @@ export const SpecView = ({
                         : setExpandedKeys([...expandedKeys, 'headers']);
                     }}
                   >
-                    <span className="truncate">Headers</span>
+                    <span className="truncate">{translateOfflineUi("Headers")}</span>
                     <Icon icon={expandedKeys.includes('headers') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
@@ -1299,7 +1301,7 @@ export const SpecView = ({
                         : setExpandedKeys([...expandedKeys, 'security']);
                     }}
                   >
-                    <span className="truncate">Security</span>
+                    <span className="truncate">{translateOfflineUi("Security")}</span>
                     <Icon icon={expandedKeys.includes('security') ? 'minus' : 'plus'} className="text-xs" />
                   </Button>
                 </div>
@@ -1348,11 +1350,9 @@ export const SpecView = ({
                   {({ close }) => (
                     <>
                       <div className="flex items-center justify-between gap-2 pb-(--padding-sm)">
-                        <Heading slot="title" className="mb-3.5 text-[22px] leading-8.5">
-                          Existing Ruleset Contents
-                        </Heading>
+                        <Heading slot="title" className="mb-3.5 text-[22px] leading-8.5">{translateOfflineUi("Existing Ruleset Contents")}</Heading>
                         <Button
-                          aria-label="Close ruleset content viewer"
+                          aria-label={translateOfflineUi("Close ruleset content viewer")}
                           onPress={close}
                           className="fa fa-times absolute top-0 right-0 text-xl"
                         />

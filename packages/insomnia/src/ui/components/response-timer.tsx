@@ -1,4 +1,7 @@
+
 import React, { type DOMAttributes, type FunctionComponent, useEffect, useState } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import type { TimingStep } from '../../main/network/request-timing';
 
@@ -57,9 +60,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, activeRe
         </div>
 
         <div className="pad text-center">
-          <button className="btn btn--clicky" onClick={handleCancel}>
-            Cancel Request
-          </button>
+          <button className="btn btn--clicky" onClick={handleCancel}>{translateOfflineUi("Cancel Request")}</button>
         </div>
       </div>
     </div>

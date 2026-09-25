@@ -1,3 +1,4 @@
+
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { Project, Request, RequestGroup, Workspace } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -14,6 +15,7 @@ import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$or
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { toKebabCase } from '../../../common/misc';
 import type { CreateRequestType } from '../../hooks/use-request';
@@ -372,7 +374,7 @@ export const RequestGroupActionsDropdown = ({
       <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           data-testid={`Dropdown-${toKebabCase(requestGroup.name)}`}
-          aria-label="Request Group Actions"
+          aria-label={translateOfflineUi("Request Group Actions")}
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
           <Icon icon="ellipsis" />

@@ -1,4 +1,7 @@
+
 import React, { forwardRef, useId, useImperativeHandle, useRef, useState } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -78,9 +81,7 @@ export const SelectModal = forwardRef<SelectModalHandle, ModalProps>((_, ref) =>
         </form>
       </ModalBody>
       <ModalFooter>
-        <button type="submit" form={formId} className="btn">
-          Done
-        </button>
+        <button type="submit" form={formId} className="btn">{translateOfflineUi("Done")}</button>
       </ModalFooter>
     </Modal>
   );

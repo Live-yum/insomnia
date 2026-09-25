@@ -1,3 +1,4 @@
+
 import { type CurrentPlan, type User } from 'insomnia-api';
 import type { Settings } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -39,6 +40,7 @@ import { RunnerProvider } from '~/ui/context/app/runner-context';
 import { useCurrentPlan, useCurrentUser, useOrganizations } from '~/ui/hooks/use-account-server-data';
 import { useCloseConnection } from '~/ui/hooks/use-close-connection';
 import { refreshKonnectAccess } from '~/ui/organization-utils';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import type { AsyncTask } from '~/ui/utils/router';
 
 interface IndicatorProps {
@@ -407,15 +409,12 @@ const Component = () => {
                           className="flex h-full items-center justify-center gap-2 px-4 py-1 text-xs text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                           onPress={() => showSettingsModal()}
                         >
-                          <Icon icon="gear" /> Preferences
-                        </Button>
+                          <Icon icon="gear" /> {translateOfflineUi("Preferences")}</Button>
                         <Tooltip
                           placement="top"
                           offset={8}
                           className="flex max-h-[85vh] min-w-max items-center gap-2 overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                        >
-                          Preferences
-                          <Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
+                        >{translateOfflineUi("Preferences")}<Hotkey keyBindings={settings.hotKeyRegistry.preferences_showGeneral} />
                         </Tooltip>
                       </TooltipTrigger>
                       {!isScratchpadWorkspace && !isLocalOrganization && hasUntrackedData && (
@@ -444,7 +443,7 @@ const Component = () => {
                     {OFFLINE_BUILD && <OfflineCryptoWorkbench />}
                     <div className="flex shrink grow basis-1/3 justify-end">
                       <div className="flex items-center gap-2">
-                        {OFFLINE_BUILD ? <span className="px-4 text-xs">Local storage · Cloud disabled</span> : (
+                        {OFFLINE_BUILD ? <span className="px-4 text-xs">{translateOfflineUi("Local storage · Cloud disabled")}</span> : (
                           <NetworkAndSyncIndicator
                             asyncTaskStatus={asyncTaskStatus}
                             settings={settings}

@@ -1,5 +1,7 @@
 import type { StorageRules } from 'insomnia-api';
 
+import { OFFLINE_ORGANIZATION_ID } from './offline';
+
 export const DEFAULT_STORAGE_RULES: StorageRules = {
   enableCloudSync: false,
   enableLocalVault: true,
@@ -7,9 +9,12 @@ export const DEFAULT_STORAGE_RULES: StorageRules = {
   isOverridden: false,
 };
 
+// These are local capabilities, not fabricated cloud entitlements.
+export const OFFLINE_STORAGE_RULES: StorageRules = { ...DEFAULT_STORAGE_RULES, enableGitSync: true };
+
 export async function fetchAndCacheOrganizationStorageRule(
-  _organizationId: string | undefined,
+  organizationId: string | undefined,
   _forceFetch = false,
 ): Promise<StorageRules> {
-  return { ...DEFAULT_STORAGE_RULES };
+  return { ...(organizationId === OFFLINE_ORGANIZATION_ID ? OFFLINE_STORAGE_RULES : DEFAULT_STORAGE_RULES) };
 }

@@ -1,3 +1,4 @@
+
 import { type FC, useEffect } from 'react';
 import {
   Button,
@@ -20,6 +21,7 @@ import { useGitProjectCommitActionFetcher } from '~/routes/git.commit';
 import { useGitProjectDiffLoaderFetcher } from '~/routes/git.diff';
 import { useGitProjectStageActionFetcher } from '~/routes/git.stage';
 import { useGitProjectUnstageActionFetcher } from '~/routes/git.unstage';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { DiffEditor } from '../diff-view-editor';
 import { ConfigLink } from '../github-app-config-link';
@@ -170,7 +172,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                     className="flex flex-col gap-2"
                   >
                     <TextField className="flex shrink-0 flex-col gap-2">
-                      <Label className="font-bold">Message</Label>
+                      <Label className="font-bold">{translateOfflineUi("Message")}</Label>
                       <TextArea
                         rows={3}
                         name="message"
@@ -190,9 +192,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                         <Icon
                           icon={isCommiting ? 'spinner' : 'check'}
                           className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
-                        />{' '}
-                        Commit
-                      </Button>
+                        />{' '}{translateOfflineUi("Commit")}</Button>
                       <Button
                         type="submit"
                         isDisabled={isCommiting || changes.staged.length === 0}
@@ -203,9 +203,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                         <Icon
                           icon={isCommiting ? 'spinner' : 'cloud-arrow-up'}
                           className={`w-5 ${isCommiting ? 'animate-spin' : ''}`}
-                        />{' '}
-                        Commit and push
-                      </Button>
+                        />{' '}{translateOfflineUi("Commit and push")}</Button>
                     </div>
                     {commitFetcher.data && commitFetcher.data.errors && commitFetcher.data.errors.length > 0 && (
                       <p className="rounded-xs bg-(--color-danger)/20 p-2 text-sm text-(--color-font-danger)">
@@ -218,7 +216,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                   <div className="grid auto-rows-auto gap-2 overflow-y-auto">
                     <div className="flex max-h-96 w-full flex-col gap-2 overflow-hidden">
                       <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
-                        <span className="flex-1">Staged changes</span>
+                        <span className="flex-1">{translateOfflineUi("Staged changes")}</span>
                         <TooltipTrigger>
                           <Button
                             className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-focus-within:opacity-100 group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:opacity-100"
@@ -233,9 +231,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                           <Tooltip
                             offset={8}
                             className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                          >
-                            Unstage all changes
-                          </Tooltip>
+                          >{translateOfflineUi("Unstage all changes")}</Tooltip>
                         </TooltipTrigger>
                         <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                           {changes.staged.length}
@@ -249,7 +245,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                             id: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label="Unstaged changes"
+                          aria-label={translateOfflineUi("Unstaged changes")}
                           onAction={key => {
                             diffChanges({
                               path: key.toString(),
@@ -347,9 +343,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                             <Tooltip
                               offset={8}
                               className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                            >
-                              Stage all changes
-                            </Tooltip>
+                            >{translateOfflineUi("Stage all changes")}</Tooltip>
                           </TooltipTrigger>
                           <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                             {changes.unstaged.length}
@@ -365,7 +359,7 @@ export const GitStagingModal: FC<{ onClose: () => void }> = ({ onClose }) => {
                             key: entry.path,
                             textValue: entry.path,
                           }))}
-                          aria-label="Unstaged changes"
+                          aria-label={translateOfflineUi("Unstaged changes")}
                           onAction={key => {
                             diffChanges({
                               path: key.toString(),

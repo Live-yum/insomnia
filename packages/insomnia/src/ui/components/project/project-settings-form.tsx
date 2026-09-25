@@ -1,3 +1,4 @@
+
 import type { StorageRules } from 'insomnia-api';
 import type { GitCredentials, GitRepository, Project, ProviderEmail } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -37,6 +38,7 @@ import { ProjectTypeWarning } from '~/ui/components/project/project-type-warning
 import { useActiveView } from '~/ui/components/project/utils';
 import { useIsLightTheme } from '~/ui/hooks/theme';
 import { useIsGitSyncEnabled } from '~/ui/hooks/use-organization-features';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
@@ -390,7 +392,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               onChange={name => setProjectData({ ...projectData, name })}
               className="group relative flex flex-col gap-2 px-0.5"
             >
-              <Label className="pt-0 text-sm text-(--color-font)">Project name</Label>
+              <Label className="pt-0 text-sm text-(--color-font)">{translateOfflineUi("Project name")}</Label>
               <Input
                 ref={nameInputRef}
                 placeholder="My project"
@@ -399,9 +401,7 @@ export const ProjectSettingsForm: FC<Props> = ({
             </TextField>
             {project?.konnectControlPlaneId ? (
               <div className="flex flex-col gap-2">
-                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
-                  Type
-                </Label>
+                <Label aria-label={translateOfflineUi("Project Type")} className="p-0 text-sm text-(--color-font)">{translateOfflineUi("Type")}</Label>
                 <div className="flex h-7.5 items-center rounded-sm border border-(--hl-sm) px-2 opacity-75">
                   <div className="flex items-center gap-2">
                     <Icon icon="laptop" />
@@ -481,7 +481,7 @@ export const ProjectSettingsForm: FC<Props> = ({
           {showRepoPath && (
             <>
               <div className="flex flex-col gap-1">
-                <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
+                <Label aria-label={translateOfflineUi("Project Type")} className="p-0 text-sm text-(--color-font)">
                   Path to local files
                 </Label>
                 <div className="text-xs text-(--hl-xl)">
@@ -685,9 +685,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               <Button
                 onPress={onCancel}
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) px-4 py-2 text-sm text-(--color-font) transition-colors hover:bg-(--hl-xs) aria-pressed:bg-(--hl-xs)"
-              >
-                Cancel
-              </Button>
+              >{translateOfflineUi("Cancel")}</Button>
             )}
             {isScanForFilesPrimaryAction ? (
               <Button
@@ -696,7 +694,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 type="submit"
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
-                <span>Scan for files</span>
+                <span>{translateOfflineUi("Scan for files")}</span>
               </Button>
             ) : (
               <Button
@@ -706,7 +704,7 @@ export const ProjectSettingsForm: FC<Props> = ({
                 className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
               >
                 {updateProjectFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />}
-                <span>Update</span>
+                <span>{translateOfflineUi("Update")}</span>
               </Button>
             )}
           </div>
@@ -731,9 +729,7 @@ export const ProjectSettingsForm: FC<Props> = ({
               isDisabled={true}
               type="button"
               className="flex h-full w-[10ch] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
-            >
-              Create
-            </Button>
+            >{translateOfflineUi("Create")}</Button>
           ) : (
             <Button
               ref={cloneButtonRef}

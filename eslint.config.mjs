@@ -285,6 +285,8 @@ export default defineConfig([
       '**/*.config.js',
       '**/*.d.ts',
       '**/*.min.js',
+      // Compiler output: byte-for-byte regeneration and native crypto tests are required.
+      'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/primitives.generated.cjs',
       '**/*.js.map',
       '**/bin/*',
       '**/build/*',

@@ -1,9 +1,11 @@
+
 import classnames from 'classnames';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
 
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { describeByteSize } from '../../../common/misc';
 import { Dropdown, DropdownItem, ItemContent } from '../base/dropdown';
@@ -172,8 +174,8 @@ export const Row: FC<Props> = ({
               </Button>
             }
           >
-            <DropdownItem aria-label="Text">
-              <ItemContent label="Text" onClick={() => onChange({ ...pair, type: 'text', multiline: false })} />
+            <DropdownItem aria-label={translateOfflineUi("Text")}>
+              <ItemContent label={translateOfflineUi("Text")} onClick={() => onChange({ ...pair, type: 'text', multiline: false })} />
             </DropdownItem>
             <DropdownItem aria-label="Text (Multi-line)">
               {allowMultiline && (
@@ -183,8 +185,8 @@ export const Row: FC<Props> = ({
                 />
               )}
             </DropdownItem>
-            <DropdownItem aria-label="File">
-              {allowFile && <ItemContent label="File" onClick={() => onChange({ ...pair, type: 'file' })} />}
+            <DropdownItem aria-label={translateOfflineUi("File")}>
+              {allowFile && <ItemContent label={translateOfflineUi("File")} onClick={() => onChange({ ...pair, type: 'file' })} />}
             </DropdownItem>
           </Dropdown>
         ) : null}

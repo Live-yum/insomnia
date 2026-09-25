@@ -1,3 +1,4 @@
+
 import type { GitRepository } from 'insomnia-data';
 import { useEffect, useRef } from 'react';
 import { OverlayContainer } from 'react-aria';
@@ -6,6 +7,7 @@ import { useParams } from 'react-router';
 import { useGitProjectResetActionFetcher } from '~/routes/git.reset';
 import { GitConnectionInfo } from '~/ui/components/git/connection-info';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { docsGitSync } from '../../../../common/documentation';
@@ -50,7 +52,7 @@ export const GitRepositorySettingsModal = ({
           <HelpTooltip>
             Sync and collaborate with Git
             <br />
-            <Link href={docsGitSync}>Documentation {<i className="fa fa-external-link-square" />}</Link>
+            <Link href={docsGitSync}>{translateOfflineUi("Documentation")} {<i className="fa fa-external-link-square" />}</Link>
           </HelpTooltip>
         </ModalHeader>
         <ModalBody>
@@ -104,9 +106,7 @@ export const GitRepositorySettingsModal = ({
               onClick={() => modalRef.current?.hide()}
               className="btn"
               data-testid="git-repository-settings-modal__sync-btn-close"
-            >
-              Close
-            </button>
+            >{translateOfflineUi("Close")}</button>
           </div>
         </ModalFooter>
       </Modal>

@@ -1,3 +1,4 @@
+
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type {
   GrpcRequest,
@@ -21,6 +22,7 @@ import { useRequestDeleteActionFetcher } from '~/routes/organization.$organizati
 import { AnalyticsEvent } from '~/ui/analytics';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { toKebabCase } from '../../../common/misc';
 import { useRequestMetaPatcher } from '../../hooks/use-request';
@@ -336,7 +338,7 @@ export const RequestActionsDropdown = ({
       <MenuTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
         <Button
           data-testid={`Dropdown-${toKebabCase(request.name)}`}
-          aria-label="Request Actions"
+          aria-label={translateOfflineUi("Request Actions")}
           className="aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
           <Icon icon="ellipsis" />

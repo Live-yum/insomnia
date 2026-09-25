@@ -1,8 +1,10 @@
+
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import type { OAuth2AuthorizationStatusType } from '~/common/constants';
 import { invariant } from '~/common/utils/invariant';
 import { useDefaultBrowserRedirectActionFetcher } from '~/routes/auth.default-browser-redirect';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import uiEventBus, { OAUTH2_AUTHORIZATION_STATUS_CHANGE } from '../../event-bus';
 import { Modal, type ModalHandle } from '../base/modal';
@@ -102,9 +104,7 @@ export const OAuthAuthorizationStatusModal: FC = () => {
                   gap: 'var(--padding-xs)',
                 }}
               >
-                <i className="fa fa-clipboard" aria-hidden="true" />
-                Copy
-              </button>
+                <i className="fa fa-clipboard" aria-hidden="true" />{translateOfflineUi("Copy")}</button>
             </div>
             <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               Please copy the full redirect URL showed in the redirect page and paste it below after you complete the

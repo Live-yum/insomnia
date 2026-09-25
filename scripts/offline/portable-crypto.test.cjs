@@ -56,15 +56,16 @@ for (const algorithm of ['sm3', 'sha3-224', 'sha3-256', 'sha3-384', 'sha3-512'])
   test(`${algorithm} digest and HMAC preserve binary, empty and Unicode input`, async () => {
     for (const input of ['', '0001ff80', Buffer.from('中文 🔐').toString('hex'), '61'.repeat(200)]) {
       const bytes = Buffer.from(input, 'hex');
+      const hmacKey = crypto.randomBytes(32);
       const digest = await run({ action: 'digest', algorithm, input, inputEncoding: 'hex' });
-      const mac = await run({ action: 'hmac', algorithm, input, inputEncoding: 'hex', key: 'secret' });
+      const mac = await run({ action: 'hmac', algorithm, input, inputEncoding: 'hex', key: hmacKey.toString('hex'), keyEncoding: 'hex' });
       assert.match(digest.output, /^[0-9a-f]+$/); assert.equal(mac.output.length, digest.output.length);
       assert.notEqual(mac.output, digest.output);
       // OpenSSL on the build host is an independent reference; Electron is separately
       // required to execute the same inputs even when it lacks the native algorithms.
       if (crypto.getHashes().includes(algorithm)) {
         assert.equal(digest.output, crypto.createHash(algorithm).update(bytes).digest('hex'));
-        assert.equal(mac.output, crypto.createHmac(algorithm, 'secret').update(bytes).digest('hex'));
+        assert.equal(mac.output, crypto.createHmac(algorithm, hmacKey).update(bytes).digest('hex'));
       }
     }
   });

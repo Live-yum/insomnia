@@ -1,3 +1,4 @@
+
 import type { Environment, RequestPathParameter, WebSocketRequest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { deconstructQueryStringToParams } from 'insomnia-data/common';
@@ -17,6 +18,7 @@ import { useRootLoaderData } from '~/root';
 import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
@@ -288,7 +290,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="params"
           >
-            <span>Params</span>
+            <span>{translateOfflineUi("Params")}</span>
             {parametersCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {parametersCount}
@@ -299,7 +301,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="content-type"
           >
-            <span>Body</span>
+            <span>{translateOfflineUi("Body")}</span>
             <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
               <span className="h-2 w-2 rounded-full bg-green-500" />
             </span>
@@ -308,7 +310,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="auth"
           >
-            <span>Auth</span>
+            <span>{translateOfflineUi("Auth")}</span>
             {!isNoneOrInherited && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -319,7 +321,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
-            <span>Headers</span>
+            <span>{translateOfflineUi("Headers")}</span>
             {headersCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {headersCount}
@@ -354,9 +356,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                       isDisabled={disabled || !urlHasQueryParameters}
                       onPress={handleImportQueryFromUrl}
                       className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
-                    >
-                      Import from URL
-                    </Button>
+                    >{translateOfflineUi("Import from URL")}</Button>
                     <ToggleButton
                       isDisabled={disabled}
                       onChange={isSelected => {
@@ -373,7 +373,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
                             icon={isSelected ? 'toggle-on' : 'toggle-off'}
                             className={`${isSelected ? 'text-(--color-success)' : ''}`}
                           />
-                          <span>{isSelected ? 'Regular Edit' : 'Bulk Edit'}</span>
+                          <span>{isSelected ? 'Regular Edit' : translateOfflineUi("Bulk Edit")}</span>
                         </Fragment>
                       )}
                     </ToggleButton>
@@ -448,9 +448,7 @@ export const WebSocketRequestPane: FC<Props> = ({ environment }) => {
               }}
               type="submit"
               form="websocketMessageForm"
-            >
-              Send
-            </button>
+            >{translateOfflineUi("Send")}</button>
           </Toolbar>
           <WebSocketRequestForm
             key={uniqueKey}

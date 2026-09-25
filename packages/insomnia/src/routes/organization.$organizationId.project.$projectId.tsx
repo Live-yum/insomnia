@@ -24,7 +24,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   const project = await services.project.getById(projectId);
   if (OFFLINE_BUILD && project) {
     invariant(project.parentId === organizationId, 'Project does not belong to this local organization');
-    invariant(!project.remoteId && !project.gitRepositoryId, 'Import this project into local storage before using it offline');
+    invariant(!project.remoteId, 'Import cloud projects into local storage before using them offline');
+    invariant(!project.gitRepositoryId || organizationId === OFFLINE_ORGANIZATION_ID, 'Git projects require the local offline organization');
     invariant(organizationId === OFFLINE_ORGANIZATION_ID || models.organization.isScratchpadOrganizationId(organizationId), 'Unknown offline organization');
   }
 

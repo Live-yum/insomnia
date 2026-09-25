@@ -67,6 +67,7 @@ interface AESMessage {
 export const test = baseTest.extend<{
   app: ElectronApplication;
   dataPath: string;
+  browserOrigins: string[];
   fixturesPath: string;
   userConfig: {
     skipOnboarding: boolean;
@@ -90,11 +91,14 @@ export const test = baseTest.extend<{
   };
   insomnia: InsomniaApp;
 }>({
-  app: async ({ playwright, trace, dataPath, userConfig }, use, testInfo) => {
+  browserOrigins: [[], { option: true }],
+  app: async ({ playwright, trace, dataPath, userConfig, browserOrigins }, use, testInfo) => {
     const echoServer = 'http://localhost:4010';
 
     const options: EnvOptions = {
       INSOMNIA_DATA_PATH: dataPath,
+      // Empty by default. Only tests exercising an explicitly configured intranet IdP opt in.
+      INSOMNIA_OFFLINE_BROWSER_ORIGINS: JSON.stringify(browserOrigins),
       INSOMNIA_API_URL: echoServer,
       INSOMNIA_APP_WEBSITE_URL: echoServer + '/website',
       INSOMNIA_AI_URL: echoServer + '/ai',

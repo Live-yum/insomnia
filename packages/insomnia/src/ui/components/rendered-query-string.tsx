@@ -1,3 +1,4 @@
+
 import classNames from 'classnames';
 import type {
   Request,
@@ -15,6 +16,7 @@ import { RenderError } from '~/common/templating/render-error';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from '~/common/utils/url/querystring';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { database as db } from '../../common/database';
 import { SECURITY_SETTINGS_PATH_LABEL } from '../../common/misc';
@@ -157,7 +159,7 @@ export const RenderedQueryString: FC<Props> = ({ request }) => {
         size="small"
         content={previewString}
         disabled={previewString === defaultPreview}
-        title="Copy URL"
+        title={translateOfflineUi("Copy URL")}
         confirmMessage=""
         onClick={showTooLongWarning}
         className="sticky top-0 self-start"

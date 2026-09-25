@@ -6,6 +6,7 @@ import { href, matchPath, type PathMatch, useFetcher } from 'react-router';
 
 import { HAS_SEEN_ONBOARDING_KEY } from '~/common/constants';
 import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
+import { canAdoptLegacyLocalProject } from '~/common/offline-project-migration';
 import { CURRENT_MIGRATION_VERSION } from '~/sync/git/git-migration-version';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';
 
@@ -87,19 +88,24 @@ export const getInitialRouteForOrganization = async ({
 };
 
 export const getInitialEntry = async () => {
-  if (OFFLINE_BUILD) {
-    return getInitialRouteForOrganization({ organizationId: OFFLINE_ORGANIZATION_ID, navigateToWorkspace: true });
-  }
   // If the user has not seen the onboarding, then show it
   // Otherwise if the user is not logged in and has not logged in before, then show the login
   // Otherwise if the user is logged in, then show the organization
   try {
     const allProjects = await services.project.list();
+    if (OFFLINE_BUILD) {
+      // Only orphaned local projects inside the explicitly selected offline data
+      // directory are adopted. Preserve IDs/content and never adopt cloud records,
+      // scratchpad data or projects already assigned to another organization.
+      for (const project of allProjects.filter(canAdoptLegacyLocalProject)) {
+        await services.project.update(project, { parentId: OFFLINE_ORGANIZATION_ID });
+      }
+    }
     const gitRepoIds = (
       allProjects.filter(
         (p): p is GitProject => models.project.isGitProject(p) && !models.project.isEmptyGitProject(p),
       ) as GitProject[]
-    ).map(p => p.gitRepositoryId);
+    ).map(p => models.project.decodeRepoId(p.gitRepositoryId));
 
     if (gitRepoIds.length > 0) {
       const gitRepos = await database.find<GitRepository>(models.gitRepository.type, {
@@ -113,6 +119,10 @@ export const getInitialEntry = async () => {
       }
     }
 
+    // Local filesystem migrations must run before the offline landing route.
+    if (OFFLINE_BUILD) {
+      return getInitialRouteForOrganization({ organizationId: OFFLINE_ORGANIZATION_ID, navigateToWorkspace: true });
+    }
     const hasSeenOnboarding = Boolean(window.localStorage.getItem(HAS_SEEN_ONBOARDING_KEY));
 
     if (!hasSeenOnboarding) {
@@ -174,7 +184,10 @@ export const getInitialEntry = async () => {
       projectId: models.project.SCRATCHPAD_PROJECT_ID,
       workspaceId: models.workspace.SCRATCHPAD_WORKSPACE_ID,
     });
-  } catch {
+  } catch (error) {
+    if (OFFLINE_BUILD) {
+      throw new Error('Unable to prepare local offline projects', { cause: error });
+    }
     return href('/organization/:organizationId/project/:projectId/workspace/:workspaceId/debug', {
       organizationId: models.organization.SCRATCHPAD_ORGANIZATION_ID,
       projectId: models.project.SCRATCHPAD_PROJECT_ID,

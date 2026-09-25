@@ -1,6 +1,9 @@
+
 import { models } from 'insomnia-data';
 import React, { type FC } from 'react';
 import { Button } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Dropdown as OriginalDropdown, DropdownItem, ItemContent } from '../base/dropdown';
 
@@ -40,9 +43,7 @@ export const DisconnectButton: FC<{ requestId: string }> = ({ requestId }) => {
           background: 'var(--color-danger)',
         }}
         onClick={handleCloseThisRequest}
-      >
-        Disconnect
-      </button>
+      >{translateOfflineUi("Disconnect")}</button>
       <OriginalDropdown
         className="tall"
         style={{

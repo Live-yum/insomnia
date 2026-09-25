@@ -1,3 +1,4 @@
+
 import {
   AWSCredentialType,
   type AWSFileCredential,
@@ -7,6 +8,8 @@ import {
 } from 'insomnia-data';
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
@@ -348,7 +351,7 @@ export const AWSCredentialForm = (props: AWSCredentialFormProps) => {
             isDisabled={isLoading}
           >
             {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
-            {isEdit ? 'Update' : 'Create'}
+            {isEdit ? translateOfflineUi("Update") : translateOfflineUi("Create")}
           </Button>
         </div>
       </div>

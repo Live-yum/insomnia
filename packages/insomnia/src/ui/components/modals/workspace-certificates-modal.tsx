@@ -1,3 +1,4 @@
+
 import type { CaCertificate, ClientCertificate } from 'insomnia-data';
 import React, { Fragment, type ReactNode, useEffect, useId, useState } from 'react';
 import {
@@ -26,6 +27,7 @@ import { useClientCertDeleteActionFetcher } from '~/routes/organization.$organiz
 import { useClientCertNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.new';
 import { useClientCertUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.clientcert.update';
 import { Tooltip } from '~/ui/components/tooltip';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
@@ -101,8 +103,8 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                   }}
                 >
                   <Input name="parentId" type="text" value={workspaceId} readOnly className="hidden" />
-                  <Label className="flex flex-col gap-1" aria-label="Host">
-                    <span className="text-sm">Host</span>
+                  <Label className="flex flex-col gap-1" aria-label={translateOfflineUi("Host")}>
+                    <span className="text-sm">{translateOfflineUi("Host")}</span>
                     <Input
                       name="host"
                       type="text"
@@ -127,7 +129,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                       </Tab>
                     </TabList>
                     <TabPanel className="p-2" id="pfx">
-                      <Label className="flex flex-col gap-1" aria-label="Host">
+                      <Label className="flex flex-col gap-1" aria-label={translateOfflineUi("Host")}>
                         <span className="text-sm">PFX or PKCS12 file</span>
                         <FileTrigger
                           allowsMultiple={false}
@@ -178,8 +180,8 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                         </FileTrigger>
                         <Input name="cert" type="text" value={certificatePath} readOnly className="hidden" />
                       </Label>
-                      <Label className="flex flex-1 flex-col gap-1" aria-label="Key">
-                        <span className="text-sm">Key</span>
+                      <Label className="flex flex-1 flex-col gap-1" aria-label={translateOfflineUi("Key")}>
+                        <span className="text-sm">{translateOfflineUi("Key")}</span>
                         <FileTrigger
                           allowsMultiple={false}
                           onSelect={fileList => {
@@ -207,8 +209,8 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                     </TabPanel>
                   </Tabs>
 
-                  <Label className="flex flex-col gap-1" aria-label="Passphrase">
-                    <span className="text-sm">Passphrase</span>
+                  <Label className="flex flex-col gap-1" aria-label={translateOfflineUi("Passphrase")}>
+                    <span className="text-sm">{translateOfflineUi("Passphrase")}</span>
                     <Input
                       name="passphrase"
                       type="password"
@@ -221,9 +223,7 @@ const AddClientCertificateModal = ({ onClose }: { onClose: () => void }) => {
                 <Button
                   onPress={close}
                   className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:border-(--hl-sm) hover:no-underline"
-                >
-                  Cancel
-                </Button>
+                >{translateOfflineUi("Cancel")}</Button>
                 <Button
                   type="submit"
                   form={formId}
@@ -295,7 +295,7 @@ const ClientCertificateGridListItem = ({ certificate }: { certificate: ClientCer
                   icon={isSelected ? 'toggle-on' : 'toggle-off'}
                   className={`${isSelected ? 'text-(--color-success)' : ''}`}
                 />
-                <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
+                <span>{isSelected ? translateOfflineUi("Enabled") : translateOfflineUi("Disabled")}</span>
               </Fragment>
             )}
           </ToggleButton>
@@ -332,7 +332,7 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
 
   return (
     <>
-      <Heading className="text-xl">CA Certificate</Heading>
+      <Heading className="text-xl">{translateOfflineUi("CA Certificate")}</Heading>
       <p className="max-w-[80ch] text-sm text-(--hl)">
         {tip ||
           'One or more PEM format certificates in a single file to pass to curl. Overrides the root CA certificate. On MacOS please upload your local Keychain certificates here.'}
@@ -365,7 +365,7 @@ export const CACertificate = ({ caCertificate, tip }: { caCertificate?: CaCertif
                       icon={isSelected ? 'toggle-on' : 'toggle-off'}
                       className={`${isSelected ? 'text-(--color-success)' : ''}`}
                     />
-                    <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
+                    <span>{isSelected ? translateOfflineUi("Enabled") : translateOfflineUi("Disabled")}</span>
                   </Fragment>
                 )}
               </ToggleButton>
@@ -496,9 +496,7 @@ export const CertificatesModal = ({ onClose }: { onClose: () => void }) => {
                 <Button
                   onPress={close}
                   className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                >
-                  Done
-                </Button>
+                >{translateOfflineUi("Done")}</Button>
               </div>
             </div>
           )}

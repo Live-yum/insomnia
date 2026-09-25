@@ -1,3 +1,4 @@
+
 import type { GitCredentials, GitRepository } from 'insomnia-data';
 import { platform } from 'insomnia-data/common';
 import React, {
@@ -61,6 +62,7 @@ import { isGitRepoLoadAuthHttp40Error } from '~/ui/components/git/git-oauth-auth
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { SvgIcon } from '~/ui/components/svg-icon';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { DiffEditor } from '../diff-view-editor';
@@ -615,7 +617,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                   commitsSections.update(commit.key, { ...commit.value, name: value });
                 }}
               >
-                <Label>Message</Label>
+                <Label>{translateOfflineUi("Message")}</Label>
                 <TextArea
                   rows={2}
                   name="message"
@@ -669,9 +671,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
                 <Icon
                   icon={isCommitting ? 'spinner' : 'check'}
                   className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
-                />
-                Commit
-              </>
+                />{translateOfflineUi("Commit")}</>
             )}
           </Button>
           <Button
@@ -705,9 +705,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
             <Icon
               icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
               className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
-            />{' '}
-            Commit
-          </Button>
+            />{' '}{translateOfflineUi("Commit")}</Button>
 
           <Button
             type="submit"
@@ -719,9 +717,7 @@ const GeneratedCommitsForm: FC<GeneratedCommitsFormProps> = ({
             <Icon
               icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
               className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
-            />{' '}
-            Commit and push
-          </Button>
+            />{' '}{translateOfflineUi("Commit and push")}</Button>
         </div>
       )}
       {pushFailedError ? (
@@ -934,7 +930,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         className="flex flex-col gap-2"
       >
         <TextField className="flex shrink-0 flex-col gap-2">
-          <Label className="font-bold">Message</Label>
+          <Label className="font-bold">{translateOfflineUi("Message")}</Label>
           <TextArea
             rows={3}
             name="message"
@@ -965,9 +961,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                   <Icon
                     icon={isCommitting ? 'spinner' : 'check'}
                     className={`w-5 ${isCommitting ? 'animate-spin' : ''}`}
-                  />
-                  Commit
-                </>
+                  />{translateOfflineUi("Commit")}</>
               )}
             </Button>
             <Button
@@ -1001,9 +995,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               <Icon
                 icon={committingActionRef.current === 'commit' && isCommitting ? 'spinner' : 'check'}
                 className={`w-5 ${committingActionRef.current === 'commit' && isCommitting ? 'animate-spin' : ''}`}
-              />{' '}
-              Commit
-            </Button>
+              />{' '}{translateOfflineUi("Commit")}</Button>
 
             {isNonOriginBranch ? (
               <TooltipTrigger>
@@ -1013,8 +1005,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                   onPress={() => {}}
                   className="flex h-8 flex-1 items-center justify-center gap-2 rounded-xs bg-(--hl-xxs) px-4 text-sm text-(--color-font) opacity-50 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 >
-                  <Icon icon="cloud-arrow-up" className="w-5" /> Commit and push
-                </Button>
+                  <Icon icon="cloud-arrow-up" className="w-5" /> {translateOfflineUi("Commit and push")}</Button>
                 <Tooltip
                   offset={8}
                   className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
@@ -1033,9 +1024,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 <Icon
                   icon={committingActionRef.current === 'commit-push' && isCommitting ? 'spinner' : 'cloud-arrow-up'}
                   className={`w-5 ${committingActionRef.current === 'commit-push' && isCommitting ? 'animate-spin' : ''}`}
-                />{' '}
-                Commit and push
-              </Button>
+                />{' '}{translateOfflineUi("Commit and push")}</Button>
             )}
           </div>
         )}
@@ -1074,7 +1063,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
       <div>
         <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between gap-2 py-1 font-semibold">
-            <span className="flex-1">Staged changes</span>
+            <span className="flex-1">{translateOfflineUi("Staged changes")}</span>
             <TooltipTrigger>
               <Button
                 className="flex aspect-square h-6 items-center justify-center rounded-xs text-base text-(--color-font) opacity-100 ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:text-[rgba(var(--color-font-rgb),0.5)] aria-pressed:bg-(--hl-sm)"
@@ -1090,9 +1079,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
               <Tooltip
                 offset={8}
                 className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-              >
-                Unstage all changes
-              </Tooltip>
+              >{translateOfflineUi("Unstage all changes")}</Tooltip>
             </TooltipTrigger>
             <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
               {changes.staged.length}
@@ -1101,7 +1088,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
               className="w-full"
-              aria-label="Staged changes"
+              aria-label={translateOfflineUi("Staged changes")}
               items={changes.staged.map(entry => ({
                 entry,
                 id: entry.path,
@@ -1160,7 +1147,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
         </div>
         <div>
           <Heading className="group flex w-full shrink-0 items-center justify-between py-1 font-semibold">
-            <span>Unstaged changes</span>
+            <span>{translateOfflineUi("Unstaged changes")}</span>
             <div className="flex items-center gap-2">
               <TooltipTrigger>
                 <Button
@@ -1208,9 +1195,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
                 <Tooltip
                   offset={8}
                   className="max-h-[85vh] max-w-xs overflow-y-auto rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) px-4 py-2 text-sm text-(--color-font) shadow-lg select-none focus:outline-hidden"
-                >
-                  Stage all changes
-                </Tooltip>
+                >{translateOfflineUi("Stage all changes")}</Tooltip>
               </TooltipTrigger>
               <span className="flex size-6 items-center justify-center rounded-full bg-(--hl-sm) px-1 text-sm text-(--hl)">
                 {changes.unstaged.length}
@@ -1219,7 +1204,7 @@ const ManualCommitForm: FC<ManualCommitFormProps> = ({
           </Heading>
           <div className="mt-2 flex max-h-60 w-full overflow-y-auto select-none">
             <GridList
-              aria-label="Unstaged changes"
+              aria-label={translateOfflineUi("Unstaged changes")}
               className="w-full"
               items={changes.unstaged.map(entry => ({
                 entry,
@@ -1663,7 +1648,7 @@ const OriginalGitProjectStagingModal: FC<
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                 <div className="flex shrink-0 items-center justify-between gap-2">
                   <Heading slot="title" className="flex items-center gap-2 text-2xl">
-                    {mode === StagingModalModes.commitAndPull ? 'Uncommitted changes' : 'Commit Changes'}{' '}
+                    {mode === StagingModalModes.commitAndPull ? 'Uncommitted changes' : translateOfflineUi("Commit Changes")}{' '}
                     {gitChangesFetcher.state === 'loading' && <Icon icon="spinner" className="animate-spin" />}
                   </Heading>
 
@@ -1927,9 +1912,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
                   onPress={() => close?.()}
-                >
-                  Cancel
-                </Button>
+                >{translateOfflineUi("Cancel")}</Button>
                 <Button
                   data-testid="discard-changes-confirm-button"
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
@@ -1938,9 +1921,7 @@ const ConfirmDiscardModal = ({ message, onConfirm, onClose }: ConfirmModalProps)
                       onConfirm();
                     }
                   }}
-                >
-                  Discard
-                </Button>
+                >{translateOfflineUi("Discard")}</Button>
               </div>
             </div>
           )}
@@ -2026,9 +2007,7 @@ const CreateBranchAndPushModal = ({
                   type="button"
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
                   onPress={close}
-                >
-                  Cancel
-                </Button>
+                >{translateOfflineUi("Cancel")}</Button>
                 <Button
                   type="submit"
                   isDisabled={isCreating || !branchName.trim()}
@@ -2087,9 +2066,7 @@ const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, '
                 <Button
                   className="h-full gap-2 rounded-md bg-(--color-bg) px-4 py-2 text-sm font-semibold ring-1 ring-transparent transition-all hover:bg-(--hl-xs)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) aria-pressed:opacity-80"
                   onPress={() => close?.()}
-                >
-                  Cancel
-                </Button>
+                >{translateOfflineUi("Cancel")}</Button>
                 <Button
                   data-testid="stage-all-and-commit-confirm-button"
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
@@ -2098,9 +2075,7 @@ const ConfirmCommitAllModal = ({ onConfirm, onClose }: Omit<ConfirmModalProps, '
                       onConfirm();
                     }
                   }}
-                >
-                  Yes
-                </Button>
+                >{translateOfflineUi("Yes")}</Button>
               </div>
             </div>
           )}

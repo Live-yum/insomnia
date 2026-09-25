@@ -1,3 +1,4 @@
+
 import classNames from 'classnames';
 import type { MergeConflict } from 'insomnia-vcs';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { migrateToLatestYaml } from '~/common/insomnia-schema-migrations';
 import { RESOLUTION_SOURCE } from '~/sync/vcs/utils';
 import { showModal } from '~/ui/components/modals';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { AnalyticsEvent } from '../../analytics';
 import { MergeEditor } from '../.client/codemirror/merge-editor';
@@ -187,9 +189,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
             {({ close }) => (
               <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                 <div className="flex shrink-0 items-center justify-between gap-2">
-                  <Heading slot="title" className="text-2xl">
-                    Resolve conflicts
-                  </Heading>
+                  <Heading slot="title" className="text-2xl">{translateOfflineUi("Resolve conflicts")}</Heading>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 overflow-hidden">
                   <div
@@ -282,7 +282,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           </GridList>
                         </div>
                         <Button
-                          aria-label="Resolve conflicts"
+                          aria-label={translateOfflineUi("Resolve conflicts")}
                           className="mb-1 flex h-10 items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                           onClick={event => {
                             event.preventDefault();
@@ -325,7 +325,7 @@ export const SyncMergeModal = forwardRef<SyncMergeModalHandle>((_, ref) => {
                           }}
                         >
                           <Icon icon="code-merge" className="w-5" />
-                          <span className="truncate">Resolve conflicts</span>
+                          <span className="truncate">{translateOfflineUi("Resolve conflicts")}</span>
                         </Button>
                         <Button
                           type="button"

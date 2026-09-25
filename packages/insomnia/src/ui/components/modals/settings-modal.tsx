@@ -1,3 +1,4 @@
+
 import { type ProxyScope, ProxyScopes } from 'insomnia-data/common';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
@@ -10,6 +11,7 @@ import { AISettings } from '~/ui/components/settings/ai-settings';
 import { CredentialsSettings } from '~/ui/components/settings/credentials';
 import { ScriptingSettings } from '~/ui/components/settings/scripting-settings';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getAppVersion, getProductName } from '../../../common/constants';
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
@@ -84,8 +86,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
       {...props}
     >
       <ModalHeader>
-        {getProductName()} Preferences
-        <span className="faint txt-sm">
+        {getProductName()} {translateOfflineUi("Preferences")}<span className="faint txt-sm">
           &nbsp;&nbsp;–&nbsp; v{getAppVersion()}
           {userSession.id && userSession.email ? ` – ${userSession.email}` : null}
         </span>
@@ -101,7 +102,7 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
               properties: { tab: key.toString() },
             });
           }}
-          aria-label="Settings"
+          aria-label={translateOfflineUi("Settings")}
           className="flex h-full w-full flex-1 flex-col"
         >
           <TabList
@@ -111,27 +112,19 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="general"
-            >
-              General
-            </Tab>
+            >{translateOfflineUi("General")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="proxy"
-            >
-              Proxy
-            </Tab>
+            >{translateOfflineUi("Proxy")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="data"
-            >
-              Data
-            </Tab>
+            >{translateOfflineUi("Data")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="themes"
-            >
-              Themes
-            </Tab>
+            >{translateOfflineUi("Themes")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="keyboard"
@@ -141,15 +134,11 @@ export const SettingsModal = forwardRef<SettingsModalHandle, ModalProps>((props,
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="plugins"
-            >
-              Plugins
-            </Tab>
+            >{translateOfflineUi("Plugins")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="credentials"
-            >
-              Credentials
-            </Tab>
+            >{translateOfflineUi("Credentials")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="scripting"

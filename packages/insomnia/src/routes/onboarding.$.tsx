@@ -1,3 +1,4 @@
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link, Route, Routes, useLocation } from 'react-router';
 
@@ -7,6 +8,7 @@ import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import new_api_collection from '~/ui/images/onboarding/new_api_collection.png';
 import scripts_for_unit_test from '~/ui/images/onboarding/scripts_for_unit_test.png';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const features = [
   {
@@ -153,9 +155,7 @@ const Component = () => {
                   className="rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-sm text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                   to={window.localStorage.getItem('prefers-project-type') ? '/organization' : '/onboarding/migrate'}
                   onClick={() => window.localStorage.setItem(HAS_SEEN_ONBOARDING_KEY, 'true')}
-                >
-                  Continue
-                </Link>
+                >{translateOfflineUi("Continue")}</Link>
               </div>
             </div>
           </div>

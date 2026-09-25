@@ -1,3 +1,4 @@
+
 import type { CloudProviderCredential } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-c
 import { useUpdateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.update';
 import { useCreateCloudCredentialActionFetcher } from '~/routes/cloud-credentials.create';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../../common/constants';
 import { Icon } from '../../icon';
@@ -174,9 +176,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                           window.clipboard.writeText(authUrl);
                         }}
                       >
-                        <i className="fa fa-clipboard mr-1" aria-hidden="true" />
-                        Copy
-                      </button>
+                        <i className="fa fa-clipboard mr-1" aria-hidden="true" />{translateOfflineUi("Copy")}</button>
                     </div>
                     <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
                       If your browser does not open the Insomnia app automatically you can manually paste the redirect
@@ -204,9 +204,7 @@ export const CloudCredentialModal = (props: CloudCredentialModalProps) => {
                         <Icon
                           icon={isAuthenticating ? 'spinner' : 'sign-in'}
                           className={`${isAuthenticating ? 'animate-spin' : ''} mr-1`}
-                        />
-                        Auth
-                      </button>
+                        />{translateOfflineUi("Auth")}</button>
                     </Form>
                   </div>
                   {error && <p className="notice error margin-bottom-sm w-full">{error}</p>}

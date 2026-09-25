@@ -1,3 +1,4 @@
+
 import type {
   ResponseTimelineEntry,
   RunnerResultPerRequest,
@@ -69,6 +70,7 @@ import {
   updateExecution,
   upsertLiveItem,
 } from '~/ui/runner-execution-store';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { moveAfter, moveBefore } from '~/ui/utils';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner';
@@ -600,9 +602,7 @@ export const Runner: FC = () => {
                     isDisabled={isDisabled}
                     className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:bg-(--color-surprise)/90 focus:bg-(--color-surprise)/90"
                     onPress={onRun}
-                  >
-                    Run
-                  </Button>
+                  >{translateOfflineUi("Run")}</Button>
                   <Dropdown
                     key="dropdown"
                     className="flex"
@@ -623,7 +623,7 @@ export const Runner: FC = () => {
                     }
                   >
                     <DropdownItem aria-label="send-now">
-                      <ItemContent icon="arrow-circle-o-right" label="Run" onClick={onRun} />
+                      <ItemContent icon="arrow-circle-o-right" label={translateOfflineUi("Run")} onClick={onRun} />
                     </DropdownItem>
                     <DropdownItem aria-label="Run via CLI">
                       <ItemContent icon="code" label="Run via CLI" onClick={() => setShowCLIModal(true)} />
@@ -648,9 +648,7 @@ export const Runner: FC = () => {
                   className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                   id="advanced"
                 >
-                  <i className="fa fa-gear fa-1x mr-2 h-4" />
-                  Advanced
-                </Tab>
+                  <i className="fa fa-gear fa-1x mr-2 h-4" />{translateOfflineUi("Advanced")}</Tab>
               </TabList>
               <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="request-order">
                 <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
@@ -662,12 +660,12 @@ export const Runner: FC = () => {
                       </span>
                     ) : Array.from(selectedKeys).length === 0 ? (
                       <span onClick={onToggleSelection}>
-                        <i className="fa fa-square fa-1x mr-2 h-4" /> <span className="cursor-pointer">Select All</span>
+                        <i className="fa fa-square fa-1x mr-2 h-4" /> <span className="cursor-pointer">{translateOfflineUi("Select All")}</span>
                       </span>
                     ) : (
                       <span onClick={onToggleSelection}>
                         <i style={{ color: 'rgb(74 222 128)' }} className="fa fa-square-minus fa-1x mr-2 h-4" />{' '}
-                        <span className="cursor-pointer">Select All</span>
+                        <span className="cursor-pointer">{translateOfflineUi("Select All")}</span>
                       </span>
                     )}
                   </span>
@@ -854,7 +852,7 @@ export const Runner: FC = () => {
               id="results"
             >
               <div>
-                <span>Results</span>
+                <span>{translateOfflineUi("Results")}</span>
                 <span
                   className={`test-result-count ml-1 rounded-xs px-1 ${testResultCountTagColor}`}
                   style={{ color: 'white' }}
@@ -866,15 +864,11 @@ export const Runner: FC = () => {
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="history"
-            >
-              History
-            </Tab>
+            >{translateOfflineUi("History")}</Tab>
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="console"
-            >
-              Console
-            </Tab>
+            >{translateOfflineUi("Console")}</Tab>
           </TabList>
           <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="console">
             <ResponseTimelineViewer key={runnerId} timeline={timelines} />

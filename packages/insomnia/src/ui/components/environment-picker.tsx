@@ -1,3 +1,4 @@
+
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { models } from 'insomnia-data';
 import { Fragment, useState } from 'react';
@@ -9,6 +10,7 @@ import { useEnvironmentSetActiveGlobalActionFetcher } from '~/routes/organizatio
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useWorkspaceLoaderData } from '../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import uiEventBus from '../event-bus';
@@ -254,7 +256,7 @@ export const EnvironmentPicker = ({
         </DialogTrigger>
       )}
       <DialogTrigger isOpen={isOpen} onOpenChange={onOpenChange}>
-        <Button aria-label="Select an API Collection Environment" className={triggerButtonClassName}>
+        <Button aria-label={translateOfflineUi("Select an API Collection Environment")} className={triggerButtonClassName}>
           <Icon
             icon={activeEnvironment.isPrivate ? 'lock' : 'code'}
             style={{ color: activeEnvironment.color || '' }}
@@ -272,7 +274,7 @@ export const EnvironmentPicker = ({
                 position="top"
                 message="Used only by this API collection. Click the edit icon to manage its environments."
               >
-                <span>Collection Environment</span>
+                <span>{translateOfflineUi("Collection Environment")}</span>
               </Tooltip>
               <div className="flex shrink-0 items-center gap-2">
                 <Button
@@ -286,7 +288,7 @@ export const EnvironmentPicker = ({
               </div>
             </Heading>
             <ListBox
-              aria-label="Select an API Collection Environment"
+              aria-label={translateOfflineUi("Select an API Collection Environment")}
               selectionMode="single"
               key={activeEnvironment._id}
               items={collectionEnvironmentList}

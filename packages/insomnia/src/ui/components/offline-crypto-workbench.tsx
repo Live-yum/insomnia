@@ -129,7 +129,7 @@ export const OfflineCryptoWorkbench = () => {
                   {actions.map(([value, zh, en]) => <option key={value} value={value}>{t(zh, en)}</option>)}
                 </select>
               </label>
-              {select('界面语言 / Interface language', locale, ['zh-CN', 'en-US'], value => setOfflineLocale(value === 'en-US' ? 'en-US' : 'zh-CN'))}
+              {select('界面语言 / Interface language', locale, ['zh-CN', 'en-US'], value => { void setOfflineLocale(value === 'en-US' ? 'en-US' : 'zh-CN').catch(() => setError(t('语言设置保存失败，请重试。', 'Language preference could not be saved.'))); })}
               {algorithms[action] && select(t('算法', 'Algorithm'), algorithm, algorithms[action], setAlgorithm)}
               {['cipher', 'rsa', 'jwt', 'sm2'].includes(action) && select(t('处理方式', 'Operation'), operation, action === 'jwt' ? ['verify', 'sign', 'inspect'] : action === 'sm2' ? ['encrypt', 'decrypt', 'sign', 'verify'] : ['encrypt', 'decrypt'], value => {
                 setOperation(value);
