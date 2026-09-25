@@ -5,6 +5,8 @@ on:
     branches: [offline/complete-portable]
     paths:
       - scripts/offline/repair_ci_warnings.py
+      - scripts/offline/repair_playwright_warnings.mjs
+      - scripts/offline/finish_ci_warning_cleanup.py
       - .github/workflows/offline-ci-warning-cleanup.yml
   workflow_dispatch:
 
@@ -47,8 +49,8 @@ jobs:
           git rev-parse HEAD > "$RUNNER_TEMP/ci-warning-cleanup/source.log"
       - name: Install locked application tools
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/ci-warning-cleanup/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/install.log"; exit 1; }
-      - name: Apply only reviewed artifact pins and locator source fixes
-        run: python3 scripts/offline/repair_ci_warnings.py
+      - name: Apply reviewed warning fixes and obsolete cycle deletions
+        run: python3 scripts/offline/finish_ci_warning_cleanup.py
       - name: Require all workspace lint and smoke test lint without any warnings
         run: |
           set -euo pipefail
@@ -60,12 +62,21 @@ jobs:
           npm run type-check --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/types.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/types.log"; exit 1; }
           python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
           python3 scripts/offline/vendor_plugins.py verify
-      - name: Build application and run all workspace unit tests
+      - name: Require the unchanged circular dependency gate
+        run: npm run check-cycle-references > "$RUNNER_TEMP/ci-warning-cleanup/cycles.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/cycles.log"; exit 1; }
+      - name: Require deterministic sandbox vendor regeneration
+        run: |
+          sha256sum packages/insomnia/src/templating/sandbox/vendored/*.generated.ts > "$RUNNER_TEMP/ci-warning-cleanup/generated.sha256"
+          npm ci --prefix packages/insomnia/src/templating/sandbox/vendored/pkg --no-audit --no-fund > "$RUNNER_TEMP/ci-warning-cleanup/vendor-install.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/vendor-install.log"; exit 1; }
+          npm run sandbox:vendored:generate -w insomnia > "$RUNNER_TEMP/ci-warning-cleanup/vendor-generate.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/vendor-generate.log"; exit 1; }
+          sha256sum -c "$RUNNER_TEMP/ci-warning-cleanup/generated.sha256"
+      - name: Build application and run all workspace and CLI unit tests
         run: |
           set -euo pipefail
           npm run app-build > "$RUNNER_TEMP/ci-warning-cleanup/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/build.log"; exit 1; }
           npm run install-libcurl-node > "$RUNNER_TEMP/ci-warning-cleanup/abi.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/abi.log"; exit 1; }
           npm run test --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ci-warning-cleanup/unit.log"; exit 1; }
+          npm run test:unit -w insomnia-inso > "$RUNNER_TEMP/ci-warning-cleanup/cli-unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ci-warning-cleanup/cli-unit.log"; exit 1; }
       - name: Export validated source patch and inventory
         run: |
           set -euo pipefail
@@ -120,17 +131,26 @@ jobs:
           git apply --check "$patch"
           git apply --index "$patch"
           python3 - <<'PY'
-          import subprocess
-          tests = {'graphql.test.ts', 'export-openapi-spec.test.ts', 'design-interactions.test.ts', 'dashboard-interactions.test.ts'}
-          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name for name in tests} | {'eslint.config.mjs'}
+          import json, subprocess
+          tests = {'graphql', 'export-openapi-spec', 'design-interactions', 'dashboard-interactions', 'grpc-interactions', 'openapi', 'pre-request-script-window', 'preferences-interactions', 'socket-io', 'spec-toolbar', 'websocket', 'grpc-mtls', 'mtls', 'plugin-load-order-sandbox-engine-integrity', 'plugin-missing-dependency', 'plugin-reload-tag-cache', 'plugin-vanish-name-collision', 'plugin-vanish-sibling-missing-dependency', 'response-bodypath-read-scope', 'sandbox-template-tags', 'quickjs-script-sandbox', 'quickjs-sendrequest-bridge'}
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name + '.test.ts' for name in tests} | {'eslint.config.mjs', 'packages/insomnia/scripts/sandbox-vendored-lib.ts', 'packages/insomnia/src/templating/sandbox/vendored/ajv.generated.ts', 'packages/insomnia/src/templating/sandbox/vendored/uuid.generated.ts'}
           names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          baseline = 'scripts/circular-references/known-violations.json'
           for name in names:
               if name in allowed:
                   continue
+              if name == baseline:
+                  before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + name], text=True))
+                  after = json.loads(subprocess.check_output(['git', 'show', ':' + name], text=True))
+                  if set(before) != set(after) or any(not set(after[key]) <= set(before[key]) for key in before):
+                      raise SystemExit('Refusing new cycle allowances')
+                  if any(before[key] != after[key] for key in before if key != 'insomnia') or len(before['insomnia']) - len(after['insomnia']) != 5:
+                      raise SystemExit('Unexpected cycle baseline change')
+                  continue
               if not name.startswith('.github/') or not name.endswith(('.yml', '.yaml')):
                   raise SystemExit('Unexpected changed path: ' + name)
-              patch = subprocess.check_output(['git', 'diff', '--cached', '--', name], text=True)
-              for line in patch.splitlines():
+              diff = subprocess.check_output(['git', 'diff', '--cached', '--', name], text=True)
+              for line in diff.splitlines():
                   if line.startswith(('+++', '---')) or not line.startswith(('+', '-')):
                       continue
                   value = line[1:].strip().removeprefix('-').strip()
@@ -139,6 +159,6 @@ jobs:
           PY
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(ci): pin Node 24 artifact actions and use warning-free Playwright locators'
+          git commit -m 'fix(ci): apply validated Node 24 pins, warning-free test interactions and reduced cycle baseline'
           git push origin HEAD:offline/complete-portable
           git log -1 --format='%H %s'
