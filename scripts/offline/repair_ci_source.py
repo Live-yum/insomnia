@@ -35,12 +35,9 @@ def replace(relative: str, before: str, after: str) -> None:
 def main() -> None:
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
         raise ValueError('Repair requires a clean checkout')
-    # The service SDK supports five HTTP methods; the generic proxy entry point
-    # is tested separately. Do not widen production types for test fixtures.
     replace('src/common/__tests__/insomnia-fetch.test.ts',
             "['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const",
             "['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const")
-    # Preserve the independently committed archive extraction repair.
     replace(
         'src/main/__tests__/bundle-spectral-ruleset.test.ts',
         '// Mock fs and dns so no real files or DNS lookups are needed.',
@@ -56,13 +53,16 @@ def main() -> None:
     replace('src/plugins/__tests__/index.test.ts',
             "import { getAppBundlePlugins } from '~/common/constants';",
             "import * as appConstants from '~/common/constants';")
+    # Restore only the one spy this fixture owns. Global restoreAllMocks would
+    # erase context factories created by vi.fn().mockReturnValue in this file.
     replace('src/plugins/__tests__/index.test.ts',
             'afterEach(() => {\n  _testOnlySetPlugins(null);\n});',
-            'afterEach(() => {\n  vi.restoreAllMocks();\n  _testOnlySetPlugins(null);\n});')
+            'let bundlePluginSpy: ReturnType<typeof vi.spyOn> | undefined;\n\n'
+            'afterEach(() => {\n  bundlePluginSpy?.mockRestore();\n  bundlePluginSpy = undefined;\n  _testOnlySetPlugins(null);\n});')
     replace('src/plugins/__tests__/index.test.ts',
             '    const bundlePluginName = getAppBundlePlugins()[0].name;',
             "    const bundlePluginName = 'insomnia-plugin-test-bundle';\n"
-            "    vi.spyOn(appConstants, 'getAppBundlePlugins').mockReturnValue([{ name: bundlePluginName }]);")
+            "    bundlePluginSpy = vi.spyOn(appConstants, 'getAppBundlePlugins').mockReturnValue([{ name: bundlePluginName }]);")
     replace('src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
             '      pluginConfig: { [elevatedPluginName]: { disabled: false, elevated: true } },',
             '      pluginConfig: {\n'
@@ -72,6 +72,12 @@ def main() -> None:
     replace('src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
             '    // Sorts second; left in the default sandboxed mode.',
             '    // Explicitly enabled test fixture; still uses the default sandboxed mode.')
+    # project.get is the local database API, not a cloud service. Verify its
+    # organization boundary instead of incorrectly forbidding local reads.
+    replace('src/ui/utils/router.test.ts',
+            '      expect(services.project.get).not.toHaveBeenCalled();',
+            "      expect(services.project.get).toHaveBeenCalledExactlyOnceWith({ parentId: 'org_offline' });\n"
+            "      expect(storage.getItem).toHaveBeenCalledWith('locationHistoryEntry:org_offline');")
     subprocess.run(['node', str(ROOT / 'node_modules/eslint/bin/eslint.js'), '--fix', *FORMAT_FILES], cwd=APP, check=True)
     permitted = {'packages/insomnia/' + item for item in FORMAT_FILES}
     changed = set(subprocess.check_output(['git', 'diff', '--name-only'], cwd=ROOT, text=True).splitlines())
