@@ -1,10 +1,35 @@
 import assert from 'node:assert/strict';
+import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
-import { isOfflineBrowserUrlAllowed as allowed, parseOfflineOrigins as parse, OFFLINE_BUILD } from '../../packages/insomnia/src/common/offline-policy.ts';
+import { pathToFileURL } from 'node:url';
+
+// Test the exact production source as an explicitly typed ES module. The app
+// itself remains CommonJS; never change its package type or suppress Node warnings
+// just to make this dependency-free policy test quiet.
+const source = new URL('../../packages/insomnia/src/common/offline-policy.ts', import.meta.url);
+const temporary = await mkdtemp(path.join(os.tmpdir(), 'insomnia-policy-test-'));
+const modulePath = path.join(temporary, 'offline-policy.mts');
+let policy;
+try {
+  await copyFile(source, modulePath);
+  assert.deepEqual(await readFile(modulePath), await readFile(source));
+  policy = await import(pathToFileURL(modulePath).href);
+} finally {
+  await rm(temporary, { recursive: true, force: true });
+}
+const { isOfflineBrowserUrlAllowed: allowed, parseOfflineOrigins: parse, OFFLINE_BUILD } = policy;
 
 test('offline build cannot be toggled by an environment variable', () => {
-  process.env.INSOMNIA_OFFLINE = 'false';
-  assert.equal(OFFLINE_BUILD, true);
+  const previous = process.env.INSOMNIA_OFFLINE;
+  try {
+    process.env.INSOMNIA_OFFLINE = 'false';
+    assert.equal(OFFLINE_BUILD, true);
+  } finally {
+    if (previous === undefined) delete process.env.INSOMNIA_OFFLINE;
+    else process.env.INSOMNIA_OFFLINE = previous;
+  }
 });
 test('no exceptions by default', () => assert.equal(parse(undefined).size, 0));
 test('exact origin parsing and deduplication', () => {

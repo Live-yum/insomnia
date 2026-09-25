@@ -189,6 +189,7 @@ export function createPluginWindow() {
       nodeIntegration: true,
       preload: path.join(__dirname, 'entry.plugin-window-preload.min.js'),
       backgroundThrottling: false,
+      spellcheck: false,
       devTools: process.env.NODE_ENV === 'development',
     },
   });

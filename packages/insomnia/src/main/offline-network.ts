@@ -1,10 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { app, type Session,session } from 'electron';
+import { app, type Session, session } from 'electron';
 
 import { isDevelopment } from '../common/constants';
 import { isOfflineBrowserUrlAllowed, parseOfflineOrigins } from '../common/offline-policy';
+import { configureOfflineChromium } from './offline-chromium-policy';
 
 let installed = false;
 let browserOrigins: ReadonlySet<string> | undefined;
@@ -46,6 +47,7 @@ const configureSession = (target: Session) => {
     callback({ cancel: !isOfflineBrowserUrlAllowed(details.url, origins) });
   });
   target.setSpellCheckerEnabled(false);
+  target.setSpellCheckerLanguages([]);
   // No implicit OS/PAC discovery in Chromium. Explicit API-request proxies are handled
   // by Insomnia's native request engine, which is intentionally not monkey-patched here.
   void target.setProxy({ mode: 'direct' }).catch(() => {
@@ -57,6 +59,7 @@ const configureSession = (target: Session) => {
 export function installOfflineNetworkPolicy(): void {
   if (installed) return;
   getOfflineBrowserOrigins(); // Validate administrator configuration before continuing startup.
+  configureOfflineChromium(app.commandLine);
   installed = true;
   app.on('session-created', configureSession);
   if (app.isReady()) {

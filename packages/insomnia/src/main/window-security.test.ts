@@ -16,6 +16,8 @@ describe('main window security posture', () => {
       nodeIntegration: false,
       nodeIntegrationInWorker: false,
       contextIsolation: true,
+      sandbox: true,
+      spellcheck: false,
     });
   });
 
@@ -30,10 +32,19 @@ describe('main window security posture', () => {
     expect(end).toBeGreaterThan(start);
     const mainWindowBlock = source.slice(start, end);
 
-    // The block must derive its security flags from the pinned constant...
     expect(mainWindowBlock).toContain('...MAIN_WINDOW_SECURITY');
-    // ...and must not re-introduce a weakening override.
     expect(mainWindowBlock).not.toMatch(/nodeIntegration\s*:\s*true/);
     expect(mainWindowBlock).not.toMatch(/contextIsolation\s*:\s*false/);
+    expect(mainWindowBlock).not.toMatch(/sandbox\s*:\s*false/);
+    expect(mainWindowBlock).not.toMatch(/spellcheck\s*:\s*true/);
+  });
+
+  it('does not enable dictionary downloads in the hidden plugin window', () => {
+    const source = readFileSync(path.join(__dirname, 'plugin-window.ts'), 'utf8');
+    const start = source.indexOf('pluginWindow = new BrowserWindow(');
+    const end = source.indexOf("pluginWindow.on('closed'", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    expect(source.slice(start, end)).toMatch(/spellcheck\s*:\s*false/);
   });
 });

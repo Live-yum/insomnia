@@ -14,17 +14,17 @@ test('disabled update checks preserve local project data across a real restart',
     await window.main.manualUpdateCheck();
     return window.main.getUpdateStatus();
   });
-  expect(status).toBe('idle');
+  expect.soft(status).toBe('idle');
 
   // An offline build must not run update-triggered backup jobs. It must still
   // persist the user's real data; closing and reopening tests that independently.
   const directories = await fs.readdir(dataPath);
-  expect(directories).not.toContain('backups');
+  expect.soft(directories).not.toContain('backups');
   const databaseFile = path.join(dataPath, 'insomnia.Project.db');
-  expect((await fs.stat(databaseFile)).size).toBeGreaterThan(0);
+  expect.soft((await fs.stat(databaseFile)).size).toBeGreaterThan(0);
   await insomnia.relaunch();
-  await expect(insomnia.page.getByTestId('offline-mode')).toBeVisible();
-  await expect(insomnia.page).toHaveURL(projectUrl);
+  await expect.soft(insomnia.page.getByTestId('offline-mode')).toBeVisible();
+  await expect.soft(insomnia.page).toHaveURL(projectUrl);
   const projects = await insomnia.page.evaluate(() => window._dataServicesInvoke('project', 'list'));
-  expect(projects.find(candidate => candidate._id === project?._id)).toEqual(project);
+  expect.soft(projects.find(candidate => candidate._id === project?._id)).toEqual(project);
 });
