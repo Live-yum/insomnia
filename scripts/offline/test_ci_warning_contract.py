@@ -22,10 +22,17 @@ class WarningContractTests(unittest.TestCase):
                 count += 1
         self.assertGreater(count, 10)
 
-    def test_sast_composite_transitive_node24_upgrade_remains_pinned(self):
+    def test_sast_runtime_is_pinned_and_scanner_errors_are_not_suppressed(self):
         source = (ROOT / '.github/workflows/sast.yml').read_text(encoding='utf-8')
-        self.assertIn('Kong/public-shared-actions/security-actions/semgrep@a92df3beb1e69e27d86be56346488f15fecaf0de', source)
-        self.assertNotIn('a18abf762d6e2444bcbfd20de70451ea1e3bc1b1', source)
+        self.assertIn("'semgrep==1.178.0'", source)
+        self.assertIn('actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c', source)
+        self.assertIn('github/codeql-action/upload-sarif@f52b05f4acaaa234e44466e66d29050e135ea9ef', source)
+        self.assertIn('ci --config auto --no-autofix --no-suppress-errors', source)
+        self.assertIn('test "$SCAN_EXIT_CODE" = 0', source)
+        self.assertIn('test -s "$RUNNER_TEMP/semgrep-reports/scan.sarif"', source)
+        self.assertNotIn('continue-on-error', source)
+        self.assertNotIn('Kong/public-shared-actions/security-actions/semgrep@', source)
+        self.assertNotIn('--exclude-rule', source)
 
     def test_warning_budget_and_cli_suite_are_required_in_portable_quality(self):
         source = (ROOT / '.github/workflows/offline-complete-build.yml').read_text(encoding='utf-8')
