@@ -70,6 +70,7 @@ const report = {
   archiveExceptions: catalog.entries.filter(entry => entry.status !== 'materialized-unreviewed').map(entry => ({ name: entry.name, status: entry.status, error: entry.error })),
   passed: false,
   allCatalogPluginsUsable: false,
+  linuxIsolatedNetworkNamespace: process.platform === 'linux' && process.env.INSOMNIA_OFFLINE_TEST_NETNS === '1',
   scope: 'Packaged startup, real local route, disabled-plugin enumeration, renderer isolation and Chromium URL policy. Windows UI is tested before wrapping; the final secure wrapper has a separate normal-start test on identical Electron bytes. Not all plugin functionality or site egress certification.',
 };
 try {
@@ -82,8 +83,7 @@ try {
   assert.equal(await control.text(), 'reachable-loopback-control');
   assert.equal(probeRequests, 1, 'Positive control must reach the live server.');
   probeRequests = 0;
-  // Playwright 1.59 defaults this to false; testing with that default silently
-  // adds --no-sandbox. Explicit true is mandatory for this distribution.
+  // Playwright defaults this to false; explicit true prevents --no-sandbox.
   app = await electron.launch({ executablePath, env, chromiumSandbox: true, timeout: 120_000 });
   const page = await app.firstWindow({ timeout: 120_000 });
   page.setDefaultTimeout(120_000);
@@ -96,17 +96,28 @@ try {
     return {
       noSandboxArgument: application.commandLine.hasSwitch('no-sandbox'),
       nodeIntegration: preferences.nodeIntegration,
-      nodeIntegrationInWorker: preferences.nodeIntegrationInWorker,
+      // Electron omits this optional field from getLastWebPreferences. Its
+      // documented default is false; an explicitly true value still fails.
+      // Node access also requires a Node-enabled creator frame, checked below.
+      nodeIntegrationInWorker: preferences.nodeIntegrationInWorker === undefined ? false : preferences.nodeIntegrationInWorker,
+      nodeIntegrationInWorkerDefaultUsed: preferences.nodeIntegrationInWorker === undefined,
       contextIsolation: preferences.contextIsolation,
       sandbox: preferences.sandbox,
     };
   });
+  report.rendererSecurity = security;
   assert.equal(security.noSandboxArgument, false, 'The tested executable must not have --no-sandbox.');
   assert.equal(security.nodeIntegration, false);
   assert.equal(security.nodeIntegrationInWorker, false);
   assert.equal(security.contextIsolation, true);
   assert.equal(security.sandbox, true);
-  report.rendererSecurity = security;
+  const nodeExposure = await page.evaluate(() => ({
+    requireType: typeof globalThis.require,
+    nodeVersion: globalThis.process?.versions?.node ?? null,
+    bindingType: typeof globalThis.process?.binding,
+  }));
+  report.rendererNodeExposure = nodeExposure;
+  assert.deepEqual(nodeExposure, { requireType: 'undefined', nodeVersion: null, bindingType: 'undefined' }, 'The real page must not have Node APIs.');
   report.chromiumSandboxEnabled = true;
   const plugins = await page.evaluate(() => window.main.plugins.getPlugins());
   const names = new Set(plugins.map(plugin => plugin.name));
