@@ -16,6 +16,10 @@ export default defineConfig({
       'src/routes/**.*.tsx',
       '.react-router',
       'node_modules',
+      // These unmodified upstream suites use CommonJS Mocha. They are executed,
+      // together with offline crypto/policy regressions, by offline-crypto-upstream.test.ts.
+      'src/vendor/insomnia-plugin-crypto/test/encrypt.test.js',
+      'src/vendor/insomnia-plugin-crypto/test/store.test.js',
       // The isolated, exact-pinned install (M3 sandbox-vendored libs) has its own node_modules
       // whose dependencies ship their own test suites (e.g. ajv's) — not this repo's, and not
       // runnable here (no test-runner devDependencies installed in that isolated install).
