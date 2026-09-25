@@ -119,6 +119,11 @@ jobs:
         shell: bash
     env:
       INSOMNIA_OFFLINE_SMOKE_EXE: packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
+      RESOURCE_TARGET: ${{ matrix.resource_target }}
+      PACKAGE_TARGET: ${{ matrix.target }}
+      PACKAGE_PLATFORM: ${{ matrix.platform }}
+      PACKAGE_ARCH: ${{ matrix.arch }}
+      PACKAGE_DIRECTORY: packages/insomnia/dist/${{ matrix.directory }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -132,7 +137,7 @@ jobs:
         run: |
           test -f docs/OFFLINE-CONSOLIDATION.json
           python -m unittest discover -s scripts/offline -p 'test_*.py' -v
-          python scripts/offline/vendor_plugins.py materialize --target '${{ matrix.resource_target }}' --output packages/insomnia/offline-plugin-resources
+          python scripts/offline/vendor_plugins.py materialize --target "$RESOURCE_TARGET" --output packages/insomnia/offline-plugin-resources
       - name: Install Linux GUI and native prerequisites
         if: runner.os == 'Linux'
         run: |
@@ -148,9 +153,9 @@ jobs:
         run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
       - name: Package native application without automatic publishing
         working-directory: packages/insomnia
-        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir --${{ matrix.platform }} --${{ matrix.arch }} --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
+        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
       - name: Require every full-catalog resource byte in the native output
-        run: python scripts/offline/stage_resources.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.resource_target }}'
+        run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" --target "$RESOURCE_TARGET"
       - name: Windows clean-profile UI, full catalog, crypto and business API smoke
         if: runner.os == 'Windows'
         run: node scripts/offline/smoke.mjs > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
@@ -167,7 +172,7 @@ jobs:
         if: runner.os == 'Linux'
         run: bash scripts/offline/smoke-linux.sh > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
       - name: Archive only validated native output, reports and portable launchers
-        run: python scripts/offline/package-complete.py '${{ matrix.target }}'
+        run: python scripts/offline/package-complete.py "$PACKAGE_TARGET"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           name: insomnia-complete-${{ matrix.target }}

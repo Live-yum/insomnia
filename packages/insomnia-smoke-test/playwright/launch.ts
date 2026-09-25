@@ -37,11 +37,7 @@ export async function launchInsomnia(
   playwright: PlaywrightWorkerArgs['playwright'],
   envOptions: EnvOptions,
 ): Promise<ElectronApplication> {
-  const {
-    ELECTRON_RUN_AS_NODE: _ignored,
-    INSOMNIA_DATA_PATH: _inheritedDataPath,
-    ...launchEnv
-  } = process.env;
+  const { ELECTRON_RUN_AS_NODE: _ignored, INSOMNIA_DATA_PATH: _inheritedDataPath, ...launchEnv } = process.env;
   // Keep the fixture API stable, but never pass the legacy application's data
   // override to this offline build. The same isolated path is reused on relaunch.
   const { INSOMNIA_DATA_PATH: dataPath, ...offlineOptions } = envOptions;
