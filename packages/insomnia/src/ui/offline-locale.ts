@@ -1,35 +1,41 @@
 import { useSyncExternalStore } from 'react';
 
-export type OfflineLocale = 'zh-CN' | 'en-US';
-export const OFFLINE_LOCALE_KEY = 'insomnia.offline.ui-locale';
+import { OFFLINE_UI_LANGUAGE_KEY, type OfflineUiLanguage, parseOfflineUiLanguage } from '~/common/offline-localization';
+
+export type OfflineLocale = OfflineUiLanguage;
 const listeners = new Set<() => void>();
 
 export function getOfflineLocale(): OfflineLocale {
   if (typeof window === 'undefined') return 'zh-CN';
-  try { return window.localStorage.getItem(OFFLINE_LOCALE_KEY) === 'en-US' ? 'en-US' : 'zh-CN'; } catch { return 'zh-CN'; }
+  return parseOfflineUiLanguage(window.localStorage.getItem(OFFLINE_UI_LANGUAGE_KEY));
 }
 
-export function setOfflineLocale(locale: OfflineLocale) {
+/** Persist both renderer and native-menu preferences; never overwrite a user choice on startup. */
+export async function setOfflineLocale(locale: OfflineLocale): Promise<void> {
   if (locale !== 'zh-CN' && locale !== 'en-US') throw new Error('Unsupported interface language');
-  window.localStorage.setItem(OFFLINE_LOCALE_KEY, locale);
+  if (typeof window === 'undefined') return;
+  if (window.main?.electronStorage) {
+    await window.main.electronStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
+  }
+  window.localStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
   document.documentElement.lang = locale;
   for (const listener of listeners) listener();
 }
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === OFFLINE_LOCALE_KEY || event.key === null) listener();
+  const storageChanged = (event: StorageEvent) => {
+    if (event.key === OFFLINE_UI_LANGUAGE_KEY) listener();
   };
-  window.addEventListener('storage', onStorage);
-  return () => { listeners.delete(listener); window.removeEventListener('storage', onStorage); };
+  window.addEventListener('storage', storageChanged);
+  return () => {
+    listeners.delete(listener);
+    window.removeEventListener('storage', storageChanged);
+  };
 }
 
-export function useOfflineLocale() {
-  return useSyncExternalStore(subscribe, getOfflineLocale, () => 'zh-CN' as const);
+export function useOfflineLocale(): OfflineLocale {
+  return useSyncExternalStore(subscribe, getOfflineLocale, () => 'zh-CN');
 }
 
-/** Explicit source labels only; never run this on user documents or responses. */
-export function localize(zh: string, en: string): string {
-  return getOfflineLocale() === 'zh-CN' ? zh : en;
-}
+export const localize = (zh: string, en: string): string => getOfflineLocale() === 'zh-CN' ? zh : en;

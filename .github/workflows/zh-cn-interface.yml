@@ -1,0 +1,185 @@
+name: Validate compact Chinese desktop source
+on:
+  push:
+    branches: [offline/zh-cn-interface]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: compact-chinese-interface
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Integrate independently reviewed local security and crypto style changes
+        run: |
+          python3 scripts/offline/integrate-reviewed-basic.py
+          python3 scripts/offline/repair-crypto-style.py
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - uses: ./.github/actions/prepare-electron
+      - name: Apply source-level Chinese translation and test user-data boundaries
+        run: python3 scripts/offline/integrate-interface-locale.py
+      - name: Format authored source and require zero-warning lint, types and cycles
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess
+          names = set(subprocess.check_output(['git','diff','--name-only','61cb41c988e71a17ddff2fc3704d73a723b71b3e'],text=True).splitlines())
+          names |= set(subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines())
+          names = sorted(n for n in names if pathlib.Path(n).is_file() and (n.endswith(('.ts','.tsx')) or n.endswith('/portable-crypto.cjs')))
+          subprocess.run(['node','node_modules/eslint/bin/eslint.js','--fix','--max-warnings=0',*names],check=True)
+          PY
+          npm run lint --workspaces --if-present -- --max-warnings=0
+          npm run type-check --workspaces --if-present
+          npm run check-cycle-references
+      - name: Build real application and run full unit and crypto interoperation suites
+        run: |
+          npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/build.log"; exit 1; }
+          npm run install-libcurl-node
+          npm test --workspaces --if-present > "$RUNNER_TEMP/unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |Test Files |AssertionError|Unhandled Error' "$RUNNER_TEMP/unit.log" || true; exit 1; }
+          npm run test:unit -w insomnia-inso
+          node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs scripts/offline/crypto-openssl-interop.test.cjs scripts/offline/localize-ui.test.cjs
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py'
+      - name: Prepare source-only patch; workflow edits require separate connector review
+        run: |
+          git restore --source=HEAD --staged --worktree .github/workflows/test.yml .github/workflows/test-e2e.yml .github/workflows/offline-complete-build.yml
+          git add packages/insomnia/src packages/insomnia-data/src/models/user-session.ts packages/insomnia-smoke-test eslint.config.mjs scripts/offline/portable-crypto.test.cjs scripts/offline/run-with-ci-keyring.sh scripts/offline/smoke.mjs docs/OFFLINE-LOCALIZATION-COVERAGE.json
+          git diff --cached --check
+          git diff --cached --binary > "$RUNNER_TEMP/validated.patch"
+          git diff --cached --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: chinese-validated-source
+          path: ${{ runner.temp }}/validated.patch
+          if-no-files-found: error
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: chinese-quality-logs
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: error
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: chinese-validated-source
+          path: source-patch
+      - name: Commit verified source without changing any workflow or running application code
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/zh-cn-interface
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check source-patch/validated.patch
+          git apply --index source-patch/validated.patch
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          exact = {'scripts/offline/run-with-ci-keyring.sh','scripts/offline/portable-crypto.test.cjs','scripts/offline/smoke.mjs','eslint.config.mjs','docs/OFFLINE-LOCALIZATION-COVERAGE.json','packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/portable-crypto.cjs','packages/insomnia/src/common/offline-ui-translations.json'}
+          prefixes = ('packages/insomnia/src/','packages/insomnia-smoke-test/','packages/insomnia-data/src/models/user-session.ts')
+          assert names and all(n in exact or n.startswith(prefixes) and n.endswith(('.ts','.tsx')) for n in names), names
+          assert not any(n.startswith('.github/') for n in names)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: localize authored desktop UI to mainland Chinese and preserve strict offline security'
+          git push origin HEAD:offline/zh-cn-interface
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1,2,3,4,5,6]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gnome-keyring libsecret-tools libsecret-1-0 dbus-x11 xvfb xauth
+          npm ci --no-audit --no-fund
+      - uses: ./.github/actions/prepare-electron
+      - name: Build exact source and configure sandbox
+        shell: bash
+        run: |
+          npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/build.log"; exit 1; }
+          sandbox="$(cd packages/insomnia && node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Test real default Chinese interface and two-way language persistence
+        if: matrix.shard == 1
+        run: dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh xvfb-run -a node scripts/offline/test-chinese-interface.mjs > "$RUNNER_TEMP/chinese-ui.log" 2>&1 || { cat "$RUNNER_TEMP/chinese-ui.log"; exit 1; }
+      - name: Complete full UI shard using an explicitly selected English user preference
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh npm run test:build -w insomnia-smoke-test -- --shard="$SHARD/6" --retries=0 > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Display bounded assertions from real JUnit records
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import pathlib, json, re, xml.etree.ElementTree as ET
+          path = pathlib.Path('packages/insomnia-smoke-test/test-results.xml')
+          if not path.is_file(): raise SystemExit('UI run produced no JUnit evidence')
+          raw = path.read_bytes()
+          assert len(raw)<20*1024*1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures=[{'name':c.get('name'),'error':re.sub(r'\x1b\[[0-9;]*m','',f.text or '')[:1600]} for c in cases for f in list(c.findall('failure'))+list(c.findall('error'))]
+          print(json.dumps({'cases':len(cases),'skipped':sum(c.find('skipped') is not None for c in cases),'failures':failures},ensure_ascii=False))
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: chinese-ui-${{ matrix.shard }}
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            offline-test-results/
+            ${{ runner.temp }}/ui.log
+            ${{ runner.temp }}/chinese-ui.log
+          if-no-files-found: error
+  required:
+    needs: [prepare,commit,ui]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          results=json.loads(os.environ['RESULTS'])
+          assert all(job['result']=='success' for job in results.values()),results
+          PY
