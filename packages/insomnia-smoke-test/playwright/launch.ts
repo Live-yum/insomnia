@@ -5,6 +5,7 @@ import { bundleType, cwd, executablePath, mainPath } from './paths';
 
 export interface EnvOptions {
   INSOMNIA_DATA_PATH: string;
+  INSOMNIA_OFFLINE_BROWSER_ORIGINS?: string;
   INSOMNIA_API_URL: string;
   INSOMNIA_APP_WEBSITE_URL: string;
   INSOMNIA_AI_URL: string;

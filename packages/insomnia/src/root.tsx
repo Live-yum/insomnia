@@ -430,7 +430,7 @@ const Root = () => {
           return;
         }
         const userSession = await services.userSession.get();
-        if (!userSession.id) {
+        if (!OFFLINE_BUILD && !userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to open a folder in Insomnia.');
           return navigate(href('/auth/login'));
@@ -476,7 +476,7 @@ const Root = () => {
           );
         }
         const userSession = await services.userSession.get();
-        if (!userSession.id) {
+        if (!OFFLINE_BUILD && !userSession.id) {
           window.sessionStorage.setItem('pendingDeepLinkAfterAuthorize', url);
           window.localStorage.setItem('logoutMessage', 'Please log in to import this resource.');
           trackImportEvent(AnalyticsEvent.importLoginRequired);

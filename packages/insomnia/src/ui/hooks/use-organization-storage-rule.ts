@@ -2,7 +2,8 @@ import type { StorageRules } from 'insomnia-api';
 import { useCallback } from 'react';
 import { useParams } from 'react-router';
 
-import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule } from '~/common/organization-storage-rules';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
+import { DEFAULT_STORAGE_RULES, fetchAndCacheOrganizationStorageRule,OFFLINE_STORAGE_RULES } from '~/common/organization-storage-rules';
 import { useServerDataQueryClient } from '~/ui/context/app/server-data-context';
 import { useServerQuery } from '~/ui/hooks/use-query';
 
@@ -25,10 +26,11 @@ export function useOrganizationStorageRule(organizationIdParam?: string): Storag
   const { data } = useServerQuery({
     queryKey: organizationStorageRuleKey(organizationId),
     queryFn: () => fetchAndCacheOrganizationStorageRule(organizationId, true),
-    enabled: !!organizationId,
+    enabled: !OFFLINE_BUILD && !!organizationId,
   });
 
   // Fall back to safe defaults while loading or on error.
+  if (OFFLINE_BUILD) return organizationId === OFFLINE_ORGANIZATION_ID ? OFFLINE_STORAGE_RULES : DEFAULT_STORAGE_RULES;
   return data ?? DEFAULT_STORAGE_RULES;
 }
 

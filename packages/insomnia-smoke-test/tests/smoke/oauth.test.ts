@@ -3,6 +3,10 @@ import { expect } from '@playwright/test';
 import { loadFixture } from '../../playwright/paths';
 import { test } from '../../playwright/test';
 
+// Explicitly approve only the two loopback names used by the test IdP and callback.
+// This does not relax the application's default browser policy.
+test.use({ browserOrigins: ['http://127.0.0.1:4010', 'http://localhost:4010'] });
+
 test('can make oauth2 requests', async ({ app, page, insomnia }) => {
   test.slow();
 

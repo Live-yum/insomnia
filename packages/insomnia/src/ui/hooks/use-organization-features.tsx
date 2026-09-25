@@ -3,6 +3,7 @@ import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { useServerQuery } from '~/ui/hooks/use-query';
 
 export const fallbackFeatures = Object.freeze<FeatureList>({
@@ -14,7 +15,14 @@ export const fallbackFeatures = Object.freeze<FeatureList>({
   aiMcpClient: { enabled: false, reason: 'Insomnia API unreachable' },
 });
 
-// If network unreachable assume user has paid for the current period
+// Account-free capabilities of the local offline organization. No backend subscription is created.
+const offlineFeatures: FeatureList = Object.freeze({
+  ...fallbackFeatures,
+  bulkImport: { enabled: true, reason: 'Local offline capability' },
+  gitSync: { enabled: true, reason: 'User-managed Git repository' },
+});
+
+// The offline organization uses local capabilities and never requests billing information.
 export const fallbackBilling = Object.freeze<Billing>({
   isActive: true,
   expirationWarningMessage: '',
@@ -35,7 +43,7 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
   const params = useParams() as { organizationId?: string };
   const organizationId = organizationIdParam ?? params.organizationId ?? '';
 
-  const isEnabled = !!organizationId && !models.organization.isLocalOrganizationId(organizationId);
+  const isEnabled = !OFFLINE_BUILD && !!organizationId && !models.organization.isLocalOrganizationId(organizationId);
 
   const { data } = useServerQuery({
     queryKey: ['organization-features', organizationId],
@@ -48,7 +56,7 @@ export function useOrganizationPermissions(organizationIdParam?: string) {
 
   // Fall back to safe defaults while loading, when disabled (scratchpad/local-only), or on error.
   return {
-    features: data?.features ?? fallbackFeatures,
+    features: OFFLINE_BUILD ? (organizationId === OFFLINE_ORGANIZATION_ID ? offlineFeatures : fallbackFeatures) : data?.features ?? fallbackFeatures,
     billing: data?.billing ?? fallbackBilling,
   };
 }

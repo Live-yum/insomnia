@@ -62,6 +62,11 @@ export function isOfflineBrowserUrlAllowed(
       const pathname = decodeURIComponent(url.pathname);
       return url.host === '' && !pathname.startsWith('//') && !pathname.includes('\\');
     }
+    // The PDF viewer is packaged with Chromium; this exact extension is a local resource.
+    // Other extensions, chrome:// pages and network origins remain denied.
+    if (url.protocol === 'chrome-extension:') {
+      return url.hostname === 'mhjfbmdgcfjbbpaeojofohoefgiehjai' && url.port === '';
+    }
     if (url.protocol === 'data:' || url.protocol === 'blob:') return true;
     return url.protocol === 'insomnia-templating-worker-database:';
   } catch {
