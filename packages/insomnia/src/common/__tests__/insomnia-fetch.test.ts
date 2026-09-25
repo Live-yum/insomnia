@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe('offline vendor SDK transport', () => {
-  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const)(
+  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'rejects %s before consulting either transport',
     async method => {
       const injected = vi.fn().mockResolvedValue(new Response('{}'));
@@ -40,13 +40,16 @@ describe('offline vendor SDK transport', () => {
     },
   );
 
-  it('fails closed through the proxy-aware SDK entry point too', async () => {
-    const injected = vi.fn();
-    setFetchImplementation(injected);
-    await expect(proxyAwareFetch('https://api.test/v1/test')).rejects.toThrow(OFFLINE_SERVICE_ERROR);
-    expect(injected).not.toHaveBeenCalled();
-    expect(fetch).not.toHaveBeenCalled();
-  });
+  it.each(['GET', 'POST', 'HEAD', 'OPTIONS'])(
+    'fails closed through the raw proxy-aware SDK entry point with method %s',
+    async method => {
+      const injected = vi.fn();
+      setFetchImplementation(injected);
+      await expect(proxyAwareFetch('https://api.test/v1/test', { method })).rejects.toThrow(OFFLINE_SERVICE_ERROR);
+      expect(injected).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
 
   it('cannot be re-enabled by replacing the injected implementation', async () => {
     const first = vi.fn();
