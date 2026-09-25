@@ -6,29 +6,32 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 jobs:
   diagnose:
     if: github.repository == 'Live-yum/insomnia'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Read prior inert unit-test diagnostics
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run download 36096337631 --repo Live-yum/insomnia --name offline-ci-diagnostics --dir "$RUNNER_TEMP/offline-diagnostics"
-      - name: Print failure blocks and suite totals without executing application code
-        shell: python
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Export exact branch, merged base and common ancestor for review
+        shell: bash
         run: |
-          import os, pathlib, re
-          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'offline-diagnostics'
-          path = root / 'offline-unit.log'
-          text = re.sub(r'\x1b\[[0-9;]*m', '', path.read_text(encoding='utf-8'))
-          lines = text.splitlines()
-          shown = set()
-          for i, line in enumerate(lines):
-              if re.search(r'^\s*FAIL\s|^\s*Test Files\s|^\s*Tests\s|Unhandled Errors|^Error:', line):
-                  for j in range(max(0, i-1), min(len(lines), i+28)):
-                      if j not in shown:
-                          print(lines[j], flush=True)
-                          shown.add(j)
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/source-review"
+          base=$(git merge-base HEAD origin/develop)
+          git rev-parse HEAD origin/develop "$base" > "$RUNNER_TEMP/source-review/commits.txt"
+          git archive --format=tar.gz -o "$RUNNER_TEMP/source-review/head.tar.gz" HEAD -- . ':!vendor/offline-plugins/blobs'
+          git archive --format=tar.gz -o "$RUNNER_TEMP/source-review/develop.tar.gz" origin/develop -- . ':!vendor/offline-plugins/blobs'
+          git archive --format=tar.gz -o "$RUNNER_TEMP/source-review/base.tar.gz" "$base" -- . ':!vendor/offline-plugins/blobs'
+          git diff --name-status "$base" origin/develop > "$RUNNER_TEMP/source-review/develop-changes.txt"
+          git diff --name-status "$base" HEAD > "$RUNNER_TEMP/source-review/head-changes.txt"
+          git ls-tree -r HEAD > "$RUNNER_TEMP/source-review/head-tree.txt"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
+        with:
+          name: offline-reconciliation-source
+          path: ${{ runner.temp }}/source-review
+          if-no-files-found: error
+          retention-days: 7
