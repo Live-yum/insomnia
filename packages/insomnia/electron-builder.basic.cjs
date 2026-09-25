@@ -1,4 +1,4 @@
-/* global require, module */
+/* global require, module, console */
 'use strict';
 // Compact profile: production code is in ASAR; no community dependency forest.
 const fs = require('node:fs');
@@ -14,6 +14,9 @@ module.exports = {
   electronLanguages: profile.engineLocales,
   files: [
     ...base.files,
+    // Apply to production dependencies too, not just the bundled build directory.
+    '!**/*.map',
+    '!node_modules/@getinsomnia/node-libcurl/lib/**/*.ts',
     {
       from: './src/vendor',
       to: './offline-reviewed-notices',
@@ -35,6 +38,7 @@ module.exports = {
     report.violations = directoryViolations(report, profile.budget);
     const output = path.join(context.outDir, 'basic-budget-' + context.electronPlatformName + '-' + context.arch + '.json');
     fs.writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
+    console.log('Compact package inventory:', JSON.stringify(report));
     if (report.violations.length) {
       throw new Error('Compact package budget failed; inspect ' + output + ': ' + report.violations.join('; '));
     }
