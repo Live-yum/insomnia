@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "edition": "basic",
+  "requestedDefaultUiLocale": "zh-CN",
+  "engineLocales": ["zh-CN", "en-US"],
+  "communityPlugins": [],
+  "reviewedBundledPlugins": [
+    {
+      "name": "insomnia-plugin-crypto",
+      "capabilities": ["request-body-aes-cbc", "response-body-aes-cbc"]
+    },
+    {
+      "name": "insomnia-plugin-offline-crypto-tools",
+      "capabilities": ["template-aes-gcm", "template-rsa-oaep", "template-hmac", "jwt-inspection-unverified"]
+    }
+  ],
+  "budget": {
+    "archiveGoalBytes": 209715200,
+    "archiveMaxBytes": 367001600,
+    "unpackedMaxBytes": 943718400,
+    "fileCountGoal": 500,
+    "fileCountMax": 1500,
+    "directoryCountMax": 300
+  },
+  "optionalProtocols": {
+    "mqtt": {"requestedVersions": ["3.1.1", "5.0"], "included": false},
+    "opcUa": {"included": false, "writeOperationsRequireExplicitConfirmation": true},
+    "opcClassic": {"included": false, "reason": "Not interchangeable with OPC UA; requires a separately reviewed Windows COM/DCOM path."}
+  },
+  "releaseAcceptance": {
+    "deduplicatedFeatureMatrix": true,
+    "requiredCryptoMatrix": true,
+    "actualChineseUiAndPersistence": true,
+    "nativePackagedTestsBothPlatforms": true,
+    "freshArchiveExtractionMeasurements": true,
+    "noRuntimeDownloads": true
+  },
+  "implementationStatus": {
+    "compactPackagingConfiguration": "implemented-pending-native-validation",
+    "completeCryptoMatrix": "pending",
+    "actualChineseUi": "pending",
+    "mqttClient": "pending",
+    "opcUaClient": "pending"
+  }
+}
