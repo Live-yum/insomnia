@@ -1,0 +1,46 @@
+name: Inspect final offline UI causes
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-final-source-inspection.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Download only existing regression reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 36144156656 --repo Live-yum/insomnia --name full-ui-regression-2 --dir reports
+      - name: Inspect actual source and Git page state without execution
+        shell: python
+        run: |
+          import pathlib, re
+          for file in pathlib.Path('reports').rglob('error-context.md'):
+              if 'clones-into' in str(file) or 'chosen-parent' in str(file) or 'git-repo-relocation' in str(file):
+                  text = file.read_text(encoding='utf-8')
+                  print('CONTEXT', str(file), '\n', text.split('# Page snapshot',1)[-1].split('# Test source',1)[0][-6000:], flush=True)
+                  break
+          roots = ['packages/insomnia/src', 'packages/insomnia-smoke-test', 'packages/insomnia-data/src']
+          for root in roots:
+              for file in pathlib.Path(root).rglob('*.ts*'):
+                  text = file.read_text(encoding='utf-8')
+                  lines = text.splitlines()
+                  for i,line in enumerate(lines):
+                      if ('getInitialEntry' in line and ('function ' in line or 'const getInitialEntry' in line)) or ('/git/setup' in line) or ('init.defaultBranch' in line) or ('git init' in line and 'fixtures' not in str(file)):
+                          print('SOURCE', str(file), '\n', '\n'.join(f'{n+1}: {lines[n]}' for n in range(max(0,i-8),min(len(lines),i+95))), flush=True)
+          for name in ['packages/insomnia-smoke-test/playwright/launch.ts', 'packages/insomnia/src/routes/konnect.tsx', 'packages/insomnia-smoke-test/tests/smoke/invite.test.ts', 'packages/insomnia-smoke-test/tests/smoke/konnect.test.ts']:
+              file = pathlib.Path(name)
+              if file.is_file(): print('FULL SOURCE', name, '\n',file.read_text(encoding='utf-8')[:21000], flush=True)
+          root = pathlib.Path('packages/insomnia-smoke-test')
+          file = root/'playwright/pages/components/navigation-sidebar.ts'
+          lines = file.read_text(encoding='utf-8').splitlines()
+          print('RENAME SOURCE', '\n'.join(f'{n+1}: {lines[n]}' for n in range(220,265)), flush=True)
+          for file in pathlib.Path('packages/insomnia/src').rglob('*secret*test.ts'):
+              print('SECRET TEST', str(file), '\n',file.read_text(encoding='utf-8')[:16000], flush=True)
