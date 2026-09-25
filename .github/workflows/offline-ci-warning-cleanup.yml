@@ -3,162 +3,94 @@ name: Offline CI warning cleanup
 on:
   push:
     branches: [offline/complete-portable]
-    paths:
-      - scripts/offline/repair_ci_warnings.py
-      - scripts/offline/repair_playwright_warnings.mjs
-      - scripts/offline/finish_ci_warning_cleanup.py
-      - .github/workflows/offline-ci-warning-cleanup.yml
+    paths: [.github/workflows/offline-ci-warning-cleanup.yml]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: offline-ci-warning-source-cleanup
   cancel-in-progress: false
 
-env:
-  PYTHONUTF8: '1'
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-  SCARF_DO_NOT_TRACK: 'true'
-  SCARF_ANALYTICS: 'false'
-  DO_NOT_TRACK: '1'
-  npm_config_audit: 'false'
-  npm_config_fund: 'false'
-  NODE_OPTIONS: --max_old_space_size=6144
-
 jobs:
-  prepare:
+  apply-validated-source:
     if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/complete-portable'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
-        with:
-          node-version-file: .nvmrc
-          package-manager-cache: false
-      - name: Prepare diagnostic record
-        run: |
-          mkdir -p "$RUNNER_TEMP/ci-warning-cleanup"
-          git rev-parse HEAD > "$RUNNER_TEMP/ci-warning-cleanup/source.log"
-      - name: Install locked application tools
-        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/ci-warning-cleanup/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/install.log"; exit 1; }
-      - name: Apply reviewed warning fixes and obsolete cycle deletions
-        run: python3 scripts/offline/finish_ci_warning_cleanup.py
-      - name: Require all workspace lint and smoke test lint without any warnings
-        run: |
-          set -euo pipefail
-          npm run lint --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/lint.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/lint.log"; exit 1; }
-          node node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 packages/insomnia-smoke-test/tests > "$RUNNER_TEMP/ci-warning-cleanup/smoke-lint.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/smoke-lint.log"; exit 1; }
-          if grep -E '(^|[[:space:]])[1-9][0-9]* warnings?([[:space:]]|$)' "$RUNNER_TEMP/ci-warning-cleanup/lint.log"; then exit 1; fi
-      - name: Require workspace types and portable workflow regressions
-        run: |
-          npm run type-check --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/types.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/types.log"; exit 1; }
-          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
-          python3 scripts/offline/vendor_plugins.py verify
-      - name: Require the unchanged circular dependency gate
-        run: npm run check-cycle-references > "$RUNNER_TEMP/ci-warning-cleanup/cycles.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/cycles.log"; exit 1; }
-      - name: Require deterministic sandbox vendor regeneration
-        run: |
-          sha256sum packages/insomnia/src/templating/sandbox/vendored/*.generated.ts > "$RUNNER_TEMP/ci-warning-cleanup/generated.sha256"
-          npm ci --prefix packages/insomnia/src/templating/sandbox/vendored/pkg --no-audit --no-fund > "$RUNNER_TEMP/ci-warning-cleanup/vendor-install.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/vendor-install.log"; exit 1; }
-          npm run sandbox:vendored:generate -w insomnia > "$RUNNER_TEMP/ci-warning-cleanup/vendor-generate.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/vendor-generate.log"; exit 1; }
-          sha256sum -c "$RUNNER_TEMP/ci-warning-cleanup/generated.sha256"
-      - name: Build application and run all workspace and CLI unit tests
-        run: |
-          set -euo pipefail
-          npm run app-build > "$RUNNER_TEMP/ci-warning-cleanup/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/build.log"; exit 1; }
-          npm run install-libcurl-node > "$RUNNER_TEMP/ci-warning-cleanup/abi.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/abi.log"; exit 1; }
-          npm run test --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ci-warning-cleanup/unit.log"; exit 1; }
-          npm run test:unit -w insomnia-inso > "$RUNNER_TEMP/ci-warning-cleanup/cli-unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ci-warning-cleanup/cli-unit.log"; exit 1; }
-      - name: Export validated source patch and inventory
-        run: |
-          set -euo pipefail
-          git diff --check
-          git diff --stat
-          git diff --binary > "$RUNNER_TEMP/ci-warning-cleanup/validated.patch"
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          for file in sorted(Path('.github').rglob('*.yml')):
-              for line in file.read_text(encoding='utf-8').splitlines():
-                  if re.match(r'\s*(?:-\s*)?uses:', line):
-                      print(str(file) + ': ' + line.strip())
-          PY
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
-        with:
-          name: ci-warning-cleanup-validated-source
-          path: ${{ runner.temp }}/ci-warning-cleanup/validated.patch
-          if-no-files-found: error
-          retention-days: 7
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
-        if: always()
-        with:
-          name: ci-warning-cleanup-diagnostics
-          path: ${{ runner.temp }}/ci-warning-cleanup/*.log
-          if-no-files-found: error
-          retention-days: 7
-
-  commit:
-    needs: prepare
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
+      actions: read
+    env:
+      VALIDATED_BASE: b9f60fd0f21b0e576c0d51357eb9378042c3f158
+      VALIDATED_RUN: '36118247514'
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+      - name: Require the successful exact-source validation job, not the failed workflow-write attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/Live-yum/insomnia/actions/runs/$VALIDATED_RUN" > "$RUNNER_TEMP/validated-run.json"
+          gh api "repos/Live-yum/insomnia/actions/runs/$VALIDATED_RUN/jobs?filter=latest&per_page=100" > "$RUNNER_TEMP/validated-jobs.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          tmp = pathlib.Path(os.environ['RUNNER_TEMP'])
+          run = json.loads((tmp / 'validated-run.json').read_text())
+          assert run['head_sha'] == os.environ['VALIDATED_BASE']
+          assert run['head_branch'] == 'offline/complete-portable'
+          assert run['repository']['full_name'] == 'Live-yum/insomnia'
+          assert run['path'] == '.github/workflows/offline-ci-warning-cleanup.yml'
+          jobs = json.loads((tmp / 'validated-jobs.json').read_text())['jobs']
+          jobs = [job for job in jobs if job['name'] == 'prepare']
+          assert len(jobs) == 1 and jobs[0]['conclusion'] == 'success'
+          results = {step['name']: step['conclusion'] for step in jobs[0]['steps']}
+          for name in ['Require all workspace lint and smoke test lint without any warnings', 'Require workspace types and portable workflow regressions', 'Require the unchanged circular dependency gate', 'Require deterministic sandbox vendor regeneration', 'Build application and run all workspace and CLI unit tests', 'Export validated source patch and inventory']:
+              assert results.get(name) == 'success', name
+          print('Verified successful complete validation at the pinned source; failed workflow write is not treated as success.')
+          PY
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, Node 24
         with:
           name: ci-warning-cleanup-validated-source
+          run-id: 36118247514
+          github-token: ${{ github.token }}
           path: ${{ runner.temp }}/validated-source
-      - name: Commit the tested patch without executing repository or plugin code
+      - name: Commit reviewed source only; workflow changes require the maintainer connection
         shell: bash
         run: |
           set -euo pipefail
           git fetch origin offline/complete-portable
           test "$(git rev-parse origin/offline/complete-portable)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$VALIDATED_BASE" HEAD
+          git diff --exit-code "$VALIDATED_BASE" HEAD -- packages eslint.config.mjs scripts/circular-references/known-violations.json
           patch="$RUNNER_TEMP/validated-source/validated.patch"
-          if [ ! -s "$patch" ]; then echo 'Source already clean'; exit 0; fi
-          git apply --check "$patch"
-          git apply --index "$patch"
+          test -s "$patch"
+          git apply --check --exclude='.github/*' "$patch"
+          git apply --index --exclude='.github/*' "$patch"
           python3 - <<'PY'
           import json, subprocess
           tests = {'graphql', 'export-openapi-spec', 'design-interactions', 'dashboard-interactions', 'grpc-interactions', 'openapi', 'pre-request-script-window', 'preferences-interactions', 'socket-io', 'spec-toolbar', 'websocket', 'grpc-mtls', 'mtls', 'plugin-load-order-sandbox-engine-integrity', 'plugin-missing-dependency', 'plugin-reload-tag-cache', 'plugin-vanish-name-collision', 'plugin-vanish-sibling-missing-dependency', 'response-bodypath-read-scope', 'sandbox-template-tags', 'quickjs-script-sandbox', 'quickjs-sendrequest-bridge'}
-          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name + '.test.ts' for name in tests} | {'eslint.config.mjs', 'packages/insomnia/scripts/sandbox-vendored-lib.ts', 'packages/insomnia/src/templating/sandbox/vendored/ajv.generated.ts', 'packages/insomnia/src/templating/sandbox/vendored/uuid.generated.ts'}
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name + '.test.ts' for name in tests} | {'eslint.config.mjs', 'packages/insomnia/scripts/sandbox-vendored-lib.ts', 'packages/insomnia/src/templating/sandbox/vendored/ajv.generated.ts', 'packages/insomnia/src/templating/sandbox/vendored/uuid.generated.ts', 'scripts/circular-references/known-violations.json'}
           names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          assert names and set(names) <= allowed, names
+          assert not any(name.startswith('.github/') for name in names)
           baseline = 'scripts/circular-references/known-violations.json'
-          for name in names:
-              if name in allowed:
-                  continue
-              if name == baseline:
-                  before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + name], text=True))
-                  after = json.loads(subprocess.check_output(['git', 'show', ':' + name], text=True))
-                  if set(before) != set(after) or any(not set(after[key]) <= set(before[key]) for key in before):
-                      raise SystemExit('Refusing new cycle allowances')
-                  if any(before[key] != after[key] for key in before if key != 'insomnia') or len(before['insomnia']) - len(after['insomnia']) != 5:
-                      raise SystemExit('Unexpected cycle baseline change')
-                  continue
-              if not name.startswith('.github/') or not name.endswith(('.yml', '.yaml')):
-                  raise SystemExit('Unexpected changed path: ' + name)
-              diff = subprocess.check_output(['git', 'diff', '--cached', '--', name], text=True)
-              for line in diff.splitlines():
-                  if line.startswith(('+++', '---')) or not line.startswith(('+', '-')):
-                      continue
-                  value = line[1:].strip().removeprefix('-').strip()
-                  if not value.startswith(('uses: actions/upload-artifact@', 'uses: actions/download-artifact@')):
-                      raise SystemExit('Unexpected workflow change: ' + name + ': ' + line)
+          before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + baseline], text=True))
+          after = json.loads(subprocess.check_output(['git', 'show', ':' + baseline], text=True))
+          assert set(before) == set(after)
+          assert all(set(after[key]) <= set(before[key]) for key in before)
+          assert all(before[key] == after[key] for key in before if key != 'insomnia')
+          assert len(before['insomnia']) - len(after['insomnia']) == 5
+          print('Allowed source files:', len(names))
           PY
+          git diff --cached --check
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'fix(ci): apply validated Node 24 pins, warning-free test interactions and reduced cycle baseline'
+          git commit -m 'fix(test): apply zero-warning CI-validated interactions, vendor comments and reduced cycle baseline'
           git push origin HEAD:offline/complete-portable
           git log -1 --format='%H %s'
