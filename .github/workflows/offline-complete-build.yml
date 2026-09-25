@@ -61,26 +61,31 @@ jobs:
       - name: Install locked application build dependencies
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
       - name: Workspace lint without autofix
-        run: npm run lint --workspaces --if-present > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-lint.log"; exit 1; }
+        run: npm run lint --workspaces --if-present > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-lint.log"; exit 1; }
       - name: Workspace and route type checks
-        run: npm run type-check --workspaces --if-present > "$RUNNER_TEMP/offline-types.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-types.log"; exit 1; }
+        run: npm run type-check --workspaces --if-present > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
       - name: Build real application before tests
         run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
       - name: Prepare Node ABI for the complete unit suite
         run: npm run install-libcurl-node > "$RUNNER_TEMP/offline-node-abi.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-node-abi.log"; exit 1; }
       - name: Complete workspace unit suites
-        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { tail -n 200 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
+        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { tail -n 400 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
       - name: Record tested source
         run: |
           git diff --exit-code
           printf '{"status":"passed","sourceCommit":"%s"}\n' "$(git rev-parse HEAD)" > offline-quality.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
         with:
           name: offline-complete-quality
-          path: |
-            offline-quality.json
-            ${{ runner.temp }}/offline-*.log
+          path: offline-quality.json
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-complete-quality-diagnostics
+          path: ${{ runner.temp }}/offline-*.log
+          if-no-files-found: warn
           retention-days: 14
 
   build:
@@ -133,7 +138,7 @@ jobs:
       - name: Validate reviewed crypto and complete application types
         run: |
           node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
-          npm run type-check -w insomnia > "$RUNNER_TEMP/offline-types.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-types.log"; exit 1; }
+          npm run type-check -w insomnia > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
       - name: Compile actual committed source
         run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
       - name: Package native application without automatic publishing
@@ -204,10 +209,10 @@ jobs:
           import hashlib, json, os, pathlib
           root = pathlib.Path('release-assets')
           sha = os.environ['SOURCE_SHA']
-          quality = json.loads(pathlib.Path('quality-evidence/offline-quality.json').read_text())
+          quality = json.loads(pathlib.Path('quality-evidence/offline-quality.json').read_text(encoding='utf-8'))
           assert quality['status'] == 'passed' and quality['sourceCommit'] == sha
           for target in ['windows-x64', 'linux-arm64']:
-              report = json.loads((root / (target + '-validation.json')).read_text())
+              report = json.loads((root / (target + '-validation.json')).read_text(encoding='utf-8'))
               assert report['sourceCommit'] == sha and report['platform'] == target
               assert report['desktopSmoke']['status'] == 'passed'
               assert report['desktopSmoke']['sourceCommit'] == sha
