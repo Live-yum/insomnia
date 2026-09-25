@@ -33,6 +33,11 @@ text = text.replace("import { safeStorage } from 'electron';", "import { safeSto
 secret.write_text(text, encoding='utf-8', newline='\n')
 changed.append(str(secret.relative_to(ROOT)))
 
+# Old on-disk records had nullable parents. Model that boundary explicitly;
+# do not cast those records into the stricter current Project type.
+replace(app + 'common/offline-project-migration.ts', "import type { Project } from 'insomnia-data';\n\n", '')
+replace(app + 'common/offline-project-migration.ts', "project: Pick<Project, '_id' | 'parentId' | 'remoteId'>", "project: Readonly<{ _id: string; parentId: string | null; remoteId: string | null }>")
+
 router = app + 'ui/utils/router.ts'
 replace(router, "import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';", "import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';\nimport { canAdoptLegacyLocalProject } from '~/common/offline-project-migration';")
 replace(router, "  if (OFFLINE_BUILD) {\n    return getInitialRouteForOrganization({ organizationId: OFFLINE_ORGANIZATION_ID, navigateToWorkspace: true });\n  }\n", '')
@@ -75,4 +80,4 @@ replace(migration, '    // 4. Opening Insomnia from the completed migration land
 
 # Only Git tests explicitly opt in to the test repository's exact origins.
 replace(smoke + 'tests/smoke/custom-lint-rules.test.ts', "  test.describe('within a git-sync project', () => {", "  test.describe('within a git-sync project', () => {\n    test.use({ browserOrigins: ['http://localhost:4010', 'http://127.0.0.1:4010'] });")
-print('\n'.join(changed))
+print('\n'.join(dict.fromkeys(changed)))
