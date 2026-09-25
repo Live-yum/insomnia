@@ -1,0 +1,158 @@
+name: Validate local vault and search
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-vault-search-validation.yml, scripts/offline/repair_local_vault_and_search.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-vault-search-validation
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply only the reviewed local capability edits
+        run: |
+          python3 scripts/offline/repair_local_vault_and_search.py
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          names.extend(['packages/insomnia/src/common/utils/offline-vault-proof.ts', 'packages/insomnia/src/common/__tests__/offline-vault-proof.test.ts'])
+          assert all(name.startswith(('packages/insomnia/src/', 'packages/insomnia-smoke-test/', 'packages/insomnia-data/src/')) and name.endswith(('.ts', '.tsx')) for name in names)
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *names], check=True)
+          PY
+      - name: Require zero-warning lint, complete types and cryptographic regressions
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present
+          npm test -w insomnia -- src/common/__tests__/offline-vault-proof.test.ts src/common/__tests__/offline-local-resources.test.ts src/common/__tests__/offline-origin-policy.test.ts
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/vault-search-repair.patch"
+          git diff --stat
+          git grep -n srpK -- packages/insomnia/src || true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-vault-search-repair
+          path: ${{ runner.temp }}/vault-search-repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-vault-search-repair
+          path: ${{ runner.temp }}/repair
+      - name: Commit reviewed source without npm or application execution
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/repair/vault-search-repair.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          allowed = ['packages/insomnia/src/ui/vault-key.client.ts', 'packages/insomnia/src/ui/components/settings/vault-key-panel.tsx', 'packages/insomnia/src/ui/components/settings/general.tsx', 'packages/insomnia/src/routes/auth.update-vault-salt.tsx', 'packages/insomnia/src/routes/auth.clear-vault-key.tsx', 'packages/insomnia/src/common/utils/vault.ts', 'packages/insomnia/src/ui/hooks/use-command-search.ts', 'packages/insomnia/src/routes/remote-files.tsx', 'packages/insomnia-data/src/models/user-session.ts', 'packages/insomnia-smoke-test/tests/smoke/socket-io.test.ts', 'packages/insomnia-smoke-test/tests/smoke/pre-request-script-features.test.ts', 'packages/insomnia-smoke-test/tests/smoke/insomnia-vault.test.ts', 'packages/insomnia/src/common/utils/offline-vault-proof.ts', 'packages/insomnia/src/common/__tests__/offline-vault-proof.test.ts']
+          assert paths and set(paths) <= set(allowed), set(paths) - set(allowed)
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'fix: verify local vault keys, restore offline search and remove ambiguous UI selectors'
+            git push origin HEAD:offline/ui-regression-diagnostics
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git log -1 --format='%H %T'
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: vault
+            files: insomnia-vault.test.ts preferences-interactions.test.ts
+          - group: interaction
+            files: command-palette.test.ts socket-io.test.ts pre-request-script-features.test.ts
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Install the pinned Electron runtime with its sandbox enabled
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Run real local vault and interaction UI assertions
+        env:
+          TEST_FILES: ${{ matrix.files }}
+        run: dbus-run-session -- npm run test:build -w insomnia-smoke-test -- --project=Smoke --retries=0 $TEST_FILES > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Report every failure and its real UI context
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          report = pathlib.Path('packages/insomnia-smoke-test/test-results.xml')
+          raw = report.read_bytes()
+          assert len(raw) < 20 * 1024 * 1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures = 0
+          for case in cases:
+              for error in list(case.findall('failure')) + list(case.findall('error')):
+                  failures += 1
+                  text = re.sub(r'\x1b\[[0-9;]*m', '', error.text or '')
+                  print(json.dumps({'file': case.get('classname'), 'name': case.get('name'), 'error': text[:1800]}), flush=True)
+          for file in pathlib.Path('packages/insomnia-smoke-test/traces').rglob('error-context.md'):
+              print(str(file) + '\n' + file.read_text(encoding='utf-8')[:7000], flush=True)
+          print(json.dumps({'cases': len(cases), 'failures': failures, 'skipped': sum(case.find('skipped') is not None for case in cases)}), flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: vault-search-ui-${{ matrix.group }}
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
