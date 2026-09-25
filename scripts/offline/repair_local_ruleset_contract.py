@@ -43,7 +43,7 @@ replacement = '''  test.describe('local rulesets at the offline cloud boundary',
         ]);
         expect(sessions.map(session => session.id)).toEqual(['', '']);
       } finally {
-        await other.close();
+        await other.app.close();
       }
     });
 
