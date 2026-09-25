@@ -28,8 +28,6 @@ def replace(file, before, after):
 def main():
     policy = APP / 'src/common/offline-policy.ts'
     replace(policy, r'/[\u0000-\u0020\u007f\\]/.test(item)', "Array.from(item).some(character => {\n        const code = character.codePointAt(0);\n        return (code !== undefined && code <= 32) || code === 127 || character === '\\\\';\n      })")
-    # Upstream fixture cases are retained to exercise the dormant SSRF guards.
-    # A separate test module exercises the immutable production offline policy.
     spectral = APP / 'src/main/__tests__/bundle-spectral-ruleset.test.ts'
     before = '// Mock fs and dns so no real files or DNS lookups are needed.'
     after = "// Preserve all legacy SSRF cases using a test-only flag override.\n// Production remains OFFLINE_BUILD=true, tested independently in bundle-spectral-offline.test.ts.\nvi.mock('~/common/offline-policy', async importOriginal => ({\n  ...await importOriginal<Record<string, unknown>>(),\n  OFFLINE_BUILD: false,\n}));\n\n" + before
@@ -44,19 +42,22 @@ def main():
     before = "vi.mock('insomnia-data', async importOriginal => {"
     after = "// These original cloud-route fixtures are retained as regression tests for the dormant branch.\n// router-offline.test.ts separately checks real account-free startup and local persistence.\nvi.mock('~/common/offline', async importOriginal => ({\n  ...await importOriginal<Record<string, unknown>>(),\n  OFFLINE_BUILD: false,\n}));\n\n" + before
     replace(router, before, after)
-    # Declare the actual CommonJS runtime without changing pinned upstream bytes.
-    # Only four formatting preferences are exempted for the vendored upstream
-    # Crypto sources; undefined variables and other correctness checks stay on.
+    # The host requires CommonJS plugin entrypoints. Preserve original vendor bytes
+    # and declare only used environment names, not Buffer/crypto as script globals.
     config = ROOT / 'eslint.config.mjs'
     before = '  // Test files ESLint rules'
-    after = """  // The reviewed offline modules execute as Node CommonJS, not browser scripts.
+    after = """  // These reviewed entrypoints must remain CommonJS for the plugin host and builder.
   {
     files: [
       'packages/insomnia/electron-builder.offline.cjs',
       'packages/insomnia/src/vendor/insomnia-plugin-crypto/**/*.js',
       'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/*.cjs',
     ],
-    languageOptions: { sourceType: 'commonjs', globals: globals.node },
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'readonly', console: 'readonly' },
+    },
+    rules: { 'unicorn/prefer-module': 'off' },
   },
   {
     // Preserve the upstream snapshot SHA256; these are spelling/format preferences only.
