@@ -69,8 +69,9 @@ jobs:
           # A crash or missing report remains a failing gate; never manufacture SARIF.
       - name: Show actual findings and scanner diagnostics
         if: ${{ !cancelled() && steps.scan.outputs.exit_code != '' }}
-        shell: python
+        shell: bash
         run: |
+          python3 - <<'PY'
           import json, os, pathlib
           root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'semgrep-reports'
           report = root / 'scan.json'
@@ -86,6 +87,7 @@ jobs:
               print(json.dumps(error, ensure_ascii=False), flush=True)
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
               summary.write(f'## Semgrep 1.178.0\n\nActual findings: {len(findings)}. Scanner diagnostics: {len(errors)}.\n\nThe original automatic rule selection is retained. JSON, text, SARIF and the real exit code are attached. Scanner errors and findings are not converted to successful empty reports.\n')
+          PY
       - name: Upload the actual scanner reports
         if: ${{ !cancelled() && steps.scan.outputs.exit_code != '' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
