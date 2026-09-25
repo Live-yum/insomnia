@@ -7,6 +7,7 @@ on:
         type: string
         required: true
       publish:
+        description: Reserved for compatibility; release publication uses offline-promote.yml only
         type: boolean
         default: false
   workflow_dispatch:
@@ -15,10 +16,6 @@ on:
         description: Exact source commit to validate
         type: string
         required: true
-      publish:
-        description: Publish tested full-plugin candidate (only develop may publish)
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -69,7 +66,7 @@ jobs:
       - name: Prepare Node ABI for the complete unit suite
         run: npm run install-libcurl-node > "$RUNNER_TEMP/offline-node-abi.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-node-abi.log"; exit 1; }
       - name: Complete workspace unit suites
-        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { tail -n 400 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
+        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |Test Files |AssertionError|Unhandled Error' "$RUNNER_TEMP/offline-unit.log" || true; tail -n 200 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
       - name: Record tested source
         run: |
           git diff --exit-code
@@ -181,61 +178,3 @@ jobs:
             ${{ runner.temp }}/offline-*.log
           if-no-files-found: warn
           retention-days: 14
-
-  release:
-    needs: [quality, build]
-    if: inputs.publish && github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          pattern: insomnia-complete-*
-          merge-multiple: true
-          path: release-assets
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: offline-complete-quality
-          path: quality-evidence
-      - name: Recheck exact-source runtime proofs and checksums before release
-        env:
-          SOURCE_SHA: ${{ inputs.source_sha }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import hashlib, json, os, pathlib
-          root = pathlib.Path('release-assets')
-          sha = os.environ['SOURCE_SHA']
-          quality = json.loads(pathlib.Path('quality-evidence/offline-quality.json').read_text(encoding='utf-8'))
-          assert quality['status'] == 'passed' and quality['sourceCommit'] == sha
-          for target in ['windows-x64', 'linux-arm64']:
-              report = json.loads((root / (target + '-validation.json')).read_text(encoding='utf-8'))
-              assert report['sourceCommit'] == sha and report['platform'] == target
-              assert report['desktopSmoke']['status'] == 'passed'
-              assert report['desktopSmoke']['sourceCommit'] == sha
-              name = report['archive']
-              assert pathlib.PurePosixPath(name).name == name
-              with (root / name).open('rb') as stream:
-                  assert hashlib.file_digest(stream, 'sha256').hexdigest() == report['archiveSha256']
-              assert report['archiveBytes'] == (root / name).stat().st_size
-              if target == 'windows-x64':
-                  assert report['windowsWrapper']['status'] == 'passed'
-          assert len(list(root.glob('*.zip'))) == len(list(root.glob('*.tar.gz'))) == 1
-          PY
-          cd release-assets
-          for checksum in *.sha256; do sha256sum -c "$checksum"; done
-      - name: Publish actual full-plugin portable candidates
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          SOURCE_SHA: ${{ inputs.source_sha }}
-          RUN_ID: ${{ github.run_id }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag="offline-full-13.3.0-${RUN_ID}"
-          gh release create "$tag" release-assets/* --target "$SOURCE_SHA" --prerelease --title 'Insomnia Offline 13.3.0 — full plugin catalog portable' --notes 'Windows x64 and Linux ARM64 portable packages with the complete public plugin snapshot accounted for, 545 materialized isolated dependency trees and explicit exceptions. Reviewed Crypto and Offline Crypto Tools are active; other community plugins start disabled. Native architecture, resource hashes, clean-profile no-login project creation/persistence, authenticated HMAC, real loopback API transport and browser-denial control passed. Windows secure wrapper separately tested without debugger flags; Linux desktop tested with loopback-only network namespace. Full workspace quality gate passed. This is not proof that every third-party plugin works without external services or a site security certification. See bundled OFFLINE-README.md and validation reports.'
-          gh release view "$tag" --json url,assets,targetCommitish,isPrerelease
