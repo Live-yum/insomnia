@@ -1,0 +1,27 @@
+name: Offline cryptography regression
+on:
+  push:
+    branches: [offline/complete-portable, offline/basic-crypto-workbench]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: crypto-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  known-answer-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+      - name: Native primitives, published vectors, tampering and JOSE policy; no npm install
+        run: node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs
+      - name: Require exact checked-in bytes
+        run: git diff --exit-code
