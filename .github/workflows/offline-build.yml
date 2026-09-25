@@ -1,4 +1,5 @@
 name: Offline portable build
+
 on:
   push:
     branches: [offline/complete-portable, develop]
@@ -10,26 +11,44 @@ on:
       - .github/workflows/offline-log-diagnostics.yml
   pull_request:
     branches: [develop]
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 concurrency:
-  group: offline-complete-${{ github.event_name }}-${{ github.head_ref || github.ref_name }}
+  # A branch push must not cancel the PR merge-result validation for the same branch.
+  group: offline-complete-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
 jobs:
   complete:
-    if: github.repository == 'Live-yum/insomnia' && github.event_name != 'pull_request'
+    # Both same-repository and fork PRs use this read-only, non-publishing path.
+    # Do not exclude pull_request here: a same-repository PR also needs checks.
+    if: github.repository == 'Live-yum/insomnia'
     uses: ./.github/workflows/offline-complete-build.yml
     with:
+      # For pull_request this is the synthetic merge SHA, not an untested branch name.
       source_sha: ${{ github.sha }}
       publish: false
     permissions:
       contents: read
-  external-pr:
-    if: github.repository == 'Live-yum/insomnia' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
-    uses: ./.github/workflows/offline-complete-build.yml
-    with:
-      source_sha: ${{ github.sha }}
-      publish: false
+
+  portable-required:
+    name: Portable validation required
+    needs: complete
+    if: ${{ always() && github.repository == 'Live-yum/insomnia' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     permissions:
       contents: read
+    steps:
+      - name: Require quality and both native builds to actually pass
+        env:
+          RESULT: ${{ needs.complete.result }}
+        run: |
+          if [ "$RESULT" != success ]; then
+            echo "Required portable validation did not pass: $RESULT"
+            exit 1
+          fi
