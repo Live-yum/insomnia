@@ -13,6 +13,7 @@ FORMAT = [
     'src/main/__tests__/bundle-spectral-ruleset.test.ts', 'src/main/__tests__/bundle-spectral-offline.test.ts',
     'src/ui/utils/router.test.ts', 'src/ui/utils/router-offline.test.ts',
     'src/common/__tests__/insomnia-fetch.test.ts',
+    'src/common/__tests__/offline-crypto-upstream.test.ts',
 ]
 
 
