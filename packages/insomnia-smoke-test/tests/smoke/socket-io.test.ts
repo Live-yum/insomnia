@@ -24,13 +24,13 @@ test('can make socket.io connection', async ({ app, page, insomnia }) => {
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Connecting to http://localhost:4020');
-  await page.getByText("Disconnect").click();
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(responseBody).toContainText('io client disconnect');
 
   await page.getByText("Connect").click();
   const connections = page.getByTestId('SocketIOSpinner__Connected');
   await expect.soft(connections).toHaveCount(1);
 
-  await page.getByText("Disconnect").click();
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(connections).toHaveCount(0);
 });

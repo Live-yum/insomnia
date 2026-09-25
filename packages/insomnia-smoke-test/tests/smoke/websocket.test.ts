@@ -24,7 +24,7 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');
-  await page.getByText("Disconnect").click();
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(responseBody).toContainText('Closing connection with code 1005');
 
   // Can connect with Basic Auth

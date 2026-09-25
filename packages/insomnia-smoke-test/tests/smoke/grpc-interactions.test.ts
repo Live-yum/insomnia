@@ -32,7 +32,7 @@ test.describe('gRPC interactions', () => {
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Bidirectional Stream');
     await page.locator('text=Bi-directional Streaming').click();
-    await page.getByText("Start").click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Stream 3 client messages
     await streamMessage.click();
@@ -49,7 +49,7 @@ test.describe('gRPC interactions', () => {
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Client Stream');
     await page.getByText("Client Streaming").click();
-    await page.getByText("Start").click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Stream 3 client messages
     await streamMessage.click();
@@ -65,7 +65,7 @@ test.describe('gRPC interactions', () => {
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Server Stream');
     await page.getByText("Server Streaming").click();
-    await page.getByText("Start").click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Check response
     await expect.soft(statusTag).toContainText('0 OK');

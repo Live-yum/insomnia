@@ -10,7 +10,7 @@ const tesSrpSecret = 'b424e8700ef89f77a6cffc648b9c6d42bb7de58914d88cd79966684ffe
 
 test('Check vault key generation', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   // generate vault key
   await page.getByRole('button', { name: 'Generate Vault Key' }).click();
   const vaultKeyValue = await page.getByTestId('VaultKeyDisplayPanel').innerText();
@@ -31,7 +31,7 @@ test.describe('Vault key actions', () => {
   test('check reset and validate vault key', async ({ page }) => {
     // check vault key validation
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
     // validate vault key
     await page.getByRole('button', { name: 'Enter Vault Key' }).click();
     const modal = page.getByTestId('input-vault-key-modal');
@@ -170,7 +170,7 @@ test.describe('Check vault used in environment', () => {
 
     // allow vault to be accessed by the request
     await page.getByTestId('settings-button').click();
-    await page.locator('text=Insomnia Preferences').first().click();
+    await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
     await page.locator('text=Enable vault in scripts').click();
     await page.locator('.app').press('Escape');
 
