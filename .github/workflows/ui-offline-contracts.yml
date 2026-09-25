@@ -1,0 +1,144 @@
+name: Validate offline service boundaries
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-offline-contracts.yml, scripts/offline/repair_offline_test_contracts.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-service-boundary-validation
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply the reviewed offline test contracts
+        run: |
+          python3 scripts/offline/repair_offline_test_contracts.py
+          python3 - <<'PY'
+          import pathlib, subprocess
+          base = pathlib.Path('packages/insomnia-smoke-test/tests/smoke')
+          preferences = base / 'preferences-interactions.test.ts'
+          text = preferences.read_text(encoding='utf-8')
+          assert text.count('window.main.llm.setActiveBackend(null)') == 1
+          preferences.write_text(text.replace('window.main.llm.setActiveBackend(null)', 'window.main.llm.clearActiveBackend()'), encoding='utf-8')
+          files = [str(base / name) for name in ['cloud-sync.test.ts', 'disable-git-sync.test.ts', 'preferences-interactions.test.ts']]
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *files], check=True)
+          PY
+      - name: Require zero-warning workspace lint and complete types
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/repair.patch"
+          git diff --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-service-boundary-repair
+          path: ${{ runner.temp }}/repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-service-boundary-repair
+          path: ${{ runner.temp }}/repair
+      - name: Commit only the validated test changes without executing application code
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check "$RUNNER_TEMP/repair/repair.patch"
+          git apply --index "$RUNNER_TEMP/repair/repair.patch"
+          python3 - <<'PY'
+          import subprocess
+          names = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines())
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name for name in ['cloud-sync.test.ts', 'disable-git-sync.test.ts', 'preferences-interactions.test.ts']}
+          assert names and names <= allowed, names - allowed
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'test: verify real offline cloud rejection and retain local configuration assertions'
+          git push origin HEAD:offline/ui-regression-diagnostics
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git log -1 --format='%H %T'
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Use the pinned Electron runtime without disabling its sandbox
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Execute all revised cloud-boundary and configuration cases
+        run: dbus-run-session -- npm run test:build -w insomnia-smoke-test -- --project=Smoke --retries=0 cloud-sync.test.ts disable-git-sync.test.ts preferences-interactions.test.ts > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Record every actual failure and page context
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          root = pathlib.Path('packages/insomnia-smoke-test')
+          raw = (root/'test-results.xml').read_bytes()
+          assert len(raw) < 20 * 1024 * 1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures = []
+          for case in cases:
+              for error in list(case.findall('failure')) + list(case.findall('error')):
+                  failures.append({'file': case.get('classname'), 'name': case.get('name'), 'error': re.sub(r'\x1b\[[0-9;]*m', '', error.text or '')[:1700]})
+          print(json.dumps({'cases': len(cases), 'failures': failures, 'skipped': sum(case.find('skipped') is not None for case in cases)}), flush=True)
+          for file in sorted((root/'traces').rglob('error-context.md')):
+              snapshot = file.read_text(encoding='utf-8').split('# Page snapshot',1)[-1].split('# Test source',1)[0]
+              print(str(file) + '\n' + snapshot[-4000:], flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: offline-service-boundary-results
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
