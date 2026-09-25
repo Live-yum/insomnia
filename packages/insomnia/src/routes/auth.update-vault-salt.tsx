@@ -2,11 +2,13 @@ import { getVault } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { type ActionFunctionArgs, href } from 'react-router';
 
+import { OFFLINE_BUILD } from '~/common/offline';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 export async function clientAction(_args: ActionFunctionArgs) {
   try {
     const userSession = await services.userSession.get();
+    if (OFFLINE_BUILD) return userSession.vaultSalt;
     const { id: sessionId } = userSession;
     const { salt: vaultSalt } = await getVault({ sessionId });
     if (vaultSalt) {

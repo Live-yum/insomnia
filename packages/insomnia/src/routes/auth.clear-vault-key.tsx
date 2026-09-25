@@ -2,12 +2,15 @@ import { getVault } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { href } from 'react-router';
 
+import { OFFLINE_BUILD } from '~/common/offline';
 import { showToast } from '~/ui/components/toast-notification';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/auth.clear-vault-key';
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
+  // Vendor reset notifications cannot erase this independent local vault.
+  if (OFFLINE_BUILD) return false;
   const { organizations = [], sessionId: resetVaultClientSessionId } = await request.json();
 
   const userSession = await services.userSession.get();

@@ -1,6 +1,7 @@
 import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
+import { OFFLINE_BUILD } from '~/common/offline';
 import { useRootLoaderData } from '~/root';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
 
@@ -240,7 +241,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      {isLoggedIn && <VaultKeyPanel />}
+      {(OFFLINE_BUILD || isLoggedIn) && <VaultKeyPanel />}
 
       <div className="form-row pad-top-sm">
         <TextArraySetting

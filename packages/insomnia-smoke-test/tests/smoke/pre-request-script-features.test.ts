@@ -600,7 +600,8 @@ test.describe('pre-request features tests', () => {
     const dialog = page.getByRole('dialog').filter({ has: page.getByRole('button', { name: 'Close' }) });
     await expect.soft(dialog).toBeVisible();
     await dialog.getByRole('button', { name: 'Close' }).click();
-    await page.locator('body').click();
+    await expect.soft(dialog).toBeHidden();
+    await page.keyboard.press('Escape');
 
     // send request
     const sendBtn = page.getByTestId('request-pane').getByRole('button', { name: 'Send' });

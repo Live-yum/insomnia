@@ -1,8 +1,11 @@
+import { services } from 'insomnia-data';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
+import { useRevalidator } from 'react-router';
 import * as reactUse from 'react-use';
 
 import { getProductName } from '~/common/constants';
+import { OFFLINE_BUILD } from '~/common/offline';
 import { decryptVaultKeyFromSession, deleteVaultKeyFromStorage, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 import { useRootLoaderData } from '~/root';
 import { useCreateVaultKeyFetcher } from '~/routes/auth.create-vault-key';
@@ -75,6 +78,7 @@ export const VaultKeyDisplayInput = ({ vaultKey }: { vaultKey: string }) => {
 export const VaultKeyPanel = () => {
   const { userSession, settings } = useRootLoaderData()!;
   const { saveVaultKeyLocally } = settings;
+  const { revalidate } = useRevalidator();
   const [isGenerating, setGenerating] = useState(false);
   const [vaultKeyValue, setVaultKeyValue] = useState('');
   const [showInputVaultKeyModal, setShowModal] = useState(false);
@@ -170,6 +174,19 @@ export const VaultKeyPanel = () => {
             </HelpTooltip>
           </Button>
         </div>
+      )}
+      {OFFLINE_BUILD && vaultSaltExists && vaultKeyExists && (
+        <Button
+          className="btn btn--outlined btn--super-compact"
+          onPress={async () => {
+            await deleteVaultKeyFromStorage(accountId);
+            await services.userSession.update({ vaultKey: '' });
+            setVaultKeyValue('');
+            await revalidate();
+          }}
+        >
+          Lock Vault
+        </Button>
       )}
       {vaultSaltExists && vaultKeyExists && vaultKeyValue !== '' && (
         <>
