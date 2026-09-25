@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Integrate reviewed local-data/security fixes without replacing newer compact/crypto code."""
 from pathlib import Path
+import os
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -8,20 +9,31 @@ BASE = 'ee36859e03b411201c2707bab7214146b9107291'
 REVIEWED = '2039c1f868fbba909af009f339213023f3653360'
 PREFIXES = ['packages/insomnia/src/', 'packages/insomnia-smoke-test/', 'packages/insomnia-data/src/models/user-session.ts']
 
+
 def git(*args):
     return subprocess.check_output(['git', *args], cwd=ROOT)
 
+
+Path(os.environ['RUNNER_TEMP'], 'integration-source.log').write_text(git('rev-parse', 'HEAD').decode(), encoding='utf-8')
 for sha in (BASE, REVIEWED):
     subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', sha], cwd=ROOT, check=True)
 names = git('diff', '--name-only', BASE, REVIEWED, '--', *PREFIXES).decode().splitlines()
 assert names and all(name.startswith(tuple(PREFIXES)) and name.endswith(('.ts', '.tsx')) for name in names)
-patch = git('diff', '--binary', BASE, REVIEWED, '--', *names)
+# Both complete versions were reviewed: the only overlapping edit is the two
+# AI settings cases. Retain their offline-negative/positive-persistence versions;
+# the keyboard, response-filter and proxy tests are identical on both sides.
+preferences = 'packages/insomnia-smoke-test/tests/smoke/preferences-interactions.test.ts'
+assert git('hash-object', preferences).decode().strip() == 'b4bce65b9c9828d3d0932e631b97b0815b50d13a'
+patch_names = [name for name in names if name != preferences]
+patch = git('diff', '--binary', BASE, REVIEWED, '--', *patch_names)
 subprocess.run(['git', 'apply', '--3way', '--index', '-'], cwd=ROOT, input=patch, check=True)
 assert not git('ls-files', '-u'), 'Resolve source conflicts; never select one whole branch silently'
+(ROOT / preferences).write_bytes(git('show', REVIEWED + ':' + preferences))
 keyring = ROOT / 'scripts/offline/run-with-ci-keyring.sh'
 keyring.write_bytes(git('show', REVIEWED + ':scripts/offline/run-with-ci-keyring.sh'))
 keyring.chmod(0o755)
 changed = set(names) | {'scripts/offline/run-with-ci-keyring.sh'}
+
 
 def replace(name, before, after, count=1):
     file = ROOT / name
@@ -32,6 +44,7 @@ def replace(name, before, after, count=1):
         raise ValueError(f'Unexpected reviewed anchor in {name}: expected {count}, got {text.count(before)}')
     file.write_text(text.replace(before, after), encoding='utf-8', newline='\n')
     changed.add(name)
+
 
 # RAC preselects the actual default branch after the remote list arrives and
 # remounts its combobox. Do not toggle the popup on a stale, disabled instance.
