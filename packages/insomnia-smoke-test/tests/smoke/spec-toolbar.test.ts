@@ -9,8 +9,8 @@ test.describe('Spec editor toolbar', () => {
     // Setup: create a design document from the Pet Store example
     await page.getByRole('button', { name: 'Create document' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.click('text=Use example');
-    await page.click('text=Pet Store');
+    await page.getByText("Use example").click();
+    await page.getByText("Pet Store").click();
 
     const codeEditor = page.locator('.pane-one').getByTestId('CodeEditor');
     await expect.soft(codeEditor).toContainText('openapi: 3.0.4');

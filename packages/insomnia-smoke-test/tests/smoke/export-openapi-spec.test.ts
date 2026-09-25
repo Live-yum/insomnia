@@ -18,8 +18,8 @@ test.describe('Export OpenAPI Spec', () => {
   const createApiCollectionWithPetStoreSpec = async (page: Page) => {
     await page.getByRole('button', { name: 'Create document' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click();
-    await page.click('text=Use example');
-    await page.click('text=Pet Store');
+    await page.getByText('Use example', { exact: true }).click();
+    await page.getByText('Pet Store', { exact: true }).click();
     await expect.soft(page.locator('.pane-one').getByTestId('CodeEditor')).toContainText('openapi: 3.0.4');
   };
 
@@ -101,8 +101,8 @@ test.describe('Export OpenAPI Spec', () => {
       const exportPath = path.join(tempDir, 'spec-export.yaml');
       await mockSaveDialogForFile(app, exportPath);
 
-      await page.click('text=Use example');
-      await page.click('text=Pet Store');
+      await page.getByText('Use example', { exact: true }).click();
+      await page.getByText('Pet Store', { exact: true }).click();
       await expect.soft(page.locator('.pane-one').getByTestId('CodeEditor')).toContainText('openapi: 3.0.4');
 
       await insomnia.navigationSidebar.selectWorkspaceDropdownOption({

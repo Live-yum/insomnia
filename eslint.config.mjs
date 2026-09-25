@@ -99,6 +99,7 @@ export default defineConfig([
       'playwright/expect-expect': 'off',
       'playwright/missing-playwright-await': 'warn',
       'playwright/require-soft-assertions': 'error',
+      'playwright/prefer-locator': 'error',
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',
       'playwright/prefer-to-contain': 'error',

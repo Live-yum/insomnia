@@ -70,7 +70,6 @@ export const generateVendoredFile = async ({ name, entry }: VendoredLib): Promis
     `// Vendored, pinned bundle of "${name}" for the QuickJS template-tag sandbox (M3).`,
     `// Sourced from the isolated install in vendored/pkg/ (see its package.json) — NOT the app's own node_modules.`,
     `// Regenerate with: npm run sandbox:vendored:generate -w insomnia`,
-    `/* eslint-disable */`,
     `export const ${constName}_VERSION = ${JSON.stringify(version)};`,
     `export const ${constName}_SOURCE = ${JSON.stringify(factorySource)};`,
     ``,

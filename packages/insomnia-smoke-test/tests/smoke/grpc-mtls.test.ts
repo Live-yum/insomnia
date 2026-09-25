@@ -33,20 +33,26 @@ test('can send gRPC requests using mTLS requests (with reflection)', async ({ ap
   await page.locator('.app').press('Escape');
 
   await page.getByRole('button', { name: 'Add Certificates' }).click();
-  let fileChooserPromise = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Add CA Certificate' }).click();
-  await (await fileChooserPromise).setFiles(path.join(fixturePath, 'rootCA.pem'));
+  const [certificateFileChooser0] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('button', { name: 'Add CA Certificate' }).click(),
+  ]);
+  await certificateFileChooser0.setFiles(path.join(fixturePath, 'rootCA.pem'));
 
   await page.getByRole('button', { name: 'Add client certificate' }).click();
   await page.locator('[name="host"]').fill('localhost');
 
-  fileChooserPromise = page.waitForEvent('filechooser');
-  await page.locator('[data-test-id="add-client-certificate-file-chooser"]').click();
-  await (await fileChooserPromise).setFiles(path.join(fixturePath, 'client.crt'));
+  const [certificateFileChooser1] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.locator('[data-test-id="add-client-certificate-file-chooser"]').click(),
+  ]);
+  await certificateFileChooser1.setFiles(path.join(fixturePath, 'client.crt'));
 
-  fileChooserPromise = page.waitForEvent('filechooser');
-  await page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click();
-  await (await fileChooserPromise).setFiles(path.join(fixturePath, 'client.key'));
+  const [certificateFileChooser2] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click(),
+  ]);
+  await certificateFileChooser2.setFiles(path.join(fixturePath, 'client.key'));
 
   await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();

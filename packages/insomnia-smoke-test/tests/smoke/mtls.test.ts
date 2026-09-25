@@ -48,9 +48,11 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   await page.getByRole('button', { name: 'Add Certificates' }).click();
   await certsDialog.waitFor({ state: 'visible', timeout: UI_TIMEOUT });
 
-  let fileChooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: 'Add CA Certificate' }).click();
-  await (await fileChooser).setFiles(path.join(fixturePath, 'rootCA.pem'));
+  const [certificateFileChooser0] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('button', { name: 'Add CA Certificate' }).click(),
+  ]);
+  await certificateFileChooser0.setFiles(path.join(fixturePath, 'rootCA.pem'));
   // verify CA cert row appears before dismissing the dialog
   await expect.soft(page.getByText('rootCA.pem')).toBeVisible({ timeout: UI_TIMEOUT });
 
@@ -68,13 +70,17 @@ test('can use client certificate for mTLS', async ({ app, page, insomnia }) => {
   await page.getByRole('button', { name: 'Add client certificate' }).click();
   await page.locator('[name="host"]').fill('localhost');
 
-  fileChooser = page.waitForEvent('filechooser');
-  await page.locator('[data-test-id="add-client-certificate-file-chooser"]').click();
-  await (await fileChooser).setFiles(path.join(fixturePath, 'client.crt'));
+  const [certificateFileChooser1] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.locator('[data-test-id="add-client-certificate-file-chooser"]').click(),
+  ]);
+  await certificateFileChooser1.setFiles(path.join(fixturePath, 'client.crt'));
 
-  fileChooser = page.waitForEvent('filechooser');
-  await page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click();
-  await (await fileChooser).setFiles(path.join(fixturePath, 'client.key'));
+  const [certificateFileChooser2] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.locator('[data-test-id="add-client-certificate-key-file-chooser"]').click(),
+  ]);
+  await certificateFileChooser2.setFiles(path.join(fixturePath, 'client.key'));
 
   await page.getByRole('dialog').getByRole('button', { name: 'Add certificate' }).click();
   // verify the certificate row appears (hostname) before dismissing the dialog

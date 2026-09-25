@@ -96,8 +96,8 @@ test('Check filter responses by environment preference', async ({ app, page, ins
 
   // Send a request
   await insomnia.navigationSidebar.clickRequestOrFolder('example http');
-  await page.click('[data-testid="request-pane"] button:has-text("Send")');
-  await page.click('text=Console');
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
+  await page.getByText("Console").click();
   await page.locator('text=HTTP/1.1 200 OK').click();
 
   // Set filter responses by environment
@@ -108,7 +108,7 @@ test('Check filter responses by environment preference', async ({ app, page, ins
 
   // Re-send the request and check timeline
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
-  await page.click('text=Console');
+  await page.getByText("Console").click();
   await page.locator('text=HTTP/1.1 200 OK').click();
 });
 
@@ -136,6 +136,6 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   // send the request and check timeline
   await insomnia.navigationSidebar.clickRequestOrFolder('proxyEnabled');
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
-  await page.click('text=Console');
+  await page.getByText("Console").click();
   await expect.soft(responsePane).toContainText('Trying 127.0.0.1:1111'); // updated proxy
 });

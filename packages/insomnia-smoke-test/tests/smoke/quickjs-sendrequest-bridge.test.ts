@@ -13,6 +13,7 @@ import { test } from '../../playwright/test';
 // block, which reproduces the `gc_obj_list` abort in vitest by settling the mocked fetch on a later
 // macrotask.
 // TODO(INS-3890): re-enable once the QuickJS sandbox setting is un-hidden in scripting-settings.tsx.
+// eslint-disable-next-line playwright/no-skipped-test -- Existing upstream INS-3890: the experimental QuickJS setting is hidden; not a new skip.
 test.describe.skip('QuickJS sendRequest bridge', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 
