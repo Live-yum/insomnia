@@ -16,9 +16,8 @@ export async function setOfflineLocale(locale: OfflineLocale): Promise<void> {
   if (typeof window === 'undefined') return;
   if (window.main?.electronStorage) {
     await window.main.electronStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
-    // Reading flushes the native store's debounced write. Immediate restart must
-    // not silently lose a preference after the UI reported it as saved.
-    const persisted = await window.main.electronStorage.getItem(OFFLINE_UI_LANGUAGE_KEY, 'zh-CN');
+    // Reading flushes the native store's debounced write before immediate restart.
+    const persisted = await window.main.electronStorage.getItem(OFFLINE_UI_LANGUAGE_KEY);
     if (persisted !== locale) throw new Error('Language preference was not persisted');
   }
   window.localStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
