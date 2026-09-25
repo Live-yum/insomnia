@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-09-24T16:49:59.000439+00:00",
+  "capturedAt": "2026-09-25T04:43:28.622925+00:00",
   "compatibilityVerified": false,
   "complete": false,
   "counts": {
@@ -12082,7 +12082,7 @@
       "defaultEnabled": false,
       "deprecated": null,
       "description": "Add api keypair signature for insomnia",
-      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_47_23_817Z-debug-0.log\n",
+      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-25T04_40_54_128Z-debug-0.log\n",
       "hub": "https://insomnia.rest/plugins/insomnia-plugin-api-signature-fulll",
       "license": "MIT",
       "name": "insomnia-plugin-api-signature-fulll",
@@ -19347,21 +19347,21 @@
             "bin": {
               "baseline-browser-mapping": "dist/cli.cjs"
             },
-            "bytes": 41665,
+            "bytes": 41770,
             "cpu": [],
-            "file": "blobs/210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50.tgz",
-            "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+            "file": "blobs/a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4.tgz",
+            "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
             "license": "Apache-2.0",
             "name": "baseline-browser-mapping",
             "os": [],
             "scripts": {},
-            "sha256": "210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50",
-            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz",
-            "version": "2.11.25"
+            "sha256": "a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4",
+            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz",
+            "version": "2.11.26"
           },
-          "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+          "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
           "location": "node_modules/baseline-browser-mapping",
-          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz"
+          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz"
         },
         {
           "archive": {
@@ -20003,21 +20003,21 @@
         {
           "archive": {
             "bin": {},
-            "bytes": 35473,
+            "bytes": 35485,
             "cpu": [],
-            "file": "blobs/27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135.tgz",
-            "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+            "file": "blobs/04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3.tgz",
+            "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
             "license": "ISC",
             "name": "electron-to-chromium",
             "os": [],
             "scripts": {},
-            "sha256": "27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135",
-            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz",
-            "version": "1.5.438"
+            "sha256": "04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3",
+            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz",
+            "version": "1.5.439"
           },
-          "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+          "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
           "location": "node_modules/electron-to-chromium",
-          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz"
+          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz"
         },
         {
           "archive": {
@@ -23901,7 +23901,7 @@
       "name": "insomnia-plugin-aws-amplify-auth",
       "profile": "d43430dc783403df2db5",
       "profileSha256": {
-        "package-lock.json": "205fb0b4ec8313a614c241cbbbccca3f1a756211e78bc4d2a5a6eefa8e33d113",
+        "package-lock.json": "972fb4a0f85083c14e968030393f812885d8f4d213ee11119b7e02db9b7b922f",
         "package.json": "ea5060989fd4ac11a13516705708488e7c0979716a36a4325594959e786ebfbe"
       },
       "repository": {
@@ -26849,21 +26849,21 @@
             "bin": {
               "baseline-browser-mapping": "dist/cli.cjs"
             },
-            "bytes": 41665,
+            "bytes": 41770,
             "cpu": [],
-            "file": "blobs/210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50.tgz",
-            "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+            "file": "blobs/a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4.tgz",
+            "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
             "license": "Apache-2.0",
             "name": "baseline-browser-mapping",
             "os": [],
             "scripts": {},
-            "sha256": "210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50",
-            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz",
-            "version": "2.11.25"
+            "sha256": "a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4",
+            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz",
+            "version": "2.11.26"
           },
-          "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+          "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
           "location": "node_modules/baseline-browser-mapping",
-          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz"
+          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz"
         },
         {
           "archive": {
@@ -27524,21 +27524,21 @@
         {
           "archive": {
             "bin": {},
-            "bytes": 35473,
+            "bytes": 35485,
             "cpu": [],
-            "file": "blobs/27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135.tgz",
-            "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+            "file": "blobs/04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3.tgz",
+            "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
             "license": "ISC",
             "name": "electron-to-chromium",
             "os": [],
             "scripts": {},
-            "sha256": "27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135",
-            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz",
-            "version": "1.5.438"
+            "sha256": "04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3",
+            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz",
+            "version": "1.5.439"
           },
-          "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+          "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
           "location": "node_modules/electron-to-chromium",
-          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz"
+          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz"
         },
         {
           "archive": {
@@ -31362,7 +31362,7 @@
       "name": "insomnia-plugin-aws-cognito-iam",
       "profile": "91218eca0582f0a69bc2",
       "profileSha256": {
-        "package-lock.json": "6ffe2061266a1896653a215d54b54d81b400cfa46763c7617698de772b12fe66",
+        "package-lock.json": "9753e0c0f0ec34057c83fe0ee250a787e50199cb02449ee0970d46c7cdcbd59b",
         "package.json": "7f5fa061eba7c9708413c38d48982adf0302ec839d940134451ee87c071cbf71"
       },
       "repository": {
@@ -34311,21 +34311,21 @@
         {
           "archive": {
             "bin": {},
-            "bytes": 26850,
+            "bytes": 26849,
             "cpu": [],
-            "file": "blobs/af6085e5538c6e558b787ea689d4a20d8055f2217cb496ce4c2ace1059a73582.tgz",
-            "integrity": "sha512-vOLaAqhfk6v1WWgBdr5AgnPb4nvuifUzrqFaq6j5SLiGSJxYInS/1Qb6E+kFmKummdSvf7uzytGpgurQVvczdQ==",
+            "file": "blobs/ffeed424ae40718ba31b3613f3be981955d509c09a99b62c32323aa1e4115db0.tgz",
+            "integrity": "sha512-0R0EevMhzsqDGWpBy6jR01NBgCQzizRibcESL0V7rs1yVwfv3zzZSJ8/ofpljyC/ZvCo5c/dMrKtm7hNKVMJMA==",
             "license": "Apache-2.0",
             "name": "@aws-sdk/credential-providers",
             "os": [],
             "scripts": {},
-            "sha256": "af6085e5538c6e558b787ea689d4a20d8055f2217cb496ce4c2ace1059a73582",
-            "url": "https://registry.npmjs.org/@aws-sdk/credential-providers/-/credential-providers-3.1139.0.tgz",
-            "version": "3.1139.0"
+            "sha256": "ffeed424ae40718ba31b3613f3be981955d509c09a99b62c32323aa1e4115db0",
+            "url": "https://registry.npmjs.org/@aws-sdk/credential-providers/-/credential-providers-3.1140.0.tgz",
+            "version": "3.1140.0"
           },
-          "integrity": "sha512-vOLaAqhfk6v1WWgBdr5AgnPb4nvuifUzrqFaq6j5SLiGSJxYInS/1Qb6E+kFmKummdSvf7uzytGpgurQVvczdQ==",
+          "integrity": "sha512-0R0EevMhzsqDGWpBy6jR01NBgCQzizRibcESL0V7rs1yVwfv3zzZSJ8/ofpljyC/ZvCo5c/dMrKtm7hNKVMJMA==",
           "location": "node_modules/@aws-sdk/credential-providers",
-          "url": "https://registry.npmjs.org/@aws-sdk/credential-providers/-/credential-providers-3.1139.0.tgz"
+          "url": "https://registry.npmjs.org/@aws-sdk/credential-providers/-/credential-providers-3.1140.0.tgz"
         },
         {
           "archive": {
@@ -34623,7 +34623,7 @@
       "name": "insomnia-plugin-aws-iam-v4",
       "profile": "6205671cd471cc1cc247",
       "profileSha256": {
-        "package-lock.json": "da26df45b01d52ce1385cb155faf57a6d968fea61272484b7144325ccd700636",
+        "package-lock.json": "759214d9f5446c71d435c4d357ff635b08ba25bec4e61831d0aead79c6fb18ca",
         "package.json": "c7ceab79c90b7743bb8db7d768d0b5dab050d7a863eac9ec6fe78a53b4f34ea2"
       },
       "repository": {
@@ -34656,19 +34656,19 @@
             "bin": {},
             "bytes": 428855,
             "cpu": [],
-            "file": "blobs/6a44c98f68c7e965853272b15e78f9317b6c6fbfabf4ad97919df37beda9efc1.tgz",
-            "integrity": "sha512-jyWIFjbjjqxlG/vfbYmRTNlG+gYay0aOVtxV4K/chsfFc5mGIRcsi+eiSE8jscHwDOY9UiQrVShw7MC8ts4nEg==",
+            "file": "blobs/97fdd46488792c730b92c1ed9417c0391ec3ea40a2cf64effa2b39c33e322006.tgz",
+            "integrity": "sha512-4Twih/5t0R0yKTqqJkoTcbs8/zPZCmOrA7yA/Hc+pbOAVhm/vf8sNFCWlehJ48O++korA7J2LZzn/2fz6U0HJw==",
             "license": "Apache-2.0",
             "name": "@aws-sdk/client-ssm",
             "os": [],
             "scripts": {},
-            "sha256": "6a44c98f68c7e965853272b15e78f9317b6c6fbfabf4ad97919df37beda9efc1",
-            "url": "https://registry.npmjs.org/@aws-sdk/client-ssm/-/client-ssm-3.1139.0.tgz",
-            "version": "3.1139.0"
+            "sha256": "97fdd46488792c730b92c1ed9417c0391ec3ea40a2cf64effa2b39c33e322006",
+            "url": "https://registry.npmjs.org/@aws-sdk/client-ssm/-/client-ssm-3.1140.0.tgz",
+            "version": "3.1140.0"
           },
-          "integrity": "sha512-jyWIFjbjjqxlG/vfbYmRTNlG+gYay0aOVtxV4K/chsfFc5mGIRcsi+eiSE8jscHwDOY9UiQrVShw7MC8ts4nEg==",
+          "integrity": "sha512-4Twih/5t0R0yKTqqJkoTcbs8/zPZCmOrA7yA/Hc+pbOAVhm/vf8sNFCWlehJ48O++korA7J2LZzn/2fz6U0HJw==",
           "location": "node_modules/@aws-sdk/client-ssm",
-          "url": "https://registry.npmjs.org/@aws-sdk/client-ssm/-/client-ssm-3.1139.0.tgz"
+          "url": "https://registry.npmjs.org/@aws-sdk/client-ssm/-/client-ssm-3.1140.0.tgz"
         },
         {
           "archive": {
@@ -35137,7 +35137,7 @@
       "name": "insomnia-plugin-aws-paramater-store",
       "profile": "c971221778813386cc54",
       "profileSha256": {
-        "package-lock.json": "7e8653702176439fdc8fbc5caa8f4ebfec13a7f45420f2886edf36b663c2f2b0",
+        "package-lock.json": "9762339e7751f35497399b7f9bab16bf2abab61d5f9bcd5cfcbce3f6dc993d82",
         "package.json": "9b79c33bb843e5a23b08777ed773a4862f369b51904ba9b6701ebb60f6a6d797"
       },
       "repository": {
@@ -45941,7 +45941,7 @@
       "defaultEnabled": false,
       "deprecated": null,
       "description": "Generate Code with custom templates using httpsnippet package",
-      "error": "Dependency resolution failed: npm error code 128\nnpm error An unknown git error occurred\nnpm error command git --no-replace-objects ls-remote ssh://git@github.com/michaelversus/httpsnippet.git\nnpm error fatal: transport 'ssh' not allowed\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_47_42_562Z-debug-0.log\n",
+      "error": "Dependency resolution failed: npm error code 128\nnpm error An unknown git error occurred\nnpm error command git --no-replace-objects ls-remote ssh://git@github.com/michaelversus/httpsnippet.git\nnpm error fatal: transport 'ssh' not allowed\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-25T04_41_13_240Z-debug-0.log\n",
       "hub": "https://insomnia.rest/plugins/insomnia-plugin-codegen",
       "license": "MIT",
       "name": "insomnia-plugin-codegen",
@@ -77253,7 +77253,7 @@
       "defaultEnabled": false,
       "deprecated": null,
       "description": "Add a customizable HMAC template tag to insomnia.",
-      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.1' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_48_13_315Z-debug-0.log\n",
+      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@fulll%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@fulll/signature@^1.3.1' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-25T04_41_45_040Z-debug-0.log\n",
       "hub": "https://insomnia.rest/plugins/insomnia-plugin-hmac-fulll",
       "license": "MIT",
       "name": "insomnia-plugin-hmac-fulll",
@@ -77284,7 +77284,7 @@
       "defaultEnabled": false,
       "deprecated": null,
       "description": "Add a customizable HMAC template tag to insomnia.",
-      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@ied%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@ied/signature@^1.2.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-24T16_48_13_341Z-debug-0.log\n",
+      "error": "Dependency resolution failed: npm error code E404\nnpm error 404 Not Found - GET https://registry.npmjs.org/@ied%2fsignature - Not found\nnpm error 404\nnpm error 404  The requested resource '@ied/signature@^1.2.0' could not be found or you do not have permission to access it.\nnpm error 404\nnpm error 404 Note that you can also install from a\nnpm error 404 tarball, folder, http url, or git url.\nnpm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-09-25T04_41_45_160Z-debug-0.log\n",
       "hub": "https://insomnia.rest/plugins/insomnia-plugin-hmac-ied",
       "license": "",
       "name": "insomnia-plugin-hmac-ied",
@@ -146899,21 +146899,21 @@
             "bin": {
               "baseline-browser-mapping": "dist/cli.cjs"
             },
-            "bytes": 41665,
+            "bytes": 41770,
             "cpu": [],
-            "file": "blobs/210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50.tgz",
-            "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+            "file": "blobs/a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4.tgz",
+            "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
             "license": "Apache-2.0",
             "name": "baseline-browser-mapping",
             "os": [],
             "scripts": {},
-            "sha256": "210d31df7ef5cb5a734e94d9860ab5d78da0eaff8aa061a8fca8aeba2bb26c50",
-            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz",
-            "version": "2.11.25"
+            "sha256": "a5042f06b070d7c07a797bac9dc19676a966f4d11b96648db38d6eb043d3b8f4",
+            "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz",
+            "version": "2.11.26"
           },
-          "integrity": "sha512-gMmEShwwq7FJqMwvfRwvCl00v4kN+KOfJqXn+f4nrufak5gNHJOksd/60Dvjuz7sI8Y5WiSFBa8FEYr+zoyqCw==",
+          "integrity": "sha512-GLQdD3y6UF8iVuMJl5fHgE4jdn/ua7n+toKfLgNlg3BqQtOZjpy68T8Tup8/wGWZCDlm7KMg7tPb4MPn7oN0TQ==",
           "location": "node_modules/baseline-browser-mapping",
-          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.25.tgz"
+          "url": "https://registry.npmjs.org/baseline-browser-mapping/-/baseline-browser-mapping-2.11.26.tgz"
         },
         {
           "archive": {
@@ -147281,21 +147281,21 @@
         {
           "archive": {
             "bin": {},
-            "bytes": 35473,
+            "bytes": 35485,
             "cpu": [],
-            "file": "blobs/27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135.tgz",
-            "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+            "file": "blobs/04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3.tgz",
+            "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
             "license": "ISC",
             "name": "electron-to-chromium",
             "os": [],
             "scripts": {},
-            "sha256": "27c8a7922ea29457073b73d619b5d14b825d13b7d52272f210098cc099a28135",
-            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz",
-            "version": "1.5.438"
+            "sha256": "04f3efe7f0d123260258e89ef45b4a11c7b0793cc7975b6f5bd31c776a480ee3",
+            "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz",
+            "version": "1.5.439"
           },
-          "integrity": "sha512-AN9xMU1hJiT65LkCUPL1DZm5TCbOPb2Qsm5pYwFLEXp6/qj9SdT4yMiqs7Qqstwvkn1zF7l36SRGt+s6XcJ0FA==",
+          "integrity": "sha512-qu6QIPXhsb+CRcAiTMNjR4A1y/7tCYKkKjr5CZXRVih6qkDf79peZ2BpEU3qoDBNCRrcy3Mra3X9nG5oruuA7Q==",
           "location": "node_modules/electron-to-chromium",
-          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.438.tgz"
+          "url": "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.5.439.tgz"
         },
         {
           "archive": {
@@ -149338,7 +149338,7 @@
       "name": "insomnia-plugin-zipkin",
       "profile": "3a775a45522075196c1e",
       "profileSha256": {
-        "package-lock.json": "5d9750971ff138d9459284784e60003b02cf02de76bbb57d5b45ce6e03b2bbf9",
+        "package-lock.json": "51f7992284bb44586f28534f0e5f4e54e80e09395d297057866667638d82082f",
         "package.json": "406373dcf838e05dcb19bc33e103acf0a8f9ea73b3152d8972650497327575db"
       },
       "repository": null,
