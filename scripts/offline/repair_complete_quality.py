@@ -29,6 +29,7 @@ def replace(file, before, after):
 def main():
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
         raise ValueError('Quality repair requires a clean source checkout')
+    replace(APP / 'src/common/__tests__/offline-crypto-upstream.test.ts', "encoding: 'utf-8',", "encoding: 'utf8',")
     policy = APP / 'src/common/offline-policy.ts'
     replace(policy, r'/[\u0000-\u0020\u007f\\]/.test(item)', "Array.from(item).some(character => {\n        const code = character.codePointAt(0);\n        return (code !== undefined && code <= 32) || code === 127 || character === '\\\\';\n      })")
     spectral = APP / 'src/main/__tests__/bundle-spectral-ruleset.test.ts'
