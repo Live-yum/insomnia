@@ -1,0 +1,27 @@
+name: Offline quality diagnostics
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths: [.github/workflows/offline-log-diagnostics.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  logs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: '10847689655'
+          run-id: '36097411037'
+          github-token: ${{ github.token }}
+          path: diagnostics
+      - name: Print the actual failing source diagnostics, not just the final workspace warnings
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for file in Path('diagnostics').rglob('offline-lint.log'):
+              print(file.read_text(encoding='utf-8'))
+          PY
