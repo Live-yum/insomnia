@@ -25,6 +25,8 @@ def replace(relative: str, before: str, after: str) -> None:
     text = target.read_text(encoding='utf-8')
     if after in text:
         return
+    if relative == 'src/main/__tests__/bundle-spectral-ruleset.test.ts' and 'importOriginal<typeof OfflinePolicy>()' in text:
+        return
     if text.count(before) != 1:
         raise ValueError('Source changed; review anchor: ' + relative)
     target.write_text(text.replace(before, after, 1), encoding='utf-8', newline='\n')
@@ -33,15 +35,15 @@ def replace(relative: str, before: str, after: str) -> None:
 def main() -> None:
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
         raise ValueError('Repair requires a clean checkout')
-    # The latest branch already contains safe identical-member extraction and
-    # its regression tests. Preserve it instead of overwriting concurrent work.
+    # Preserve the independently committed archive extraction repair.
     replace(
         'src/main/__tests__/bundle-spectral-ruleset.test.ts',
         '// Mock fs and dns so no real files or DNS lookups are needed.',
+        "import type * as OfflinePolicy from '~/common/offline-policy';\n\n"
         "// Historical online-branch protections remain tested with inert network mocks.\n"
         "// bundle-spectral-offline.test.ts independently tests the real offline flag.\n"
         "vi.mock('~/common/offline-policy', async importOriginal => ({\n"
-        "  ...(await importOriginal<typeof import('~/common/offline-policy')>()),\n"
+        "  ...(await importOriginal<typeof OfflinePolicy>()),\n"
         "  OFFLINE_BUILD: false,\n"
         "}));\n\n"
         '// Mock fs and dns so no real files or DNS lookups are needed.',
