@@ -15,6 +15,8 @@ import tempfile
 import time
 import zipfile
 
+from safe_archive import extract_verified_archive
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -94,7 +96,6 @@ def main():
         launcher.chmod(0o755)
     if (build / 'data').exists():
         raise RuntimeError('Never ship a test/user profile')
-    # Carry concise notices and evidence, not source/test/catalog forests.
     shutil.copy2(ROOT / 'docs/OFFLINE-BASIC.zh-CN.md', build / 'OFFLINE-README.zh-CN.md')
     (build / 'BUILD-INFO.json').write_text(json.dumps(smoke, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     before = budget_report('directory', build)
@@ -121,14 +122,8 @@ def main():
     archive_budget = budget_report('archive', archive_path)
     with tempfile.TemporaryDirectory(prefix='insomnia-basic-extract-') as temporary:
         started = time.perf_counter()
-        if windows:
-            with zipfile.ZipFile(archive_path) as archive:
-                archive.extractall(temporary)
-        else:
-            with tarfile.open(archive_path, 'r:gz') as archive:
-                archive.extractall(temporary, filter='data')
+        extracted = extract_verified_archive(archive_path, Path(temporary), basename, manifest, windows)
         elapsed = time.perf_counter() - started
-        extracted = Path(temporary) / basename
         after = budget_report('directory', extracted)
         if tree_manifest(extracted) != manifest:
             raise RuntimeError('Final downloaded-format archive changes validated application bytes')
@@ -140,7 +135,7 @@ def main():
     report = {**smoke, **after, **archive_budget, 'archive': archive_path.name, 'archiveSha256': digest,
               'freshExtractionSeconds': round(elapsed, 3), 'extractionHashVerified': True,
               'extractionEnvironment': {'os': host_platform.platform(), 'python': host_platform.python_version(),
-                                        'tool': 'stdlib zipfile' if windows else 'stdlib tarfile',
+                                        'tool': 'manifest-verified stdlib zipfile' if windows else 'manifest-verified stdlib tarfile',
                                         'disk': 'GitHub-hosted runner temporary volume; not a user-device benchmark'}}
     (output / (archive_path.name + '.sha256')).write_text(f'{digest}  {archive_path.name}\n', encoding='utf-8')
     (output / (target + '-basic-validation.json')).write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

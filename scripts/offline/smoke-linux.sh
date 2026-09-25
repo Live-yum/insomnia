@@ -2,7 +2,10 @@
 set -euo pipefail
 : "${INSOMNIA_OFFLINE_SMOKE_EXE:?Set the packaged executable path}"
 edition="${INSOMNIA_OFFLINE_EDITION:-full}"
-case "$edition" in basic|full) ;; *) echo 'Unsupported offline edition' >&2; exit 1 ;; esac
+if [ "$edition" != basic ] && [ "$edition" != full ]; then
+  echo 'Unsupported offline edition' >&2
+  exit 1
+fi
 # Preserve Chromium's sandbox; never use --no-sandbox.
 sudo chown root:root packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
 sudo chmod 4755 packages/insomnia/dist/linux-arm64-unpacked/chrome-sandbox
