@@ -34,9 +34,22 @@ class SafePortableArchive(unittest.TestCase):
         return file
 
     def test_valid_tar_bytes_and_executable_mode(self):
-        root = extract_verified_archive(self.tar(), self.output, 'portable', self.manifest, False)
-        self.assertEqual((root / 'bin/app').read_bytes(), self.payload)
-        self.assertEqual((root / 'bin/app').stat().st_mode & 0o777, 0o755)
+        archive_path = self.tar()
+        # The portable TAR must retain POSIX mode metadata on every build host.
+        with tarfile.open(archive_path, 'r:gz') as archive:
+            self.assertEqual(archive.getmember('portable/bin/app').mode & 0o777, 0o755)
+        root = extract_verified_archive(archive_path, self.output, 'portable', self.manifest, False)
+        extracted = root / 'bin/app'
+        self.assertEqual(extracted.read_bytes(), self.payload)
+        self.assertTrue(extracted.is_file())
+        # Windows chmod supports the read-only bit, not POSIX execute bits.
+        # Still execute the extraction/integrity test there; test the actual
+        # executable permission on POSIX rather than skipping the whole case.
+        if os.name == 'nt':
+            self.assertTrue(extracted.stat().st_mode & 0o200)
+        else:
+            self.assertEqual(extracted.stat().st_mode & 0o777, 0o755)
+            self.assertTrue(os.access(extracted, os.X_OK))
 
     def test_valid_zip(self):
         file = self.base / 'test.zip'

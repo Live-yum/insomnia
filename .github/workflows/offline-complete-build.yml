@@ -70,6 +70,8 @@ jobs:
           node --test scripts/offline/basic-budget.test.cjs
       - name: Install locked application build dependencies
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
+      - name: Prepare pinned Electron before any parallel import
+        uses: ./.github/actions/prepare-electron
       - name: Workspace lint without autofix or warning allowances
         run: npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-lint.log"; exit 1; }
       - name: Uncached smoke test lint with zero warnings
@@ -177,7 +179,7 @@ jobs:
           npx --no-install electron-builder --config "$config" --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
       - name: Historical full edition only - require every catalog byte
         if: inputs.edition == 'full'
-        run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" --target "$RESOURCE_TARGET"
+        run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" > /dev/null --target "$RESOURCE_TARGET"
       - name: Basic edition - enforce size and physical-file budget
         if: inputs.edition == 'basic'
         run: node scripts/offline/basic-budget.cjs directory "$PACKAGE_DIRECTORY" > "$RUNNER_TEMP/offline-basic-budget.log"
