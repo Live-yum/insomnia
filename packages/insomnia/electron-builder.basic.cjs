@@ -20,7 +20,7 @@ module.exports = {
     {
       from: './src/vendor',
       to: './offline-reviewed-notices',
-      filter: ['*/LICENSE', '*/NOTICE', '*/package.json', '*/UPSTREAM.json'],
+      filter: ['*/LICENSE', '*/NOTICE', '*/package.json', '*/UPSTREAM.json', '*/PRIMITIVES-LICENSE.txt', '*/PRIMITIVES.json'],
     },
     { from: './config/offline-basic.json', to: './offline-basic.json' },
   ],

@@ -1,0 +1,51 @@
+name: Native offline crypto compatibility
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [offline/complete-portable, develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-crypto-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked build dependencies
+        shell: bash
+        run: npm ci --no-audit --no-fund
+      - uses: ./.github/actions/prepare-electron
+      - name: Test standalone and real Electron crypto with no optional algorithm skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs
+          exe="$(node -p 'require("electron")')"
+          ELECTRON_RUN_AS_NODE=1 "$exe" --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs
+      - name: Independent OpenSSL bidirectional interoperability
+        if: runner.os == 'Linux'
+        shell: bash
+        run: node --test scripts/offline/crypto-openssl-interop.test.cjs

@@ -6,6 +6,7 @@ import { setOfflineLocale, useOfflineLocale } from '~/ui/offline-locale';
 
 const actions = [
   ['cipher', '对称加解密', 'Symmetric encryption'], ['rsa', 'RSA-OAEP 加解密', 'RSA-OAEP'],
+  ['sm2', 'SM2 国密加解密 / 签名', 'SM2 encryption / signatures'],
   ['sign', '数字签名', 'Sign'], ['verify', '签名验证', 'Verify signature'], ['jwt', 'JWT 签名与验签', 'JWT'],
   ['digest', '摘要 / Hash', 'Digest / Hash'], ['hmac', '消息认证码 / HMAC', 'HMAC'],
   ['convert', '编码转换', 'Encoding conversion'], ['random', '安全随机数', 'Secure random'], ['keygen', '生成密钥', 'Generate keys'],
@@ -17,7 +18,7 @@ const algorithms: Record<string, string[]> = {
   jwt: ['HS256', 'HS384', 'HS512', ...signatures],
   digest: ['sha256', 'sha384', 'sha512', 'sha224', 'sha3-256', 'sha3-384', 'sha3-512', 'sm3', 'md5', 'sha1'],
   hmac: ['sha256', 'sha384', 'sha512', 'sha3-256', 'sha3-512', 'sm3'],
-  keygen: ['aes-256', 'aes-128', 'aes-192', 'sm4', 'hmac-sha256', 'hmac-sha384', 'hmac-sha512', 'rsa', 'ES256', 'ES384', 'ES512', 'EdDSA'],
+  keygen: ['aes-256', 'aes-128', 'aes-192', 'sm4', 'sm2', 'hmac-sha256', 'hmac-sha384', 'hmac-sha512', 'rsa', 'ES256', 'ES384', 'ES512', 'EdDSA'],
 };
 const encodings = ['utf8', 'hex', 'base64', 'base64url'];
 const controlClass = 'w-full rounded-sm border border-solid border-(--hl-md) bg-(--color-bg) p-2 text-(--color-font)';
@@ -41,6 +42,8 @@ export const OfflineCryptoWorkbench = () => {
   const [tag, setTag] = useState('');
   const [signature, setSignature] = useState('');
   const [signatureFormat, setSignatureFormat] = useState('der');
+  const [cipherMode, setCipherMode] = useState('c1c3c2');
+  const [userId, setUserId] = useState('1234567812345678');
   const [padding, setPadding] = useState('pkcs7');
   const [issuer, setIssuer] = useState('');
   const [audience, setAudience] = useState('');
@@ -49,13 +52,13 @@ export const OfflineCryptoWorkbench = () => {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
-  const keyBased = ['cipher', 'rsa', 'sign', 'verify', 'hmac', 'jwt'].includes(action) && !(action === 'jwt' && operation === 'inspect');
+  const keyBased = ['cipher', 'rsa', 'sm2', 'sign', 'verify', 'hmac', 'jwt'].includes(action) && !(action === 'jwt' && operation === 'inspect');
   const asymmetric = ['rsa', 'sign', 'verify'].includes(action) || (action === 'jwt' && !algorithm.startsWith('HS'));
   const clear = () => { setInput(''); setKey(''); setPassphrase(''); setResult(''); setError(''); setSignature(''); setIv(''); setAad(''); setTag(''); setShowKey(false); };
   const changeOpen = (value: boolean) => { if (!value) clear(); setOpen(value); };
   const changeAction = (value: string) => {
     setAction(value); setAlgorithm(algorithms[value]?.[0] || ''); setResult(''); setError('');
-    setOperation(value === 'jwt' ? 'verify' : 'encrypt');
+    setOperation(value === 'jwt' ? 'verify' : 'encrypt'); setSignatureFormat('der');
     setInputEncoding('utf8'); setOutputEncoding(['digest', 'hmac', 'keygen', 'random'].includes(value) ? 'hex' : 'base64');
   };
   const select = (label: string, value: string, values: string[], update: (value: string) => void) => (
@@ -78,7 +81,13 @@ export const OfflineCryptoWorkbench = () => {
         action, algorithm, operation, input, inputEncoding, outputEncoding, key: material, keyEncoding,
         signature, signatureEncoding: 'base64', signatureFormat, legacy,
       };
-      if (action === 'cipher') Object.assign(options, { iv: iv || undefined, aad, tag: tag || undefined, padding });
+      if (action === 'cipher') {
+        options.iv = iv || undefined;
+        options.aad = aad;
+        options.tag = tag || undefined;
+        options.padding = padding;
+      }
+      if (action === 'sm2') { options.cipherMode = cipherMode; options.userId = userId; }
       if (action === 'rsa') { options.hash = algorithm; options.label = aad; }
       if (action === 'keygen') { options.format = keyFormat; options.bits = 3072; }
       if (action === 'jwt') {
@@ -112,7 +121,7 @@ export const OfflineCryptoWorkbench = () => {
               <Heading slot="title" className="text-xl font-semibold">{t('离线加解密工作台', 'Offline cryptography workbench')}</Heading>
               <Button onPress={() => changeOpen(false)} isDisabled={busy} aria-label={t('关闭加解密工作台', 'Close cryptography workbench')}>{t('关闭', 'Close')}</Button>
             </div>
-            <p className="text-sm">{t('在本机计算，不上传密钥或正文；关闭窗口时清空本次输入和结果。国密当前提供 SM3/SM4，SM2 尚未集成。', 'Computed locally. Keys and input are never uploaded; closing clears this form. SM3/SM4 are available; SM2 is not yet integrated.')}</p>
+            <p className="text-sm">{t('在本机计算，不上传密钥或正文；关闭窗口时清空本次输入和结果。SM2/SM3/SM4 使用随包固定实现，不依赖系统安装国密库。', 'Computed locally. Closing clears keys, input and results. Bundled SM2/SM3/SM4 do not require a system crypto provider.')}</p>
             <div className="grid grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
                 <span>{t('操作类别', 'Operation category')}</span>
@@ -122,15 +131,17 @@ export const OfflineCryptoWorkbench = () => {
               </label>
               {select('界面语言 / Interface language', locale, ['zh-CN', 'en-US'], value => setOfflineLocale(value === 'en-US' ? 'en-US' : 'zh-CN'))}
               {algorithms[action] && select(t('算法', 'Algorithm'), algorithm, algorithms[action], setAlgorithm)}
-              {['cipher', 'rsa', 'jwt'].includes(action) && select(t('处理方式', 'Operation'), operation, action === 'jwt' ? ['verify', 'sign', 'inspect'] : ['encrypt', 'decrypt'], value => {
+              {['cipher', 'rsa', 'jwt', 'sm2'].includes(action) && select(t('处理方式', 'Operation'), operation, action === 'jwt' ? ['verify', 'sign', 'inspect'] : action === 'sm2' ? ['encrypt', 'decrypt', 'sign', 'verify'] : ['encrypt', 'decrypt'], value => {
                 setOperation(value);
                 setInputEncoding(value === 'decrypt' ? 'base64' : 'utf8'); setOutputEncoding(value === 'decrypt' ? 'utf8' : 'base64');
               })}
               {!['jwt', 'keygen', 'random'].includes(action) && select(t('输入编码', 'Input encoding'), inputEncoding, encodings, setInputEncoding)}
               {!['jwt', 'verify'].includes(action) && select(t('输出编码', 'Output encoding'), outputEncoding, encodings, setOutputEncoding)}
-              {keyBased && !asymmetric && select(t('密钥编码', 'Key encoding'), keyEncoding, encodings, setKeyEncoding)}
-              {(keyBased && asymmetric || action === 'keygen') && select(t('密钥格式', 'Key format'), keyFormat, ['pem', 'der', 'jwk'], setKeyFormat)}
+              {keyBased && !asymmetric && action !== 'sm2' && select(t('密钥编码', 'Key encoding'), keyEncoding, encodings, setKeyEncoding)}
+              {(keyBased && asymmetric || action === 'keygen' && algorithm !== 'sm2') && select(t('密钥格式', 'Key format'), keyFormat, ['pem', 'der', 'jwk'], setKeyFormat)}
               {['sign', 'verify'].includes(action) && select(t('EC 签名格式', 'EC signature format'), signatureFormat, ['der', 'ieee-p1363'], setSignatureFormat)}
+              {action === 'sm2' && ['sign', 'verify'].includes(operation) && select(t('SM2 签名格式', 'SM2 signature format'), signatureFormat, ['der', 'raw'], setSignatureFormat)}
+              {action === 'sm2' && ['encrypt', 'decrypt'].includes(operation) && select(t('SM2 密文排列（含 04 点前缀）', 'SM2 ciphertext layout (04 point prefix)'), cipherMode, ['c1c3c2', 'c1c2c3'], setCipherMode)}
               {action === 'cipher' && algorithm.endsWith('cbc') && select(t('填充', 'Padding'), padding, ['pkcs7', 'none'], setPadding)}
             </div>
             {!['keygen', 'random'].includes(action) && (
@@ -147,6 +158,8 @@ export const OfflineCryptoWorkbench = () => {
                 {asymmetric && <label>{t('私钥口令（可选）', 'Private key passphrase (optional)')}<input className={controlClass} type="password" autoComplete="off" aria-label={t('私钥口令（可选）', 'Private key passphrase (optional)')} value={passphrase} onChange={event => setPassphrase(event.target.value)} /></label>}
               </div>
             )}
+            {action === 'sm2' && <p role="note">{t('私钥：64 位十六进制；公钥：04 开头的 130 位十六进制（或压缩点）。签名使用 SM3，并绑定用户标识。', 'Private key: 64 hex digits. Public key: 130 hex digits beginning 04 (or compressed point). SM2 signatures use SM3 and bind the user ID.')}</p>}
+            {action === 'sm2' && ['sign', 'verify'].includes(operation) && <label>{t('SM2 用户标识（UTF-8）', 'SM2 user ID (UTF-8)')}<input className={controlClass} aria-label={t('SM2 用户标识（UTF-8）', 'SM2 user ID (UTF-8)')} value={userId} onChange={event => setUserId(event.target.value)} /></label>}
             {action === 'cipher' && <label>{t('IV / Nonce（Hex；加密时留空自动生成）', 'IV / nonce (hex; leave empty to generate on encryption)')}<input className={controlClass} aria-label={t('IV / Nonce（Hex；加密时留空自动生成）', 'IV / nonce (hex; leave empty to generate on encryption)')} value={iv} onChange={event => setIv(event.target.value)} /></label>}
             {action === 'cipher' && algorithm.endsWith('gcm') && (
               <div className="grid grid-cols-2 gap-4">
@@ -155,7 +168,7 @@ export const OfflineCryptoWorkbench = () => {
               </div>
             )}
             {action === 'rsa' && <label>OAEP label (UTF-8)<input className={controlClass} value={aad} onChange={event => setAad(event.target.value)} /></label>}
-            {action === 'verify' && <label>{t('签名（Base64）', 'Signature (Base64)')}<textarea className={controlClass} aria-label={t('签名（Base64）', 'Signature (Base64)')} value={signature} onChange={event => setSignature(event.target.value)} /></label>}
+            {(action === 'verify' || action === 'sm2' && operation === 'verify') && <label>{t('签名（Base64）', 'Signature (Base64)')}<textarea className={controlClass} aria-label={t('签名（Base64）', 'Signature (Base64)')} value={signature} onChange={event => setSignature(event.target.value)} /></label>}
             {action === 'jwt' && operation === 'verify' && <div className="grid grid-cols-2 gap-4">
               <label>{t('期望签发者 iss（可选）', 'Expected issuer (optional)')}<input className={controlClass} aria-label={t('期望签发者 iss（可选）', 'Expected issuer (optional)')} value={issuer} onChange={event => setIssuer(event.target.value)} /></label>
               <label>{t('期望受众 aud（可选）', 'Expected audience (optional)')}<input className={controlClass} aria-label={t('期望受众 aud（可选）', 'Expected audience (optional)')} value={audience} onChange={event => setAudience(event.target.value)} /></label>

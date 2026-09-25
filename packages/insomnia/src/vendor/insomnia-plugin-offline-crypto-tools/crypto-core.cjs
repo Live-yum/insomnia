@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // One local provider. No filesystem, network, dynamic imports, logging or stored keys.
 const crypto = require('node:crypto');
+const portable = require('./portable-crypto.cjs');
 const { Buffer } = require('node:buffer');
 const { TextDecoder } = require('node:util');
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -59,7 +60,7 @@ function hashName(algorithm, legacy = false) {
   if (!STRONG_HASHES.has(algorithm) && !(legacy === true && ['md5', 'sha1'].includes(algorithm))) {
     fail('摘要算法不受支持；MD5/SHA-1 仅允许显式旧接口兼容 / Unsupported or legacy hash');
   }
-  if (!crypto.getHashes().includes(algorithm)) fail('当前运行时不支持此摘要 / Hash unavailable in this runtime');
+  if (!portable.supportsHash(algorithm) && !crypto.getHashes().includes(algorithm)) fail('当前运行时不支持此摘要 / Hash unavailable in this runtime');
   return algorithm;
 }
 function readKey(value, privateKey) {
@@ -124,7 +125,7 @@ function symmetric(options) {
   const match = /^aes-(128|192|256)-(gcm|cbc|ctr)$/.exec(algorithm);
   const sm4 = ['sm4-cbc', 'sm4-ctr'].includes(algorithm);
   if (!match && !sm4) fail('不支持的对称算法 / Unsupported symmetric algorithm');
-  if (!crypto.getCiphers().includes(algorithm)) fail('当前运行时不支持此算法 / Cipher unavailable in this runtime');
+  if (!sm4 && !crypto.getCiphers().includes(algorithm)) fail('当前运行时不支持此算法 / Cipher unavailable in this runtime');
   if (!['encrypt', 'decrypt'].includes(options.operation)) fail('请选择加密或解密 / Choose encrypt or decrypt');
   const encrypting = options.operation === 'encrypt';
   const mode = match ? match[2] : algorithm.slice(4);
@@ -142,6 +143,9 @@ function symmetric(options) {
   let output;
   let tag;
   try {
+    if (sm4) {
+      output = portable.sm4Cipher({ key, iv, input, encrypting, mode, padding: options.padding || 'pkcs7' });
+    } else {
     const cipher = encrypting
       ? crypto.createCipheriv(algorithm, key, iv, mode === 'gcm' ? { authTagLength: 16 } : undefined)
       : crypto.createDecipheriv(algorithm, key, iv, mode === 'gcm' ? { authTagLength: 16 } : undefined);
@@ -161,6 +165,7 @@ function symmetric(options) {
     // Do not expose decipher.update() output until final() authenticates/passes padding.
     output = Buffer.concat([cipher.update(input), cipher.final()]);
     if (mode === 'gcm' && encrypting) tag = cipher.getAuthTag();
+    }
   } catch {
     fail('加解密失败：请检查密钥、IV、Tag、AAD、长度和填充 / Cipher authentication or parameters failed');
   }
@@ -277,6 +282,7 @@ function jwt(options) {
 }
 async function keygen(options) {
   const kind = options.algorithm || 'aes-256';
+  if (kind === 'sm2') return portable.generateSm2();
   if (['aes-128', 'aes-192', 'aes-256', 'sm4', 'hmac-sha256', 'hmac-sha384', 'hmac-sha512'].includes(kind)) {
     const size = kind === 'sm4' ? 16 : Number(kind.match(/\d+$/)[0]) / 8;
     const encoding = options.outputEncoding || 'hex';
@@ -303,16 +309,23 @@ async function keygen(options) {
   return { algorithm: kind, format, publicKey: format === 'der' ? publicKey.toString('base64') : publicKey,
     privateKey: format === 'der' ? privateKey.toString('base64') : privateKey };
 }
+function hashBytes(algorithm, bytes) {
+  return portable.supportsHash(algorithm) ? portable.digest(algorithm, bytes) : crypto.createHash(algorithm).update(bytes).digest();
+}
+function macBytes(algorithm, key, bytes) {
+  return portable.supportsHash(algorithm) ? portable.mac(algorithm, key, bytes) : crypto.createHmac(algorithm, key).update(bytes).digest();
+}
 async function execute(options) {
   object(options, '参数');
   if (JSON.stringify(options).length > MAX_BYTES * 2) fail('参数总长度超过限制 / Options exceed size limit');
   switch (options.action) {
     case 'cipher': { return symmetric(options); }
     case 'rsa': { return oaep(options); }
+    case 'sm2': { return portable.sm2Operation(options, decode, encode); }
     case 'digest': {
       const algorithm = hashName(options.algorithm || 'sha256', options.legacy);
       const encoding = options.outputEncoding || 'hex';
-      return { output: encode(crypto.createHash(algorithm).update(decode(options.input ?? '', options.inputEncoding || 'utf8')).digest(), encoding), algorithm, encoding,
+      return { output: encode(hashBytes(algorithm, decode(options.input ?? '', options.inputEncoding || 'utf8')), encoding), algorithm, encoding,
         ...(['md5', 'sha1'].includes(algorithm) ? { warning: '仅限旧接口兼容，不用于安全认证 / Legacy compatibility only' } : {}) };
     }
     case 'hmac': {
@@ -320,7 +333,7 @@ async function execute(options) {
       const key = decode(options.key, options.keyEncoding || 'utf8', 'MAC 密钥');
       if (!key.length) fail('MAC 密钥不能为空 / MAC key must not be empty');
       const encoding = options.outputEncoding || 'hex';
-      return { output: encode(crypto.createHmac(algorithm, key).update(decode(options.input ?? '', options.inputEncoding || 'utf8')).digest(), encoding), encoding, algorithm };
+      return { output: encode(macBytes(algorithm, key, decode(options.input ?? '', options.inputEncoding || 'utf8')), encoding), encoding, algorithm };
     }
     case 'sign': {
       const encoding = options.outputEncoding || 'base64';

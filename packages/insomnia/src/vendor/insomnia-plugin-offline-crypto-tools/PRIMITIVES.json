@@ -1,0 +1,47 @@
+{
+  "format": 1,
+  "buildOnly": true,
+  "packages": [
+    {
+      "name": "@noble/ciphers",
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/@noble/ciphers/-/ciphers-1.3.0.tgz",
+      "integrity": "sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==",
+      "license": "MIT",
+      "licenseSha256": "f36671a5487c9c5050efacb58011c37c24c55a889803cb036cf9d9a6347c1e2d"
+    },
+    {
+      "name": "@noble/curves",
+      "version": "1.9.7",
+      "resolved": "https://registry.npmjs.org/@noble/curves/-/curves-1.9.7.tgz",
+      "integrity": "sha512-gbKGcRUYIjA3/zCCNaWDciTMFI0dCkvou3TL8Zmy5Nc7sJ47a0jtOeZoTaMxkuqRo9cRhjOdZJXegxYE5FN/xw==",
+      "license": "MIT",
+      "licenseSha256": "4f221aee6e072336700c408c68ab3b96a3fc09f6aebe6f48f1bd99e5ef13faec"
+    },
+    {
+      "name": "@noble/hashes",
+      "version": "1.8.0",
+      "resolved": "https://registry.npmjs.org/@noble/hashes/-/hashes-1.8.0.tgz",
+      "integrity": "sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==",
+      "license": "MIT",
+      "licenseSha256": "4f221aee6e072336700c408c68ab3b96a3fc09f6aebe6f48f1bd99e5ef13faec"
+    },
+    {
+      "name": "sm-crypto-v2",
+      "version": "1.15.1",
+      "resolved": "https://registry.npmjs.org/sm-crypto-v2/-/sm-crypto-v2-1.15.1.tgz",
+      "integrity": "sha512-QN96kvbM6YMULb4WmYiyPBhEj6jhIQgvbMnJ2cU5ZumfptLkZwvaIpBacQGZXvPD6GKf27+eNDlXKR+er0VeBQ==",
+      "license": "MIT",
+      "licenseSha256": "eb1207133ce0138b50f8e81810e9db94c6257fd9d218fbc4bc0cc6cfc9155c68"
+    }
+  ],
+  "generator": {
+    "name": "esbuild",
+    "version": "0.25.12"
+  },
+  "bundle": "primitives.generated.cjs",
+  "bytes": 82984,
+  "sha256": "d3654c086c04f5480f2fe256816e8485023f429f14ad55b7f39778c01e9bc9af",
+  "cryptographicRandomness": "Captured node:crypto.webcrypto.getRandomValues; no Math.random fallback",
+  "limitation": "SM2/SM4 wrapper validation and interoperability are tested separately; this is not an independent security certification"
+}
