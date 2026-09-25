@@ -1,0 +1,291 @@
+// Copyright 2025 Sun Yimin. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
+package mldsa
+
+import (
+	"crypto/subtle"
+	"unsafe"
+)
+
+// fieldElement is an integer modulo q, an element of ℤ_q. It is always reduced.
+type fieldElement uint32
+
+// fieldReduceOnce reduces a value a < 2q.
+// Also refer "A note on the implementation of the Number Theoretic Transform": https://eprint.iacr.org/2017/727.pdf .
+func fieldReduceOnce(a uint32) fieldElement {
+	x := a - q
+	// If x underflowed, then x >= 2^32 - q > 2^31, so the top bit is set.
+	x += (x >> 31) * q
+	return fieldElement(x)
+}
+
+func fieldAdd(a, b fieldElement) fieldElement {
+	x := uint32(a + b)
+	return fieldReduceOnce(x)
+}
+
+func fieldSub(a, b fieldElement) fieldElement {
+	x := uint32(a - b + q)
+	return fieldReduceOnce(x)
+}
+
+const (
+	r       = 4193792            // 2³² mod q
+	qNegInv = uint32(4236238847) // -q⁻¹ mod 2³² (q * qNegInv ≡ -1 mod 2³²)
+)
+
+func fieldReduce(a uint64) fieldElement {
+	// See FIPS 204, Algorithm 49, MontgomeryReduce()
+	t := uint32(a) * qNegInv
+	return fieldReduceOnce(uint32((a + uint64(t)*q) >> 32))
+}
+
+func fieldMul(a, b fieldElement) fieldElement {
+	x := uint64(a) * uint64(b)
+	return fieldReduce(x)
+}
+
+// fieldMulSub returns a * (b - c). This operation is fused to save a
+// fieldReduceOnce after the subtraction.
+func fieldMulSub(a, b, c fieldElement) fieldElement {
+	x := uint64(a) * uint64(b-c+q)
+	return fieldReduce(x)
+}
+
+// ringElement is a polynomial, an element of R_q, represented as an array.
+type ringElement [n]fieldElement
+
+// polyAddGeneric updates dst as dst += src (generic implementation).
+func polyAddGeneric[T ~[n]fieldElement](dst, src *T) {
+	for i := range *dst {
+		(*dst)[i] = fieldAdd((*dst)[i], (*src)[i])
+	}
+}
+
+// polySubGeneric updates dst as dst -= src (generic implementation).
+func polySubGeneric[T ~[n]fieldElement](dst, src *T) {
+	for i := range *dst {
+		(*dst)[i] = fieldSub((*dst)[i], (*src)[i])
+	}
+}
+
+// nttElement is an NTT representation, an element of T_q, represented as an array.
+type nttElement [n]fieldElement
+
+// The table in FIPS 204 Appendix B uses the following formula
+// zeta[k]= 1753^BitRev₈(k) mod q for (k = 1..255) (The first value is not used).
+//
+// As this implementation uses montgomery form with a multiplier of 2³²,
+// The values need to be transformed i.e.
+//
+// zetasMontgomery[k] = fieldReduce(zeta[k] * (2³² * 2³² mod(q))) = (zeta[k] * r) mod q
+var zetasMontgomery = [n]fieldElement{
+	4193792, 25847, 5771523, 7861508, 237124, 7602457, 7504169, 466468,
+	1826347, 2353451, 8021166, 6288512, 3119733, 5495562, 3111497, 2680103,
+	2725464, 1024112, 7300517, 3585928, 7830929, 7260833, 2619752, 6271868,
+	6262231, 4520680, 6980856, 5102745, 1757237, 8360995, 4010497, 280005,
+	2706023, 95776, 3077325, 3530437, 6718724, 4788269, 5842901, 3915439,
+	4519302, 5336701, 3574422, 5512770, 3539968, 8079950, 2348700, 7841118,
+	6681150, 6736599, 3505694, 4558682, 3507263, 6239768, 6779997, 3699596,
+	811944, 531354, 954230, 3881043, 3900724, 5823537, 2071892, 5582638,
+	4450022, 6851714, 4702672, 5339162, 6927966, 3475950, 2176455, 6795196,
+	7122806, 1939314, 4296819, 7380215, 5190273, 5223087, 4747489, 126922,
+	3412210, 7396998, 2147896, 2715295, 5412772, 4686924, 7969390, 5903370,
+	7709315, 7151892, 8357436, 7072248, 7998430, 1349076, 1852771, 6949987,
+	5037034, 264944, 508951, 3097992, 44288, 7280319, 904516, 3958618,
+	4656075, 8371839, 1653064, 5130689, 2389356, 8169440, 759969, 7063561,
+	189548, 4827145, 3159746, 6529015, 5971092, 8202977, 1315589, 1341330,
+	1285669, 6795489, 7567685, 6940675, 5361315, 4499357, 4751448, 3839961,
+	2091667, 3407706, 2316500, 3817976, 5037939, 2244091, 5933984, 4817955,
+	266997, 2434439, 7144689, 3513181, 4860065, 4621053, 7183191, 5187039,
+	900702, 1859098, 909542, 819034, 495491, 6767243, 8337157, 7857917,
+	7725090, 5257975, 2031748, 3207046, 4823422, 7855319, 7611795, 4784579,
+	342297, 286988, 5942594, 4108315, 3437287, 5038140, 1735879, 203044,
+	2842341, 2691481, 5790267, 1265009, 4055324, 1247620, 2486353, 1595974,
+	4613401, 1250494, 2635921, 4832145, 5386378, 1869119, 1903435, 7329447,
+	7047359, 1237275, 5062207, 6950192, 7929317, 1312455, 3306115, 6417775,
+	7100756, 1917081, 5834105, 7005614, 1500165, 777191, 2235880, 3406031,
+	7838005, 5548557, 6709241, 6533464, 5796124, 4656147, 594136, 4603424,
+	6366809, 2432395, 2454455, 8215696, 1957272, 3369112, 185531, 7173032,
+	5196991, 162844, 1616392, 3014001, 810149, 1652634, 4686184, 6581310,
+	5341501, 3523897, 3866901, 269760, 2213111, 7404533, 1717735, 472078,
+	7953734, 1723600, 6577327, 1910376, 6712985, 7276084, 8119771, 4546524,
+	5441381, 6144432, 7959518, 6094090, 183443, 7403526, 1612842, 4834730,
+	7826001, 3919660, 8332111, 7018208, 3937738, 1400424, 7534263, 1976782,
+}
+
+// ntt maps a ringElement to its nttElement representation.
+//
+// It implements NTT, according to FIPS 204, Algorithm 41.
+// Also refer "A note on the implementation of the Number Theoretic Transform": https://eprint.iacr.org/2017/727.pdf .
+func ntt(f ringElement) nttElement {
+	internalNTT(&f)
+	return nttElement(f)
+}
+
+func nttAssign(dst *nttElement, src *ringElement) {
+	*(*ringElement)(dst) = *src
+	internalNTT((*ringElement)(dst))
+}
+
+func internalNTTGeneric(f *ringElement) {
+	k := 1
+	// len: 128, 64, 32, ..., 1
+	for len := 128; len >= 1; len /= 2 {
+		// start
+		for start := 0; start < n; start += 2 * len {
+			zeta := zetasMontgomery[k]
+			k++
+			// Bounds check elimination hint.
+			f, flen := f[start:start+len], f[start+len:start+len+len]
+			for j := range len {
+				t := fieldMul(zeta, flen[j])
+				flen[j] = fieldSub(f[j], t)
+				f[j] = fieldAdd(f[j], t)
+			}
+		}
+	}
+}
+
+// inverseNTT maps a nttElement back to the ringElement it represents.
+//
+// It implements NTT⁻¹, according to FIPS 204, Algorithm 42.
+// Also refer "A note on the implementation of the Number Theoretic Transform": https://eprint.iacr.org/2017/727.pdf .
+func inverseNTT(f nttElement) ringElement {
+	internalInverseNTT(&f)
+	return ringElement(f)
+}
+
+// inverseNTTAssign updates dst as dst = NTT⁻¹(src) (generic implementation).
+func inverseNTTAssign(dst *ringElement, src *nttElement) {
+	*(*nttElement)(dst) = *src
+	internalInverseNTT((*nttElement)(dst))
+}
+
+func internalInverseNTTGeneric(f *nttElement) {
+	k := 255
+	for len := 1; len < n; len *= 2 {
+		for start := 0; start < n; start += 2 * len {
+			zeta := q - zetasMontgomery[k]
+			k--
+			// Bounds check elimination hint.
+			f, flen := f[start:start+len], f[start+len:start+len+len]
+			for j := range len {
+				t := f[j]
+				f[j] = fieldAdd(t, flen[j])
+				flen[j] = fieldMulSub(zeta, t, flen[j])
+			}
+		}
+	}
+	for i := range f {
+		f[i] = fieldMul(f[i], 41978) // 41978 = ((256⁻¹ mod q) * (2³² * 2³² mod q)) mod q
+	}
+}
+
+func nttMulGeneric(out, lhs, rhs *nttElement) {
+	for i, v := range lhs {
+		out[i] = fieldMul(v, rhs[i])
+	}
+}
+
+func nttMulAccGeneric(acc, lhs, rhs *nttElement) {
+	for i, v := range lhs {
+		acc[i] = fieldAdd(acc[i], fieldMul(v, rhs[i]))
+	}
+}
+
+// nttMatRowVecMulGeneric computes dst = matRow[0]*vec[0] + matRow[1]*vec[1] + ... + matRow[len-1]*vec[len-1]
+// All operands are in NTT domain (coefficient-wise multiplication in NTT domain).
+func nttMatRowVecMulGeneric(dst, vec, matRow *nttElement, len int) {
+	vecSlice := unsafe.Slice(vec, len)
+	matSlice := unsafe.Slice(matRow, len)
+
+	for i := range n {
+		acc := fieldMul(vecSlice[0][i], matSlice[0][i])
+		for j := 1; j < len; j++ {
+			acc = fieldAdd(acc, fieldMul(vecSlice[j][i], matSlice[j][i]))
+		}
+		dst[i] = acc
+	}
+}
+
+func maxUint32(a, b uint32) uint32 {
+	mask := uint32(int32(a-b) >> 31)
+	return a ^ ((a ^ b) & mask)
+}
+
+func absInt32(a int32) uint32 {
+	mask := a >> 31
+	return uint32((a ^ mask) - mask)
+}
+
+// infinityNorm returns the absolute value modulo q in constant time
+//
+//	i.e return x > (q - 1) / 2 ? q - x : x;
+func infinityNorm(a fieldElement) uint32 {
+	x := uint32(a)
+	y := q - x
+	mask := uint32((int32(qMinus1Div2) - int32(x)) >> 31)
+	return x ^ ((x ^ y) & mask)
+}
+
+func polyInfinityNormGeneric[T ~[n]fieldElement](a *T, norm int) int {
+	current := uint32(norm)
+	for i := range *a {
+		current = maxUint32(current, infinityNorm((*a)[i]))
+	}
+	return int(current)
+}
+
+func vectorInfinityNorm[T ~[n]fieldElement](a []T, norm int) int {
+	for i := range a {
+		norm = polyInfinityNorm(&a[i], norm)
+	}
+	return norm
+}
+
+// infinityNormSigned returns the absolute value in constant time
+//
+// i.e return a < 0 ? -a : a;
+func polyInfinityNormSignedGeneric(a *[n]int32, norm int) int {
+	current := uint32(norm)
+	for i := range *a {
+		current = maxUint32(current, absInt32((*a)[i]))
+	}
+	return int(current)
+}
+
+func vectorInfinityNormSigned(a [][n]int32, norm int) int {
+	for i := range a {
+		norm = polyInfinityNormSigned(&a[i], norm)
+	}
+	return norm
+}
+
+func vectorCountOnes(a []ringElement) int {
+	var oneCount int
+	for i := range a {
+		for j := range a[i] {
+			oneCount += int(a[i][j])
+		}
+	}
+	return oneCount
+}
+
+func constantTimeEqualRingElement(a, b ringElement) int {
+	eq := 1
+	for i := range a {
+		eq &= subtle.ConstantTimeEq(int32(a[i]), int32(b[i]))
+	}
+	return eq
+}
+
+func constantTimeEqualRingElementArray(a, b []ringElement) int {
+	eq := 1
+	for i := range a {
+		eq &= constantTimeEqualRingElement(a[i], b[i])
+	}
+	return eq
+}

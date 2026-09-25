@@ -1,0 +1,223 @@
+// Copyright 2025 Sun Yimin. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
+package mldsa
+
+import (
+	"crypto/sha3"
+	"crypto/subtle"
+
+	"github.com/emmansun/gmsm/internal/keccakx4"
+)
+
+// Algorithm 30
+// G must be a SHAKE128 instance; it is reset and reused on each call.
+func rejNTTPoly(G *sha3.SHAKE, rho []byte, s, r byte) nttElement {
+	G.Reset()
+	G.Write(rho)
+	G.Write([]byte{s, r})
+
+	const blockSize = 168 // SHAKE128 block size in bytes
+	var buf [blockSize]byte
+
+	var a nttElement
+	var j int
+
+	for {
+		G.Read(buf[:])
+		for i := 0; i < blockSize; i += 3 {
+			// Algorithm 14, CoeffFromThreeBytes()
+			d := uint32(buf[i]) | uint32(buf[i+1])<<8 | ((uint32(buf[i+2]) & 0x7f) << 16)
+			if d < q {
+				a[j] = fieldElement(d)
+				j++
+			}
+			if j >= n {
+				return a
+			}
+		}
+	}
+}
+
+// This is a constant time version of n % 5
+// Note that 0xFFFF / 5 = 0x3333, 2 is added to make an over-estimate of 1/5
+// and then we divide by (0xFFFF + 1)
+//
+// from openssl
+func constantMod5(n uint32) uint32 {
+	return ((n) - 5*(0x3335*(n)>>16))
+}
+
+// rejBoundedPoly uses a seed value to generate a polynomial with coefficients in the
+// range of ((q-eta)..0..eta) using rejection sampling. eta is either 2 or 4.
+// SHAKE256 is used to absorb the seed, and then samples are squeezed.
+// See FIPS 204, Algorithm 31, RejBoundedPoly()
+// H must be a SHAKE256 instance; it is reset and reused on each call.
+func rejBoundedPoly(H *sha3.SHAKE, rho []byte, eta int, highByte, lowByte byte) ringElement {
+	H.Reset()
+	H.Write(rho)
+	H.Write([]byte{lowByte, highByte})
+
+	const blockSize = 136 // SHAKE256 block size in bytes
+	var buf [blockSize]byte
+	var a ringElement
+	var offset, j int
+
+	H.Read(buf[:])
+
+	for {
+		z0 := buf[offset] & 0xf
+		z1 := buf[offset] >> 4
+		offset++
+
+		if eta == 2 {
+			if subtle.ConstantTimeByteEq(z0, 15) == 0 {
+				a[j] = fieldSub(2, fieldElement(constantMod5(uint32(z0))))
+				j++
+				if j >= n {
+					break
+				}
+			}
+			if subtle.ConstantTimeByteEq(z1, 15) == 0 {
+				a[j] = fieldSub(2, fieldElement(constantMod5(uint32(z1))))
+				j++
+				if j >= n {
+					break
+				}
+			}
+		} else if eta == 4 {
+			if subtle.ConstantTimeLessOrEq(int(z0), 8) == 1 {
+				a[j] = fieldSub(4, fieldElement(z0))
+				j++
+				if j >= n {
+					break
+				}
+			}
+			if subtle.ConstantTimeLessOrEq(int(z1), 8) == 1 {
+				a[j] = fieldSub(4, fieldElement(z1))
+				j++
+				if j >= n {
+					break
+				}
+			}
+		}
+		if offset >= blockSize {
+			H.Read(buf[:])
+			offset = 0
+		}
+	}
+	return a
+}
+
+// rejNTTPolyx4 runs 4 independent SHAKE128-based rejection samplers in
+// parallel using keccakx4. indices[i] = [s, r] for the i-th lane, matching
+// the byte order used by rejNTTPoly (Algorithm 30, FIPS 204).
+func rejNTTPolyx4(rho []byte, indices [4][2]byte) [4]nttElement {
+	var xof keccakx4.SHAKE128x4
+	xof.AbsorbSeed(rho, indices)
+
+	var results [4]nttElement
+	var j [4]int
+	var buf [4][keccakx4.RateSHAKE128]byte
+
+	for {
+		xof.Squeeze(buf[0][:], buf[1][:], buf[2][:], buf[3][:])
+		allDone := true
+		for lane := range 4 {
+			if j[lane] >= n {
+				continue
+			}
+			for i := 0; i < keccakx4.RateSHAKE128 && j[lane] < n; i += 3 {
+				// Algorithm 14, CoeffFromThreeBytes()
+				d := uint32(buf[lane][i]) | uint32(buf[lane][i+1])<<8 | ((uint32(buf[lane][i+2]) & 0x7f) << 16)
+				if d < q {
+					results[lane][j[lane]] = fieldElement(d)
+					j[lane]++
+				}
+			}
+			if j[lane] < n {
+				allDone = false
+			}
+		}
+		if allDone {
+			break
+		}
+	}
+	return results
+}
+
+// See FIPS 204, Algorithm 34, ExpandMask()
+func expandMaskInto(dst *ringElement, derivedSeed []byte, gamma1 int) {
+	var nu [32 * 20]byte
+	l := len(nu)
+	if gamma1 == gamma1TwoPower17 {
+		l = 32 * 18
+	}
+	v := nu[:l]
+	H := sha3.NewSHAKE256()
+	H.Write(derivedSeed)
+	H.Read(v)
+
+	switch gamma1 {
+	case gamma1TwoPower17:
+		bitUnpackSignedTwoPower17(v, dst)
+	case gamma1TwoPower19:
+		bitUnpackSignedTwoPower19(v, dst)
+	default:
+		panic("mldsa: invalid gamma1 value")
+	}
+}
+
+// See FIPS 204, Algorithm 34, ExpandMask()
+func expandMask(derivedSeed []byte, gamma1 int) (f ringElement) {
+	expandMaskInto(&f, derivedSeed, gamma1)
+	return
+}
+
+// samples a polynomial with coefficients in the range {-1..1}.
+// The number of non zero values (hamming weight) is given by tau
+//
+// See FIPS 204, Algorithm 29, SampleInBall()
+// This function is assumed to not be constant time.
+// The algorithm is based on Durstenfeld's version of the Fisher-Yates shuffle.
+//
+// Note that the coefficients returned by this implementation are positive
+// i.e one of q-1, 0, or 1.
+func sampleInBallInto(dst *ringElement, seed []byte, tao int) {
+	*dst = ringElement{}
+	H := sha3.NewSHAKE256()
+	H.Write(seed)
+
+	var buf [64]byte
+	var index byte
+	var signs uint64
+
+	H.Read(buf[:])
+	offset := 8
+	signs = uint64(buf[0]) | uint64(buf[1])<<8 | uint64(buf[2])<<16 | uint64(buf[3])<<24
+	signs |= uint64(buf[4])<<32 | uint64(buf[5])<<40 | uint64(buf[6])<<48 | uint64(buf[7])<<56
+
+	for end := 256 - tao; end < 256; end++ {
+		for {
+			if offset == 64 {
+				H.Read(buf[:])
+				offset = 0
+			}
+
+			index = buf[offset]
+			offset++
+			if index <= byte(end) {
+				break
+			}
+		}
+		dst[end] = dst[index]
+		dst[index] = fieldSub(1, fieldElement(2*(signs&1)))
+		signs >>= 1
+	}
+}
+
+func sampleInBall(seed []byte, tao int) (f ringElement) {
+	sampleInBallInto(&f, seed, tao)
+	return
+}

@@ -1,0 +1,126 @@
+package padding
+
+import (
+	"crypto/subtle"
+	"errors"
+
+	"github.com/emmansun/gmsm/internal/byteorder"
+)
+
+// The padded data comprises (in this order):
+//
+// - The length of the unpadded data (in bits) expressed in big-endian binary in n bits (i.e. one cipher block)
+// - The unpadded data
+// - As many (possibly none) bits with value 0 as are required to bring the total length to a multiple of n bits
+// It is not necessary to transmit or store the padding bits, because the recipient can regenerate them, knowing the length of the unpadded data and the padding method used.
+//
+// https://en.wikipedia.org/wiki/ISO/IEC_9797-1#Padding_method_3
+// also GB/T 17964-2021 C.4 Padding method 3
+type iso9797M3Padding uint
+
+func (pad iso9797M3Padding) BlockSize() int {
+	return int(pad)
+}
+
+func (pad iso9797M3Padding) Pad(src []byte) []byte {
+	srcLen := len(src)
+	overhead := pad.BlockSize() - srcLen%pad.BlockSize()
+	if overhead == pad.BlockSize() && srcLen > 0 {
+		overhead = 0
+	}
+
+	if srcLen > (int(^uint(0)>>1) - overhead - pad.BlockSize()) {
+		panic("padding: total length overflow")
+	}
+
+	var head, tail []byte
+	total := srcLen + overhead + pad.BlockSize()
+
+	if cap(src) >= total {
+		head = src[:total]
+	} else {
+		head = make([]byte, total)
+	}
+
+	tail = head[srcLen+pad.BlockSize():]
+	clear(head[:pad.BlockSize()])
+	copy(head[pad.BlockSize():], src)
+	if overhead > 0 {
+		clear(tail)
+	}
+	byteorder.BEPutUint64(head[8:], uint64(srcLen*8))
+	return head
+}
+
+// Unpad decrypted plaintext, non-constant-time
+func (pad iso9797M3Padding) Unpad(src []byte) ([]byte, error) {
+	srcLen := len(src)
+	if srcLen < 2*pad.BlockSize() || srcLen%pad.BlockSize() != 0 {
+		return nil, errors.New("padding: invalid src length")
+	}
+	for _, b := range src[:8] {
+		if b != 0 {
+			return nil, errors.New("padding: invalid padding header")
+		}
+	}
+	dstLen := int(byteorder.BEUint64(src[8:pad.BlockSize()]) / 8)
+	if dstLen < 0 || dstLen > srcLen-pad.BlockSize() {
+		return nil, errors.New("padding: invalid padding header")
+	}
+	padded := src[pad.BlockSize()+dstLen:]
+	for _, b := range padded {
+		if b != 0 {
+			return nil, errors.New("padding: invalid padding bytes")
+		}
+	}
+	return src[pad.BlockSize() : pad.BlockSize()+dstLen], nil
+}
+
+// ConstantTimeUnpad removes ISO/IEC 9797-1 Method 3 padding in constant time.
+func (pad iso9797M3Padding) ConstantTimeUnpad(src []byte) ([]byte, error) {
+	srcLen := len(src)
+
+	// Basic length validation (can be non-constant-time as it's a structural check)
+	if srcLen < 2*pad.BlockSize() || srcLen%pad.BlockSize() != 0 {
+		return nil, errors.New("padding: invalid src length")
+	}
+
+	// Constant-time check: first 8 bytes must be 0x00
+	headerOk := 1
+	for i := range 8 {
+		headerOk &= subtle.ConstantTimeByteEq(src[i], 0x00)
+	}
+
+	// Read data length from bytes 8-15 (big-endian, in bits)
+	dstLenBits := byteorder.BEUint64(src[8:pad.BlockSize()])
+	dstLen := int(dstLenBits / 8)
+
+	// Constant-time validation: 0 <= dstLen <= srcLen - blockSize
+	validLen := subtle.ConstantTimeLessOrEq(0, dstLen) &
+		subtle.ConstantTimeLessOrEq(dstLen, srcLen-pad.BlockSize())
+
+	// Constant-time check: all padding bytes (after data) must be 0x00
+	// We must check all possible padding positions to maintain constant time
+	paddingOk := 1
+	maxPaddingLen := srcLen - pad.BlockSize()
+
+	for i := range maxPaddingLen {
+		pos := pad.BlockSize() + i
+
+		// Check if this position is in the padding range (i >= dstLen)
+		inPadding := subtle.ConstantTimeLessOrEq(dstLen, i)
+
+		// Verify the byte is 0x00
+		isZero := subtle.ConstantTimeByteEq(src[pos], 0x00)
+
+		// Update paddingOk only if this position should be padding
+		paddingOk &= subtle.ConstantTimeSelect(inPadding, isZero, 1)
+	}
+
+	// Combine all validation checks
+	if (headerOk & validLen & paddingOk) == 0 {
+		return nil, errors.New("padding: invalid padding")
+	}
+
+	return src[pad.BlockSize() : pad.BlockSize()+dstLen], nil
+}

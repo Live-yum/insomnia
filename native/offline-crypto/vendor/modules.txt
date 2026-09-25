@@ -1,0 +1,43 @@
+# github.com/emmansun/gmsm v0.44.1
+## explicit; go 1.25.0
+github.com/emmansun/gmsm/cipher
+github.com/emmansun/gmsm/ecdh
+github.com/emmansun/gmsm/internal/alias
+github.com/emmansun/gmsm/internal/bigmod
+github.com/emmansun/gmsm/internal/byteorder
+github.com/emmansun/gmsm/internal/cache
+github.com/emmansun/gmsm/internal/cipher/gcmsiv
+github.com/emmansun/gmsm/internal/cipher/xts
+github.com/emmansun/gmsm/internal/cpuid
+github.com/emmansun/gmsm/internal/deps/cpu
+github.com/emmansun/gmsm/internal/godebug
+github.com/emmansun/gmsm/internal/keccakx4
+github.com/emmansun/gmsm/internal/randutil
+github.com/emmansun/gmsm/internal/sm2
+github.com/emmansun/gmsm/internal/sm2ec
+github.com/emmansun/gmsm/internal/sm2ec/fiat
+github.com/emmansun/gmsm/internal/sm3
+github.com/emmansun/gmsm/internal/sm4
+github.com/emmansun/gmsm/internal/sm9
+github.com/emmansun/gmsm/internal/sm9/bn256
+github.com/emmansun/gmsm/internal/subtle
+github.com/emmansun/gmsm/mldsa
+github.com/emmansun/gmsm/padding
+github.com/emmansun/gmsm/pkcs
+github.com/emmansun/gmsm/pkcs/internal/md2
+github.com/emmansun/gmsm/pkcs/internal/rc2
+github.com/emmansun/gmsm/pkcs8
+github.com/emmansun/gmsm/shake
+github.com/emmansun/gmsm/slhdsa
+github.com/emmansun/gmsm/sm2
+github.com/emmansun/gmsm/sm2/sm2ec
+github.com/emmansun/gmsm/sm3
+github.com/emmansun/gmsm/sm4
+github.com/emmansun/gmsm/sm9
+github.com/emmansun/gmsm/smx509
+# golang.org/x/crypto v0.54.0
+## explicit; go 1.25.0
+golang.org/x/crypto/cryptobyte
+golang.org/x/crypto/cryptobyte/asn1
+golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/scrypt
