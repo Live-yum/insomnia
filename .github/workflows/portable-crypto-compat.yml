@@ -1,0 +1,120 @@
+name: Validate portable cryptographic primitives
+on:
+  push:
+    branches: [offline/portable-crypto-compat]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: portable-crypto-compat
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install only locked application build tools
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Resolve the explicitly pinned build-only crypto closure without lifecycle scripts
+        run: |
+          npm install --prefix scripts/offline/crypto-provider --ignore-scripts --no-audit --no-fund
+          npm audit --prefix scripts/offline/crypto-provider --omit=dev --audit-level=high
+          node scripts/offline/build-crypto-provider.cjs
+          python3 scripts/offline/integrate-portable-crypto.py
+      - name: Require existing and new algorithms, negative cases and independent OpenSSL interoperability
+        run: |
+          node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs scripts/offline/crypto-openssl-interop.test.cjs
+          git diff --check
+          mkdir -p "$RUNNER_TEMP/crypto-patch"
+          git add packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/crypto-core.cjs packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/primitives.generated.cjs packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/PRIMITIVES-LICENSE.txt packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/PRIMITIVES.json scripts/offline/crypto-provider/package-lock.json
+          git diff --cached --binary > "$RUNNER_TEMP/crypto-patch/validated.patch"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: portable-crypto-reviewed-patch
+          path: ${{ runner.temp }}/crypto-patch/validated.patch
+          if-no-files-found: error
+          retention-days: 7
+  native:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: portable-crypto-reviewed-patch
+          path: crypto-patch
+      - shell: bash
+        run: git apply --check crypto-patch/validated.patch && git apply crypto-patch/validated.patch
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - shell: bash
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - uses: ./.github/actions/prepare-electron
+      - name: Verify every crypto operation in the real Electron BoringSSL runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs
+          exe="$(node -p 'require("electron")')"
+          ELECTRON_RUN_AS_NODE=1 "$exe" --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs
+          python -m unittest discover -s scripts/offline -p 'test_safe_archive.py' -v
+  commit:
+    needs: [prepare, native]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: portable-crypto-reviewed-patch
+          path: crypto-patch
+      - name: Commit only validated generated crypto data and shared-core adapter changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/portable-crypto-compat
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check crypto-patch/validated.patch
+          git apply --index crypto-patch/validated.patch
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines()
+          base = 'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/'
+          allowed = {base + name for name in ['crypto-core.cjs','primitives.generated.cjs','PRIMITIVES-LICENSE.txt','PRIMITIVES.json']}
+          allowed.add('scripts/offline/crypto-provider/package-lock.json')
+          assert names and set(names) == allowed, names
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(crypto): pin native-tested portable SM2 SM3 SM4 and SHA3 primitives'
+          git push origin HEAD:offline/portable-crypto-compat
+          git log -1 --format='%H %T'
