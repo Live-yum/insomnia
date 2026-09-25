@@ -1,0 +1,43 @@
+name: Offline failure diagnostics
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths: [.github/workflows/offline-diagnostics.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diagnose:
+    if: github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download existing validation reports only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 36034595467 --repo Live-yum/insomnia --name offline-validation-linux-arm64 --dir "$RUNNER_TEMP/offline-diagnostics/native"
+          gh run download 36034595910 --repo Live-yum/insomnia --name offline-full-quality-96056f84ff50a90b664b798c5466708b56bc6979 --dir "$RUNNER_TEMP/offline-diagnostics/quality"
+      - name: Read inert diagnostic data without importing application or plugin code
+        shell: python
+        run: |
+          import json, os, pathlib, re
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'offline-diagnostics'
+          for path in root.rglob('catalog.json'):
+              catalog = json.loads(path.read_text(encoding='utf-8'))
+              print('CATALOG FAILURES', catalog['target'], flush=True)
+              for item in catalog['entries']:
+                  if item['status'] == 'materialization-failed':
+                      print(json.dumps(item, ensure_ascii=True), flush=True)
+          for path in root.rglob('unit-tests.log'):
+              text = re.sub(r'\x1b\[[0-9;]*m', '', path.read_text(encoding='utf-8'))
+              lines = text.splitlines()
+              print('UNIT FAILURE SUMMARY', flush=True)
+              for i, line in enumerate(lines):
+                  if re.search(r'FAIL |Error:|AssertionError|failed|Unhandled', line):
+                      print('\n'.join(lines[max(0, i-2):min(len(lines), i+12)]), flush=True)
+              print('FINAL TEST SUMMARY\n' + '\n'.join(lines[-100:]), flush=True)
