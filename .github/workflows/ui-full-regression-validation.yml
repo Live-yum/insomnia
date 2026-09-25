@@ -1,0 +1,170 @@
+name: Validate all offline UI regressions
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-full-regression-validation.yml, scripts/offline/repair_git_and_fixture_state.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: all-offline-ui-regressions
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply reviewed source and fixture repairs
+        run: |
+          python3 scripts/offline/repair_git_and_fixture_state.py
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          names.append('packages/insomnia-smoke-test/tests/smoke/offline-vault-roundtrip.test.ts')
+          assert all(name.startswith(('packages/insomnia/src/', 'packages/insomnia-smoke-test/')) and name.endswith(('.ts', '.tsx')) for name in names)
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *names], check=True)
+          PY
+      - name: Require zero-warning workspace lint and complete types
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present
+          npm test -w insomnia -- src/common/__tests__/offline-vault-proof.test.ts src/common/__tests__/offline-local-resources.test.ts src/common/__tests__/offline-origin-policy.test.ts
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/repair.patch"
+          git diff --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-git-fixture-repair
+          path: ${{ runner.temp }}/repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-git-fixture-repair
+          path: ${{ runner.temp }}/repair
+      - name: Commit only the validated source without running app or dependency code
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/repair/repair.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          names = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines())
+          allowed = {'packages/insomnia/src/routes/organization.$organizationId.project.$projectId.tsx'}
+          allowed.update('packages/insomnia-smoke-test/' + name for name in ['playwright/launch.ts', 'playwright/pages/project/index.ts', 'tests/smoke/git-sync.test.ts', 'tests/smoke/git-repo-relocation.test.ts', 'tests/smoke/git-local-repos.test.ts', 'tests/smoke/command-palette.test.ts', 'tests/smoke/offline-vault-roundtrip.test.ts'])
+          assert names and names <= allowed, names - allowed
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'fix: allow local Git project navigation and seed authenticated legacy vault fixtures'
+            git push origin HEAD:offline/ui-regression-diagnostics
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git log -1 --format='%H %T'
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Install pinned Electron and keep Chromium sandbox enabled
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Run the complete UI suite, without filtering or retrying assertions
+        run: dbus-run-session -- npm run test:build -w insomnia-smoke-test -- --shard=${{ matrix.shard }}/6 --retries=0 > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 45 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Preserve bounded actual failure and page-context diagnostics
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          root = pathlib.Path('packages/insomnia-smoke-test')
+          raw = (root/'test-results.xml').read_bytes()
+          assert len(raw) < 20 * 1024 * 1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures = []
+          for case in cases:
+              for error in list(case.findall('failure')) + list(case.findall('error')):
+                  text = re.sub(r'\x1b\[[0-9;]*m', '', error.text or '')
+                  failures.append({'file': case.get('classname'), 'name': case.get('name'), 'error': text[:1700]})
+          report = {'cases': len(cases), 'failures': failures, 'skipped': sum(case.find('skipped') is not None for case in cases)}
+          (root/'failure-summary.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+          print(json.dumps(report), flush=True)
+          for file in sorted((root/'traces').rglob('error-context.md')):
+              text = file.read_text(encoding='utf-8')
+              snapshot = text.split('# Page snapshot',1)[-1].split('# Test source',1)[0]
+              print(str(file) + '\n' + snapshot[-6000:], flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: full-ui-regression-${{ matrix.shard }}
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            packages/insomnia-smoke-test/failure-summary.json
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
+  required:
+    if: ${{ always() }}
+    needs: [prepare, commit, ui]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Fail unless every required job completed successfully
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          results = json.loads(os.environ['RESULTS'])
+          assert all(job['result'] == 'success' for job in results.values()), results
+          PY
