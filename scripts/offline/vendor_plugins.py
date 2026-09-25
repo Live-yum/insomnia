@@ -375,10 +375,12 @@ def verify(require_complete: bool = False) -> dict:
 def unpack(archive_path: Path, destination: Path, windows: bool = False) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     expanded, count, prefix = 0, 0, None
-    seen = set()
+    seen = {}
     with tarfile.open(archive_path, 'r:gz') as archive:
         for member in archive:
             count += 1
+            if count > 100000:
+                raise ValueError('Expanded archive exceeds entry limit')
             parts = safe_parts(member.name, windows)
             if prefix is None:
                 prefix = parts[0]
@@ -389,23 +391,43 @@ def unpack(archive_path: Path, destination: Path, windows: bool = False) -> None
             if not member.isfile() or len(parts) < 2:
                 raise ValueError('Links, devices and root-level files are not permitted')
             relative = parts[1:]
-            key = '/'.join(relative).casefold() if windows else '/'.join(relative)
-            if key in seen:
-                raise ValueError('Duplicate or case-colliding archive path')
-            seen.add(key)
+            spelling = '/'.join(relative)
+            key = spelling.casefold() if windows else spelling
             expanded += member.size
-            if count > 100000 or expanded > 512 * 1024 * 1024:
+            if member.size < 0 or expanded > 512 * 1024 * 1024:
                 raise ValueError('Expanded archive exceeds limits')
+            mode = 0o755 if member.mode & 0o111 else 0o644
+            source = archive.extractfile(member)
+            if source is None:
+                raise ValueError('Unreadable archive member')
+            if key in seen:
+                prior_spelling, prior_size, prior_mode, prior_digest = seen[key]
+                # Old npm tarballs sometimes repeat a regular file verbatim. Such
+                # entries describe one unambiguous file, not an overwrite. Never
+                # accept different casing, permissions or bytes, and never apply
+                # last-entry-wins semantics to a conflicting duplicate.
+                if (spelling, member.size, mode) != (prior_spelling, prior_size, prior_mode):
+                    raise ValueError('Conflicting duplicate archive path: ' + spelling)
+                with source:
+                    current_digest = hashlib.file_digest(source, 'sha256').hexdigest()
+                if current_digest != prior_digest:
+                    raise ValueError('Conflicting duplicate archive bytes: ' + spelling)
+                continue
             target = destination.joinpath(*relative)
             if target.is_symlink() or any(p.is_symlink() for p in target.parents):
                 raise ValueError('Symlink extraction destination')
             target.parent.mkdir(parents=True, exist_ok=True)
-            source = archive.extractfile(member)
-            if source is None:
-                raise ValueError('Unreadable archive member')
-            with target.open('wb') as out:
-                shutil.copyfileobj(source, out)
-            target.chmod(0o755 if member.mode & 0o111 else 0o644)
+            digest = hashlib.sha256()
+            written = 0
+            with source, target.open('wb') as out:
+                while chunk := source.read(1024 * 1024):
+                    written += len(chunk)
+                    digest.update(chunk)
+                    out.write(chunk)
+            if written != member.size:
+                raise ValueError('Truncated archive member: ' + spelling)
+            target.chmod(mode)
+            seen[key] = (spelling, member.size, mode, digest.hexdigest())
 
 
 def materialize(output: Path, target: str) -> None:
@@ -426,7 +448,10 @@ def materialize(output: Path, target: str) -> None:
             for package in sorted(entry['dependencies'], key=lambda p: (p['location'].count('/'), p['location'])):
                 safe_parts(package['location'], target == 'win32-x64')
                 archive = package['archive']
-                unpack(VENDOR / archive['file'], dest / package['location'], target == 'win32-x64')
+                try:
+                    unpack(VENDOR / archive['file'], dest / package['location'], target == 'win32-x64')
+                except Exception as error:
+                    raise ValueError(f"{archive['name']}@{archive['version']} ({archive['file']}): {error}") from error
             package_path = dest / 'node_modules' / entry['name']
             package_json = json.loads((package_path / 'package.json').read_text(encoding='utf-8'))
             if package_json.get('name') != entry['name'] or package_json.get('version') != entry['version']:
@@ -437,6 +462,7 @@ def materialize(output: Path, target: str) -> None:
         except Exception as error:
             shutil.rmtree(dest, ignore_errors=True)
             record.update(status='materialization-failed', error=str(error))
+            print(json.dumps({'package': entry['name'], 'materializationError': str(error)}, ensure_ascii=True), flush=True)
         records.append(record)
     write_json(output / 'catalog.json', {'target': target, 'entries': records, 'tested': False, 'sourceSha256': manifest['sourceSha256']})
     print('Materialized plugin profiles:', sum(e['status'] == 'materialized-unreviewed' for e in records), flush=True)
