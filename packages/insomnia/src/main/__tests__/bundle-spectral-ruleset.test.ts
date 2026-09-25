@@ -2,6 +2,15 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
 
+import type * as OfflinePolicy from '~/common/offline-policy';
+
+// Historical online-branch protections remain tested with inert network mocks.
+// bundle-spectral-offline.test.ts independently tests the real offline flag.
+vi.mock('~/common/offline-policy', async importOriginal => ({
+  ...(await importOriginal<typeof OfflinePolicy>()),
+  OFFLINE_BUILD: false,
+}));
+
 // Mock fs and dns so no real files or DNS lookups are needed.
 vi.mock('node:fs', () => ({
   default: {

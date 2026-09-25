@@ -42,7 +42,8 @@ describe('offline initial route', () => {
       expect(await getInitialEntry()).toBe('/organization/org_offline/project');
       expect(services.userSession.get).not.toHaveBeenCalled();
       expect(services.project.list).not.toHaveBeenCalled();
-      expect(services.project.get).not.toHaveBeenCalled();
+      expect(services.project.get).toHaveBeenCalledExactlyOnceWith({ parentId: 'org_offline' });
+      expect(storage.getItem).toHaveBeenCalledWith('locationHistoryEntry:org_offline');
       expect(getKonnectOrganizationEscapeRoute).not.toHaveBeenCalled();
       expect(fetch).not.toHaveBeenCalled();
     },

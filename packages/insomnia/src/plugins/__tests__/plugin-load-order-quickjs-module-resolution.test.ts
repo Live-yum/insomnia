@@ -115,12 +115,15 @@ describe('an elevated plugin loaded before a sandboxed sibling', () => {
         module.exports = {};
       `,
     );
-    // Sorts second; left in the default sandboxed mode.
+    // Explicitly enabled test fixture; still uses the default sandboxed mode.
     writePluginFolder(tempDir, '1-sandboxed', sandboxedPluginName, 'module.exports = {};');
 
     await services.settings.update(settings, {
       pluginPath: tempDir,
-      pluginConfig: { [elevatedPluginName]: { disabled: false, elevated: true } },
+      pluginConfig: {
+        [elevatedPluginName]: { disabled: false, elevated: true },
+        [sandboxedPluginName]: { disabled: false },
+      },
       pluginSandboxEnabled: true,
     });
 

@@ -27,7 +27,7 @@ vi.mock('insomnia-data', () => ({
 
 import { services } from 'insomnia-data';
 
-import { getAppBundlePlugins } from '~/common/constants';
+import * as appConstants from '~/common/constants';
 import { fetchFromTemplateWorkerDatabase } from '~/common/templating/liquid-extension-worker';
 
 import type { Plugin } from '../index';
@@ -57,7 +57,11 @@ const makePlugin = (overrides: Partial<Plugin> = {}): Plugin => ({
   ...overrides,
 });
 
+let bundlePluginSpy: ReturnType<typeof vi.spyOn> | undefined;
+
 afterEach(() => {
+  bundlePluginSpy?.mockRestore();
+  bundlePluginSpy = undefined;
   _testOnlySetPlugins(null);
 });
 
@@ -417,7 +421,8 @@ describe('getPlugins: discovery', () => {
   it('rejects a plugin folder that declares the name of one of Insomnia\'s own bundled plugins', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'insomnia-plugin-discovery-test-'));
     const pluginBase = path.join(root, 'plugins');
-    const bundlePluginName = getAppBundlePlugins()[0].name;
+    const bundlePluginName = 'insomnia-plugin-test-bundle';
+    bundlePluginSpy = vi.spyOn(appConstants, 'getAppBundlePlugins').mockReturnValue([{ name: bundlePluginName }]);
     writePlugin(path.join(pluginBase, ...bundlePluginName.split('/')), bundlePluginName);
 
     vi.mocked(services.settings.get).mockResolvedValue({

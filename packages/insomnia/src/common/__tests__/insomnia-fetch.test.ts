@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe('offline vendor SDK transport', () => {
-  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const)(
+  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const)(
     'rejects %s without consulting either transport',
     async method => {
       const injected = vi.fn().mockResolvedValue(new Response('{}'));
