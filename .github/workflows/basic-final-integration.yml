@@ -31,15 +31,22 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - name: Merge only reviewed source changes and repair actual UI failures
-        run: python3 scripts/offline/integrate-reviewed-basic.py
+        run: |
+          python3 scripts/offline/integrate-reviewed-basic.py
+          python3 scripts/offline/repair-crypto-style.py
       - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
       - uses: ./.github/actions/prepare-electron
+      - name: Reproduce pinned cryptographic compiler output without changing a byte
+        run: |
+          npm ci --prefix scripts/offline/crypto-provider --ignore-scripts --no-audit --no-fund
+          node scripts/offline/build-crypto-provider.cjs
+          git diff --exit-code -- packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/primitives.generated.cjs packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/PRIMITIVES.json packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/PRIMITIVES-LICENSE.txt
       - name: Format modified source and require zero-warning full lint, types and cycles
         run: |
           python3 - <<'PY'
           import subprocess
           names = subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
-          names = [n for n in names if n.endswith(('.ts','.tsx'))]
+          names = [n for n in names if n.endswith(('.ts','.tsx')) or n.endswith('/portable-crypto.cjs')]
           subprocess.run(['node','node_modules/eslint/bin/eslint.js','--fix','--max-warnings=0',*names],check=True)
           PY
           npm run lint --workspaces --if-present -- --max-warnings=0
@@ -53,7 +60,7 @@ jobs:
           npm run test:unit -w insomnia-inso
           node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs scripts/offline/crypto-openssl-interop.test.cjs
           python3 -m unittest discover -s scripts/offline -p 'test_*.py'
-          git add packages/insomnia/src packages/insomnia-data/src/models/user-session.ts packages/insomnia-smoke-test .github/workflows/test.yml .github/workflows/test-e2e.yml .github/workflows/offline-complete-build.yml scripts/offline/run-with-ci-keyring.sh
+          git add packages/insomnia/src packages/insomnia-data/src/models/user-session.ts packages/insomnia-smoke-test .github/workflows/test.yml .github/workflows/test-e2e.yml .github/workflows/offline-complete-build.yml scripts/offline/run-with-ci-keyring.sh eslint.config.mjs scripts/offline/portable-crypto.test.cjs
           git diff --cached --check
           git diff --cached --binary > "$RUNNER_TEMP/validated.patch"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -92,7 +99,7 @@ jobs:
           python3 - <<'PY'
           import subprocess
           names = subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
-          exact = {'scripts/offline/run-with-ci-keyring.sh','.github/workflows/test.yml','.github/workflows/test-e2e.yml','.github/workflows/offline-complete-build.yml'}
+          exact = {'scripts/offline/run-with-ci-keyring.sh','scripts/offline/portable-crypto.test.cjs','eslint.config.mjs','.github/workflows/test.yml','.github/workflows/test-e2e.yml','.github/workflows/offline-complete-build.yml','packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/portable-crypto.cjs'}
           prefixes = ('packages/insomnia/src/','packages/insomnia-smoke-test/','packages/insomnia-data/src/models/user-session.ts')
           assert names and all(n in exact or n.startswith(prefixes) and n.endswith(('.ts','.tsx')) for n in names), names
           PY
