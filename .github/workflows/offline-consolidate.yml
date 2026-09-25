@@ -41,8 +41,8 @@ jobs:
           node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
           python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
           python3 scripts/offline/vendor_plugins.py verify
-      - name: Export exact tested source patch
-        run: git diff --cached --binary > "$RUNNER_TEMP/consolidated-source.patch"
+      - name: Export exact tested application source patch (workflow definitions are reviewed separately)
+        run: git diff --cached --binary -- . ':(exclude).github/workflows/**' > "$RUNNER_TEMP/consolidated-source.patch"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: consolidated-source
@@ -91,7 +91,6 @@ jobs:
             'scripts/offline/vendor_plugins.py', 'scripts/offline/stage_resources.py',
             'scripts/offline/test_stage_resources.py', 'scripts/offline/test_vendor_plugins.py',
             'scripts/offline/test_vendor_regressions.py', 'scripts/offline/test_vendor_duplicates.py',
-            '.github/workflows/offline-build.yml', '.github/workflows/offline-plugin-snapshot.yml',
             'docs/OFFLINE-CONSOLIDATION.json',
           }
           changed = set(subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines())
