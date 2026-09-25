@@ -4,6 +4,8 @@ import json
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
+subprocess.run(['git', 'fetch', '--no-tags', '--depth=1', 'origin', '61cb41c988e71a17ddff2fc3704d73a723b71b3e'], cwd=ROOT, check=True)
+
 
 def replace(name, before, after, count=1):
     path = ROOT / name
@@ -13,6 +15,7 @@ def replace(name, before, after, count=1):
     assert text.count(before) == count, (name, text.count(before), before[:80])
     path.write_text(text.replace(before, after), encoding='utf-8', newline='\n')
 
+
 # Canonicalize repeated identical glossary entries; refuse conflicting translations.
 def unique_pairs(pairs):
     result = {}
@@ -20,6 +23,8 @@ def unique_pairs(pairs):
         assert key not in result or result[key] == value, key
         result[key] = value
     return result
+
+
 file = ROOT / 'packages/insomnia/src/common/offline-ui-translations.json'
 glossary = json.loads(file.read_text(encoding='utf-8'), object_pairs_hook=unique_pairs)
 glossary['Headers'] = '标头'
@@ -31,13 +36,11 @@ replace(app + 'ui/components/settings/general.tsx', '<div className="relative p-
 replace(app + 'entry.main.ts', "import { initElectronStorage } from '~/main/electron-storage';", "import { initElectronStorage } from '~/main/electron-storage';\nimport { getNativeOfflineLocale } from '~/main/offline-ui-locale';")
 replace(app + 'entry.main.ts', 'initElectronStorage(dataPath);', "initElectronStorage(dataPath);\n// Engine/native controls follow the persisted explicit choice; first launch is zh-CN.\napp.commandLine.appendSwitch('lang', getNativeOfflineLocale());")
 replace(app + 'root.tsx', '<html lang="en" className="size-full overflow-hidden">', '<html lang={getOfflineLocale()} suppressHydrationWarning className="size-full overflow-hidden">')
-replace(app + 'root.tsx', "import { OFFLINE_BUILD } from '~/common/offline-policy';", "import { OFFLINE_BUILD } from '~/common/offline-policy';\nimport { getOfflineLocale } from '~/ui/offline-locale';")
-# Handle persistence errors inside the form, not as an unhandled background rejection.
+replace(app + 'root.tsx', "import { OFFLINE_BUILD, OFFLINE_ENTRY } from '~/common/offline';", "import { OFFLINE_BUILD, OFFLINE_ENTRY } from '~/common/offline';\nimport { getOfflineLocale } from '~/ui/offline-locale';")
 replace(app + 'ui/components/offline-crypto-workbench.tsx', "value => setOfflineLocale(value === 'en-US' ? 'en-US' : 'zh-CN')", "value => { void setOfflineLocale(value === 'en-US' ? 'en-US' : 'zh-CN').catch(() => setError(t('语言设置保存失败，请重试。', 'Language preference could not be saved.'))); }")
 
-# Existing integration cases deliberately select English using the real user
-# preference before asserting legacy English locators. Fresh Chinese acceptance
-# launches the unmodified native application separately, without this fixture.
+# Legacy English UI cases explicitly select English through the real stored
+# user preference. A separate fresh-process test checks the default Chinese UI.
 launch = 'packages/insomnia-smoke-test/playwright/launch.ts'
 replace(launch, '  try {\n', '''  try {
     const languagePage = await app.firstWindow();
@@ -51,9 +54,6 @@ replace(launch, '  try {\n', '''  try {
     });
     await languagePage.reload();
 ''')
-
-# Existing broad smoke exercises the real English preference after checking
-# the default Chinese shell; the separate locale suite verifies Chinese forms.
 smoke = 'scripts/offline/smoke.mjs'
 replace(smoke, "  await page.getByTestId('offline-mode').waitFor();\n  assert.match", '''  await page.getByTestId('offline-mode').waitFor();
   assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');

@@ -35,7 +35,6 @@ function transform(source, fileName, native = false) {
       const key = known(expr.text);
       if (key) add(expr.getStart(sf), expr.end, `${fn}(${JSON.stringify(expr.text)})`, key);
     } else if (ts.isConditionalExpression(expr)) {
-      // Never translate the comparison/condition, only its rendered alternatives.
       expression(expr.whenTrue); expression(expr.whenFalse);
     } else if (ts.isParenthesizedExpression(expr)) {
       expression(expr.expression);
@@ -77,6 +76,7 @@ function transform(source, fileName, native = false) {
       }
       if (ts.isJsxExpression(node) && (ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent))) {
         expression(node.expression);
+        ts.forEachChild(node, visit);
         return;
       }
     }
@@ -92,7 +92,6 @@ function transform(source, fileName, native = false) {
     limit = edit.start;
   }
   if (edits.length && !source.includes(native ? "from '~/main/offline-ui-locale'" : "from '~/ui/translate-offline'")) {
-    // Preserve a leading directive prologue when present.
     let insertion = 0;
     for (const statement of sf.statements) {
       if (!ts.isExpressionStatement(statement) || !ts.isStringLiteral(statement.expression)) break;
