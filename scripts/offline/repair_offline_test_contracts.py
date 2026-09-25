@@ -54,3 +54,13 @@ test('AI URL deactivation preserves the local configuration without enabling clo
 '''
 file.write_text(text[:start] + replacement + text[end:], encoding='utf-8', newline='\n')
 print(file.relative_to(ROOT))
+# The new-project form initially displays all storage radio buttons. There is
+# no preselected existing-project summary to expand. Assert that real state,
+# rather than branching inside tests or suppressing Playwright's warning.
+conditional = "    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });\n    if (await change.isVisible()) await change.click();\n"
+for name, count in [('cloud-sync.test.ts', 1), ('disable-git-sync.test.ts', 2)]:
+    file = ROOT / 'packages/insomnia-smoke-test/tests/smoke' / name
+    text = file.read_text(encoding='utf-8')
+    assert text.count(conditional) == count, name
+    file.write_text(text.replace(conditional, ''), encoding='utf-8', newline='\n')
+    print(file.relative_to(ROOT))
