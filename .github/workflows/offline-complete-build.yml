@@ -156,6 +156,8 @@ jobs:
         run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
       - name: Require every full-catalog resource byte in the native output
         run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" --target "$RESOURCE_TARGET"
+      - name: Packaged critical tests for requests, scripts, code generation, custom CA and restart
+        run: bash scripts/offline/run-critical-tests.sh
       - name: Windows clean-profile UI, full catalog, crypto and business API smoke
         if: runner.os == 'Windows'
         run: node scripts/offline/smoke.mjs > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }

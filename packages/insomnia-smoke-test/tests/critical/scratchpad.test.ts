@@ -1,9 +1,14 @@
+import { expect } from '@playwright/test';
+
+import { createOfflineTestProject } from '../../playwright/offline-project';
 import { test } from '../../playwright/test';
 
-test('can open scratchpad', async ({ page }) => {
-  await page.getByTestId('user-dropdown').filter({ visible: true }).click();
-  await page.getByText('Log Out').click();
-  await page.getByRole('button', { name: 'Log Out' }).click();
-  await page.getByLabel('Use local Scratch Pad').click();
-  await page.getByText('Unlock full features').click();
+test('local projects and request collections are available without a vendor account', async ({ app, page, insomnia }) => {
+  await createOfflineTestProject(app, page, 'Account-free workspace');
+  await insomnia.projectPage.createCollection('Offline request collection');
+  await expect(page.getByTestId('offline-mode')).toBeVisible();
+  await expect(page.getByText('Unlock full features', { exact: true })).toHaveCount(0);
+  const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+  expect(session.id).toBeFalsy();
+  expect(session.accountId).toBeFalsy();
 });
