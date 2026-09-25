@@ -1,0 +1,28 @@
+name: Inspect crypto form labels
+on:
+  push:
+    branches: [offline/basic-crypto-workbench]
+    paths: [.github/workflows/crypto-ui-label-inspection.yml]
+permissions:
+  actions: read
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read existing test DOM without executing repository or artifact code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 36158633529 --repo Live-yum/insomnia --name crypto-ui-diagnostics --dir reports
+          python3 - <<'PY'
+          import pathlib, re
+          for file in pathlib.Path('reports').rglob('crypto-ui-page.txt'):
+              assert file.is_file() and not file.is_symlink() and file.stat().st_size < 5000000
+              text = file.read_text(encoding='utf-8')
+              for item in re.findall(r'<label\b[^>]*>.*?</label>', text, re.S):
+                  if '操作类别' in item or '界面语言' in item or '密钥' in item:
+                      print(item[:5000], flush=True)
+              print('DIALOGS', re.findall(r'<[^>]*role="dialog"[^>]*>', text), flush=True)
+          PY
