@@ -2,92 +2,43 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-const mockCredentials = {
-  email: 'insomnia-test@konghq.com',
-  gitUsername: 'insomnia-test',
-  username: 'insomnia',
-  token: '12345',
-};
-
-test.describe('Git Sync', () => {
-  test.describe('with git sync feature flag disabled', () => {
-    test.beforeEach(async ({ request }) => {
-      // Disable git sync feature flag for organization
-      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
-        data: {
-          features: {
-            gitSync: {
-              enabled: false,
-            },
-          },
-        },
-      });
+// The vendor's billing/storage flags must not disable user-owned local Git in
+// this offline fork. No vendor session or remote repository is needed here.
+test.describe('Offline Git capability does not depend on vendor flags', () => {
+  test.afterEach(async ({ request }) => {
+    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
+      data: { features: { gitSync: { enabled: true } } },
     });
-
-    test.afterEach(async ({ request }) => {
-      // Re-enable git sync feature flag for organization
-      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
-        data: {
-          features: {
-            gitSync: {
-              enabled: true,
-            },
-          },
-        },
-      });
-    });
-
-    test('should disable git sync usage', async ({ page }) => {
-      await page.getByTestId('settings-button').click();
-      await page.getByRole('tab', { name: 'Credentials' }).click();
-      await page.getByRole('button', { name: 'Create Git Credential' }).click();
-      await page.getByText('Access Token').click();
-      await page.getByRole('textbox', { name: 'Author Email' }).fill(mockCredentials.email);
-      await page.getByRole('textbox', { name: 'Author Name' }).fill(mockCredentials.gitUsername);
-      await page.getByRole('textbox', { name: 'Username', exact: true }).fill(mockCredentials.username);
-      await page.getByRole('textbox', { name: 'Git Access Token' }).fill(mockCredentials.token);
-      await page.getByRole('button', { name: 'Save Credential' }).click();
-      await page.getByRole('button', { name: 'Modal Close Button' }).click();
-      await page.getByRole('button', { name: 'Create new Project' }).click();
-      await page.getByLabel('Project Type Item: git').click();
-      await expect.soft(page.getByLabel('Git Sync Feature Disabled Banner')).toBeVisible();
-
-      await expect.soft(page.getByLabel('Git Setup Form')).toBeHidden();
-      await expect.soft(page.getByRole('button', { name: 'Scan for files' })).toBeDisabled();
+    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/storage-rule', {
+      data: { enableCloudSync: true, enableGitSync: true, enableLocalVault: true, isOverridden: false },
     });
   });
 
-  test.describe('with git storage rule disabled', () => {
-    test.beforeEach(async ({ request }) => {
-      // Set storage rule to disable git sync
-      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/storage-rule', {
-        data: {
-          enableCloudSync: true,
-          enableGitSync: false,
-          enableLocalVault: true,
-          isOverridden: false,
-        },
-      });
+  test('local Git is available even when the test vendor reports an unpaid feature', async ({ page, request }) => {
+    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/features', {
+      data: { features: { gitSync: { enabled: false } } },
     });
+    await page.getByRole('button', { name: 'Create new Project' }).click();
+    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });
+    if (await change.isVisible()) await change.click();
+    await expect(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
+    await expect(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
+    await page.getByLabel('Project Type Item: git', { exact: true }).click();
+    await expect(page.getByLabel('Git Setup Form')).toBeVisible();
+    await expect(page.getByLabel('Git Sync Feature Disabled Banner')).toBeHidden();
+    const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+    expect(session.id).toBe('');
+  });
 
-    test.afterEach(async ({ request }) => {
-      // reset the storage rule after test
-      await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/storage-rule', {
-        data: {
-          enableCloudSync: true,
-          enableGitSync: true,
-          enableLocalVault: true,
-          isOverridden: false,
-        },
-      });
+  test('vendor storage rules neither enable cloud nor disable local Git', async ({ page, request }) => {
+    await request.post('http://127.0.0.1:4010/v1/test-utils/organizations/storage-rule', {
+      data: { enableCloudSync: true, enableGitSync: false, enableLocalVault: false, isOverridden: true },
     });
-
-    test('disable git sync selection', async ({ page }) => {
-      await page.getByRole('button', { name: 'Create new Project' }).click();
-      const banner = page.getByLabel('Project Storage Restriction Banner');
-      await expect.soft(banner).toBeVisible();
-      await expect.soft(banner).not.toHaveText('Git Sync');
-      await expect.soft(page.getByLabel('Project Type: git')).toBeDisabled();
-    });
+    await page.getByRole('button', { name: 'Create new Project' }).click();
+    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });
+    if (await change.isVisible()) await change.click();
+    await expect(page.getByLabel('Project Type: local', { exact: true })).toBeEnabled();
+    await expect(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
+    await expect(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
   });
 });
