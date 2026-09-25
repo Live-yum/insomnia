@@ -16,8 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SOURCE_SHA: 6d43d0fee20edb2d56255470233fd5edd42e9972
-  VALIDATION_RUN: '36097383740'
+  SOURCE_SHA: 40b6e4c97dcc68b9e7d49b3886491948c866d379
+  VALIDATION_RUN: '36098852270'
   RELEASE_TAG: offline-full-v13.3.0-rc.1
 
 jobs:
