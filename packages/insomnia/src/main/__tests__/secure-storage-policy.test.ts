@@ -44,7 +44,7 @@ describe('protected native credential storage', () => {
     expect(storage.getSelectedStorageBackend).not.toHaveBeenCalled();
   });
 
-  it.each(['', 'plaintext-password', 'abc', '01zz', 'aa\n'])('rejects invalid ciphertext rather than returning it: %s', input => {
+  it.each(['', 'plaintext-password', 'abc', '01zz', 'aa\n', 'abc\n'])('rejects invalid ciphertext rather than returning it: %s', input => {
     const storage = native();
     expect(() => decryptWithNativeStorage(storage, input, 'linux')).toThrow('not valid OS-encrypted data');
     expect(storage.decryptString).not.toHaveBeenCalled();

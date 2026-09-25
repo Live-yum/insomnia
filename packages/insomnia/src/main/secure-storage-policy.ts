@@ -31,7 +31,7 @@ export function encryptWithNativeStorage(storage: NativeSecretStorage, value: st
 
 export function decryptWithNativeStorage(storage: NativeSecretStorage, value: string, platform: NodeJS.Platform): string {
   requireProtectedBackend(storage, platform);
-  if (typeof value !== 'string' || value.length === 0 || value.length % 2 !== 0 || !/^[\da-f]+$/i.test(value)) {
+  if (typeof value !== 'string' || value.length === 0 || value.length % 2 !== 0 || /[^\da-f]/i.test(value)) {
     throw new Error('This credential is not valid OS-encrypted data. Re-enter it through the credential settings.');
   }
   try {

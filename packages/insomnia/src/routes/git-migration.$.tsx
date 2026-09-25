@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link as ExternalLink } from '~/ui/components/base/link';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
@@ -53,8 +54,9 @@ const MigrationView = () => {
   // if they haven't seen it yet; otherwise go to the organization view.
   // Guard `window` so this stays safe during SSR (entry.server.tsx) — the value is
   // only read once the completion links render, which only happens client-side.
-  const postMigrationPath =
-    typeof window !== 'undefined' && window.localStorage.getItem('hasSeenOnboardingV13')
+  const postMigrationPath = OFFLINE_BUILD
+    ? `/organization/${OFFLINE_ORGANIZATION_ID}/project`
+    : typeof window !== 'undefined' && window.localStorage.getItem('hasSeenOnboardingV13')
       ? '/organization'
       : '/onboarding';
 

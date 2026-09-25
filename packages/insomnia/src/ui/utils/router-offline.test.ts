@@ -96,7 +96,7 @@ describe('real offline initial route', () => {
     expect(await getInitialEntry()).toBe('/organization/org_offline/project');
     expect(services.project.update).toHaveBeenCalledTimes(1);
     expect(services.project.update).toHaveBeenCalledWith(legacy, { parentId: 'org_offline' });
-    expect(services.project.update.mock.invocationCallOrder[0]).toBeLessThan(services.project.get.mock.invocationCallOrder[0]);
+    expect(vi.mocked(services.project.update).mock.invocationCallOrder[0]).toBeLessThan(vi.mocked(services.project.get).mock.invocationCallOrder[0]);
   });
 
   it.each(['git_pending', 'gr_pending'])('checks required local filesystem migration for %s', async gitRepositoryId => {
