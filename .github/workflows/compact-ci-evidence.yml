@@ -20,7 +20,9 @@ jobs:
           import json, pathlib, re, subprocess
           repo = 'Live-yum/insomnia'
           def api(path):
-              return subprocess.check_output(['gh', 'api', 'repos/' + repo + '/' + path], text=True)
+              raw = subprocess.check_output(['gh', 'api', '--allow-escape-sequences', 'repos/' + repo + '/' + path], text=True)
+              raw = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', raw)
+              return ''.join(char for char in raw if char in '\n\r\t' or ord(char) >= 32)
           for run in [36168010429, 36168010826, 36168652090]:
               data = json.loads(api(f'actions/runs/{run}/jobs?per_page=100'))
               for job in data['jobs']:
@@ -28,8 +30,7 @@ jobs:
                       continue
                   if 'windows-2025' in job['name'] or 'ubuntu-24.04-arm' in job['name']:
                       continue
-                  text = re.sub(r'\x1b\[[0-9;]*[mK]', '', api(f'actions/jobs/{job["id"]}/logs'))
-                  lines = text.splitlines()
+                  lines = api(f'actions/jobs/{job["id"]}/logs').splitlines()
                   selected = set()
                   for index, line in enumerate(lines):
                       if ('FAIL ' in line or 'AssertionError' in line or 'Code Finding' in line or
