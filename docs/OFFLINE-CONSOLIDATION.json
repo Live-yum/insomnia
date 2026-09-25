@@ -1,0 +1,24 @@
+{
+  "base": "e81df4a041a79a4c3f9e5f77a000c7b4f9f56883",
+  "selectedCatalogSource": "93200ceade08b65289472d66c01a5126a44055a0",
+  "preservedReviewedCrypto": true,
+  "runtimeValidated": false,
+  "copiedPaths": [
+    "packages/insomnia/src/plugins/offline-catalog.ts",
+    "scripts/offline/vendor_plugins.py",
+    "scripts/offline/stage_resources.py",
+    "scripts/offline/test_stage_resources.py",
+    "scripts/offline/test_vendor_plugins.py",
+    "scripts/offline/test_vendor_regressions.py",
+    "scripts/offline/test_vendor_duplicates.py"
+  ],
+  "files": {
+    "packages/insomnia/src/plugins/offline-catalog.ts": "bd24b986d3bc6840349762574a5c1bfa297fd4e778db2c1b758f682cdf75b2ed",
+    "scripts/offline/vendor_plugins.py": "d1f7532eda58b75972ea8b0f1d2207177309171a4b3acf3fd0ddc0d3ab24e3d4",
+    "scripts/offline/stage_resources.py": "a9cbd7881e593856283f89f2717d73b1152f47a184bcffbe254d2f760a280643",
+    "scripts/offline/test_stage_resources.py": "564f8f8d9dff03d93ea4c177baeb75528560e876e95da3f9485cd57561301a90",
+    "scripts/offline/test_vendor_plugins.py": "c9f58d7dba710a46cba0c74bd57e4beae72ac4845282b7dbd5c05145b10f229e",
+    "scripts/offline/test_vendor_regressions.py": "4d4298258970cdcfa564cc4f9725fe42b8f944350f56b9426951342221035568",
+    "scripts/offline/test_vendor_duplicates.py": "18a63587b916cfdffda87f93539c2e17b3d77cf0b3908a14175b01018e81aed9"
+  }
+}

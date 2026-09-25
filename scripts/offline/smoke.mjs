@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { verifyCompleteSmoke } from './verify-complete-smoke.mjs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -10,6 +11,8 @@ const profile = await fs.mkdtemp(path.join(os.tmpdir(), 'insomnia-offline-smoke-
 const env = { ...process.env, NODE_ENV: 'production', INSOMNIA_OFFLINE_DATA_PATH: profile };
 delete env.INSOMNIA_DATA_PATH;
 delete env.INSOMNIA_SESSION;
+delete env.INSOMNIA_OFFLINE_PLUGIN_DIR;
+for (const key of ['GH_TOKEN', 'GITHUB_TOKEN', 'NODE_AUTH_TOKEN', 'NPM_TOKEN']) delete env[key];
 delete env.INSOMNIA_OFFLINE_BROWSER_ORIGINS;
 const app = await electron.launch({ executablePath: path.resolve(executablePath), env, timeout: 60000 });
 let page;
@@ -64,6 +67,7 @@ try {
   await page.reload();
   await page.getByTestId('offline-mode').waitFor();
   assert.equal(page.url(), projectUrl);
+  await verifyCompleteSmoke(app, page);
   console.log('Packaged offline smoke passed: clean profile, no login, local project UI, persisted route, bundled plugins, HMAC bridge, blocked vendor fetch, disabled updates.');
 } catch (error) {
   await fs.mkdir('offline-test-results', { recursive: true });
