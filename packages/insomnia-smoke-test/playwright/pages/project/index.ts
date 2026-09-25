@@ -136,7 +136,7 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType], { exact: true }).click();
   }
 
   /**

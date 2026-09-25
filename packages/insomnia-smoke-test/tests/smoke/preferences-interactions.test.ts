@@ -5,12 +5,12 @@ import { test } from '../../playwright/test';
 
 test('Preferences through click', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
 });
 
 test('Preferences through keyboard shortcut', async ({ page }) => {
   await page.locator('.app').press(process.platform === 'darwin' ? 'Meta+,' : 'Control+,');
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
 });
 
 test('AI URL settings persist advanced options', async ({ page }) => {
@@ -27,7 +27,7 @@ test('AI URL settings persist advanced options', async ({ page }) => {
   });
 
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.getByRole('tab', { name: 'AI Settings' }).click();
   await page.getByRole('button', { name: 'LLM URL Active' }).click();
 
@@ -54,7 +54,7 @@ test('AI URL settings can deactivate active backend', async ({ page }) => {
   });
 
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.getByRole('tab', { name: 'AI Settings' }).click();
   await page.getByRole('button', { name: 'LLM URL Active' }).click();
 
@@ -102,7 +102,7 @@ test('Check filter responses by environment preference', async ({ app, page, ins
 
   // Set filter responses by environment
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.locator('text=Filter responses by environment').click();
   await page.locator('.app').press('Escape');
 
@@ -116,7 +116,7 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   const responsePane = page.getByTestId('response-pane');
 
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.locator('[name="timeout"]').fill('1000');
 
   await page.getByRole('tab', { name: 'Proxy' }).click();
