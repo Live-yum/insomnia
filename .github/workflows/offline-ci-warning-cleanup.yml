@@ -1,0 +1,144 @@
+name: Offline CI warning cleanup
+
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths:
+      - scripts/offline/repair_ci_warnings.py
+      - .github/workflows/offline-ci-warning-cleanup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-ci-warning-source-cleanup
+  cancel-in-progress: false
+
+env:
+  PYTHONUTF8: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  NODE_OPTIONS: --max_old_space_size=6144
+
+jobs:
+  prepare:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/complete-portable'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Prepare diagnostic record
+        run: |
+          mkdir -p "$RUNNER_TEMP/ci-warning-cleanup"
+          git rev-parse HEAD > "$RUNNER_TEMP/ci-warning-cleanup/source.log"
+      - name: Install locked application tools
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/ci-warning-cleanup/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/install.log"; exit 1; }
+      - name: Apply only reviewed artifact pins and locator source fixes
+        run: python3 scripts/offline/repair_ci_warnings.py
+      - name: Require all workspace lint and smoke test lint without any warnings
+        run: |
+          set -euo pipefail
+          npm run lint --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/lint.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/lint.log"; exit 1; }
+          node node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 packages/insomnia-smoke-test/tests > "$RUNNER_TEMP/ci-warning-cleanup/smoke-lint.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/smoke-lint.log"; exit 1; }
+          if grep -E '(^|[[:space:]])[1-9][0-9]* warnings?([[:space:]]|$)' "$RUNNER_TEMP/ci-warning-cleanup/lint.log"; then exit 1; fi
+      - name: Require workspace types and portable workflow regressions
+        run: |
+          npm run type-check --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/types.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/types.log"; exit 1; }
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+      - name: Build application and run all workspace unit tests
+        run: |
+          set -euo pipefail
+          npm run app-build > "$RUNNER_TEMP/ci-warning-cleanup/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/ci-warning-cleanup/build.log"; exit 1; }
+          npm run install-libcurl-node > "$RUNNER_TEMP/ci-warning-cleanup/abi.log" 2>&1 || { cat "$RUNNER_TEMP/ci-warning-cleanup/abi.log"; exit 1; }
+          npm run test --workspaces --if-present > "$RUNNER_TEMP/ci-warning-cleanup/unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ci-warning-cleanup/unit.log"; exit 1; }
+      - name: Export validated source patch and inventory
+        run: |
+          set -euo pipefail
+          git diff --check
+          git diff --stat
+          git diff --binary > "$RUNNER_TEMP/ci-warning-cleanup/validated.patch"
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          for file in sorted(Path('.github').rglob('*.yml')):
+              for line in file.read_text(encoding='utf-8').splitlines():
+                  if re.match(r'\s*(?:-\s*)?uses:', line):
+                      print(str(file) + ': ' + line.strip())
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
+        with:
+          name: ci-warning-cleanup-validated-source
+          path: ${{ runner.temp }}/ci-warning-cleanup/validated.patch
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
+        if: always()
+        with:
+          name: ci-warning-cleanup-diagnostics
+          path: ${{ runner.temp }}/ci-warning-cleanup/*.log
+          if-no-files-found: error
+          retention-days: 7
+
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, Node 24
+        with:
+          name: ci-warning-cleanup-validated-source
+          path: ${{ runner.temp }}/validated-source
+      - name: Commit the tested patch without executing repository or plugin code
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/complete-portable
+          test "$(git rev-parse origin/offline/complete-portable)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/validated-source/validated.patch"
+          if [ ! -s "$patch" ]; then echo 'Source already clean'; exit 0; fi
+          git apply --check "$patch"
+          git apply --index "$patch"
+          python3 - <<'PY'
+          import subprocess
+          tests = {'graphql.test.ts', 'export-openapi-spec.test.ts', 'design-interactions.test.ts', 'dashboard-interactions.test.ts'}
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name for name in tests} | {'eslint.config.mjs'}
+          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          for name in names:
+              if name in allowed:
+                  continue
+              if not name.startswith('.github/') or not name.endswith(('.yml', '.yaml')):
+                  raise SystemExit('Unexpected changed path: ' + name)
+              patch = subprocess.check_output(['git', 'diff', '--cached', '--', name], text=True)
+              for line in patch.splitlines():
+                  if line.startswith(('+++', '---')) or not line.startswith(('+', '-')):
+                      continue
+                  value = line[1:].strip().removeprefix('-').strip()
+                  if not value.startswith(('uses: actions/upload-artifact@', 'uses: actions/download-artifact@')):
+                      raise SystemExit('Unexpected workflow change: ' + name + ': ' + line)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(ci): pin Node 24 artifact actions and use warning-free Playwright locators'
+          git push origin HEAD:offline/complete-portable
+          git log -1 --format='%H %s'
