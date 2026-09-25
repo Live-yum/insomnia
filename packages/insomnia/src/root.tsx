@@ -53,7 +53,7 @@ import { AppHooks } from '~/ui/containers/app-hooks';
 import { ServerDataCacheProvider } from '~/ui/context/app/server-data-context';
 import cssHref from '~/ui/css/styles.css?url';
 import Modals from '~/ui/modals';
-import { getOfflineLocale } from '~/ui/offline-locale';
+import { useOfflineLocale } from '~/ui/offline-locale';
 import { createPlugin } from '~/ui/plugins/create';
 import { setTheme } from '~/ui/plugins/misc';
 import { plugins } from '~/ui/plugins/renderer-bridge';
@@ -217,8 +217,13 @@ export async function clientLoader(_args: Route.ClientLoaderArgs) {
 }
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+  const locale = useOfflineLocale();
+  useEffect(() => {
+    // React does not repair suppressed hydration attributes from prerendered HTML.
+    document.documentElement.lang = locale;
+  }, [locale]);
   return (
-    <html lang={getOfflineLocale()} suppressHydrationWarning className="size-full overflow-hidden">
+    <html lang={locale} suppressHydrationWarning className="size-full overflow-hidden">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

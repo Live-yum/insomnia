@@ -13,7 +13,7 @@ test('importing external vault references preserves the request without cloud au
   await app.evaluate(({ clipboard }, contents) => clipboard.writeText(contents), text);
   await page.getByLabel('Import', { exact: true }).click();
   await page.locator('[data-test-id="import-from-clipboard"]').click();
-  await page.getByRole('button', { name: 'Scan', exact: true }).click();
+  // Clipboard import scans immediately; require its real confirmation dialog.
   await page.getByRole('dialog').getByRole('button', { name: 'Import', exact: true }).click();
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
   const before = await page.evaluate(() => window._dataServicesInvoke('request', 'all'));

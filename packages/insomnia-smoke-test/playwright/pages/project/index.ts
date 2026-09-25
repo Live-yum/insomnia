@@ -1,4 +1,5 @@
 import type { ElectronApplication, Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
