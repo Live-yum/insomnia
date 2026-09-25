@@ -1,0 +1,47 @@
+name: Inspect compact validation evidence
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/compact-ci-evidence.yml]
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read bounded diagnostics only, without running repository or artifact code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import json, pathlib, re, subprocess
+          repo = 'Live-yum/insomnia'
+          def api(path):
+              return subprocess.check_output(['gh', 'api', 'repos/' + repo + '/' + path], text=True)
+          for run in [36168010429, 36168010826, 36168652090]:
+              data = json.loads(api(f'actions/runs/{run}/jobs?per_page=100'))
+              for job in data['jobs']:
+                  if job['conclusion'] != 'failure' or job['name'] in ['required', 'Portable validation required']:
+                      continue
+                  if 'windows-2025' in job['name'] or 'ubuntu-24.04-arm' in job['name']:
+                      continue
+                  text = re.sub(r'\x1b\[[0-9;]*[mK]', '', api(f'actions/jobs/{job["id"]}/logs'))
+                  lines = text.splitlines()
+                  selected = set()
+                  for index, line in enumerate(lines):
+                      if ('FAIL ' in line or 'AssertionError' in line or 'Code Finding' in line or
+                          'error TS' in line or 'Rule ID:' in line or 'Blocking Code' in line or
+                          'Traceback' in line or 'FAILED (' in line or 'test failure' in line.lower()):
+                          selected.update(range(max(0,index-3), min(len(lines),index+24)))
+                  print('JOB', run, job['id'], job['name'], flush=True)
+                  print('\n'.join(lines[index] for index in sorted(selected))[-24000:], flush=True)
+          for target in ['windows-x64', 'linux-arm64']:
+              output = pathlib.Path('budget-' + target)
+              subprocess.run(['gh', 'run', 'download', '36159816365', '--repo', repo,
+                              '--name', 'offline-complete-diagnostics-' + target, '--dir', str(output)], check=True)
+              for file in output.rglob('*'):
+                  if file.is_file() and ('basic-budget' in file.name) and file.stat().st_size < 50000:
+                      print('ACTUAL_PACKAGE_BUDGET', target, file.name, file.read_text(encoding='utf-8')[:16000], flush=True)
