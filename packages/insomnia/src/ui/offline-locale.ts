@@ -10,12 +10,16 @@ export function getOfflineLocale(): OfflineLocale {
   return parseOfflineUiLanguage(window.localStorage.getItem(OFFLINE_UI_LANGUAGE_KEY));
 }
 
-/** Persist both renderer and native-menu preferences; never overwrite a user choice on startup. */
+/** Persist the explicit choice to native storage before reporting success. */
 export async function setOfflineLocale(locale: OfflineLocale): Promise<void> {
   if (locale !== 'zh-CN' && locale !== 'en-US') throw new Error('Unsupported interface language');
   if (typeof window === 'undefined') return;
   if (window.main?.electronStorage) {
     await window.main.electronStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
+    // Reading flushes the native store's debounced write. Immediate restart must
+    // not silently lose a preference after the UI reported it as saved.
+    const persisted = await window.main.electronStorage.getItem(OFFLINE_UI_LANGUAGE_KEY, 'zh-CN');
+    if (persisted !== locale) throw new Error('Language preference was not persisted');
   }
   window.localStorage.setItem(OFFLINE_UI_LANGUAGE_KEY, locale);
   document.documentElement.lang = locale;

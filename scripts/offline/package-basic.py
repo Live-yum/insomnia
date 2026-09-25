@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Archive exact tested native basic bytes, then measure/verify a fresh extraction."""
+"""Archive exact tested basic bytes, then verify fresh extraction and Windows startup."""
 import hashlib
 import json
 import os
@@ -16,6 +16,7 @@ import time
 import zipfile
 
 from safe_archive import extract_verified_archive
+from windows_payload_cleanup import cleanup_windows_test_payload
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -80,14 +81,15 @@ def main():
                 raise RuntimeError('Expected AMD64 executable')
         elif header[:4] != b'\x7fELF' or header[4:6] != b'\x02\x01' or struct.unpack_from('<H', header, 18)[0] != 183:
             raise RuntimeError('Expected AArch64 ELF64')
+    removed = []
     if windows:
         wrapper = read_json(ROOT / 'offline-test-results/windows-wrapper.json')
         if wrapper.get('status') != 'passed' or wrapper.get('debuggerArguments') is not False or wrapper.get('sandboxDisabled') is not False:
             raise RuntimeError('Final Windows wrapper has not passed')
-        if not (build / 'insomnia.dll').is_file():
-            raise RuntimeError('Missing secure wrapper payload')
-        for original in build.glob('Insomnia-origin-*.exe'):
-            original.unlink()
+        # A smoke-run may be terminated before the wrapper deletes its transient
+        # child. It is not a second runtime to ship. Only remove exact-version
+        # copies after verifying every byte matches the preserved insomnia.dll.
+        removed = cleanup_windows_test_payload(build, version)
         launcher = '@echo off\nsetlocal\nset "INSOMNIA_DATA_PATH="\nset "INSOMNIA_OFFLINE_PLUGIN_DIR="\nset "INSOMNIA_OFFLINE_DATA_PATH=%~dp0data"\nif not exist "%INSOMNIA_OFFLINE_DATA_PATH%" mkdir "%INSOMNIA_OFFLINE_DATA_PATH%"\n"%~dp0Insomnia.exe" %*\n'
         (build / 'Start-Insomnia-Offline.cmd').write_bytes(launcher.replace('\n', '\r\n').encode('utf-8'))
     else:
@@ -120,6 +122,7 @@ def main():
         with tarfile.open(archive_path, 'w:gz', compresslevel=6) as archive:
             archive.add(build, arcname=basename, filter=normalize)
     archive_budget = budget_report('archive', archive_path)
+    fresh_wrapper = None
     with tempfile.TemporaryDirectory(prefix='insomnia-basic-extract-') as temporary:
         started = time.perf_counter()
         extracted = extract_verified_archive(archive_path, Path(temporary), basename, manifest, windows)
@@ -130,10 +133,23 @@ def main():
         for field in ('fileCount', 'unpackedBytes', 'symlinkCount'):
             if after[field] != before[field]:
                 raise RuntimeError('Extraction inventory mismatch: ' + field)
+        if windows:
+            proof = ROOT / 'offline-test-results/windows-fresh-extraction.json'
+            subprocess.run(['pwsh', '-NoProfile', '-File', str(ROOT / 'scripts/offline/smoke-windows-wrapper.ps1'),
+                            '-Executable', str(extracted / 'Insomnia.exe'), '-ReportFile', str(proof),
+                            '-RequireFreshPayload'], cwd=ROOT, check=True)
+            fresh_wrapper = read_json(proof)
+            if (fresh_wrapper.get('status') != 'passed' or fresh_wrapper.get('freshPayloadRequired') is not True
+                    or fresh_wrapper.get('runtimePayloadHashVerified') is not True):
+                raise RuntimeError('Freshly extracted Windows wrapper did not recreate a valid runtime')
+            cleanup_windows_test_payload(extracted, version)
+            if tree_manifest(extracted) != manifest:
+                raise RuntimeError('Fresh wrapper execution modified release files unexpectedly')
     with archive_path.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
     report = {**smoke, **after, **archive_budget, 'archive': archive_path.name, 'archiveSha256': digest,
               'freshExtractionSeconds': round(elapsed, 3), 'extractionHashVerified': True,
+              'removedIdenticalWrapperTestCopies': removed, 'freshExtractedWindowsWrapper': fresh_wrapper,
               'extractionEnvironment': {'os': host_platform.platform(), 'python': host_platform.python_version(),
                                         'tool': 'manifest-verified stdlib zipfile' if windows else 'manifest-verified stdlib tarfile',
                                         'disk': 'GitHub-hosted runner temporary volume; not a user-device benchmark'}}

@@ -1,0 +1,109 @@
+name: Validate final source repairs
+on:
+  push:
+    branches: [offline/final-source-fixes]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: final-source-repairs
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Require native keyring readiness before starting any tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gnome-keyring libsecret-tools libsecret-1-0 dbus-x11
+          for attempt in 1 2 3 4; do dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh true; done
+      - name: Apply exact reviewed source repairs
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('packages/insomnia-smoke-test/playwright/pages/project/index.ts')
+          text=p.read_text(encoding='utf-8')
+          assert "import { expect } from '@playwright/test';" not in text
+          p.write_text("import { expect } from '@playwright/test';\n"+text,encoding='utf-8')
+          p=Path('packages/insomnia/src/root.tsx')
+          text=p.read_text(encoding='utf-8')
+          before="import { getOfflineLocale } from '~/ui/offline-locale';"
+          assert text.count(before)==1
+          text=text.replace(before,"import { useOfflineLocale } from '~/ui/offline-locale';")
+          before='export const Layout = ({ children }: { children: React.ReactNode }) => {\n  return ('
+          assert text.count(before)==1
+          text=text.replace(before,'''export const Layout = ({ children }: { children: React.ReactNode }) => {
+            const locale = useOfflineLocale();
+            useEffect(() => {
+              // React does not repair suppressed hydration attributes from prerendered HTML.
+              document.documentElement.lang = locale;
+            }, [locale]);
+            return (''')
+          assert text.count('lang={getOfflineLocale()}')==1
+          p.write_text(text.replace('lang={getOfflineLocale()}', 'lang={locale}'),encoding='utf-8')
+          p=Path('packages/insomnia-smoke-test/tests/smoke/external-vault-integration.test.ts')
+          text=p.read_text(encoding='utf-8')
+          before="  await page.getByRole('button', { name: 'Scan', exact: true }).click();\n"
+          assert text.count(before)==1
+          p.write_text(text.replace(before,'  // Clipboard import scans immediately; require its real confirmation dialog.\n'),encoding='utf-8')
+      - run: npm ci --no-audit --no-fund
+      - uses: ./.github/actions/prepare-electron
+      - name: Format authored edits and require zero-warning workspace lint and types
+        run: |
+          node node_modules/eslint/bin/eslint.js --fix --max-warnings=0 packages/insomnia/src/root.tsx packages/insomnia/src/main/offline-ui-locale.ts packages/insomnia/src/ui/offline-locale.ts packages/insomnia-smoke-test/playwright/pages/project/index.ts packages/insomnia-smoke-test/tests/smoke/external-vault-integration.test.ts
+          npm run lint --workspaces --if-present -- --max-warnings=0
+          npm run type-check --workspaces --if-present
+      - name: Export only reviewed source changes
+        run: |
+          git add packages/insomnia/src/root.tsx packages/insomnia/src/main/offline-ui-locale.ts packages/insomnia/src/ui/offline-locale.ts packages/insomnia-smoke-test/playwright/pages/project/index.ts packages/insomnia-smoke-test/tests/smoke/external-vault-integration.test.ts
+          git diff --cached --check
+          git diff --cached --binary > "$RUNNER_TEMP/source.patch"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-source-fixes
+          path: ${{ runner.temp }}/source.patch
+          if-no-files-found: error
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: final-source-fixes
+          path: patch
+      - name: Commit only source, without executing it or modifying workflows
+        run: |
+          set -euo pipefail
+          git fetch origin offline/final-source-fixes
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check patch/source.patch
+          git apply --index patch/source.patch
+          python3 - <<'PY'
+          import subprocess
+          paths=subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          allowed={'packages/insomnia/src/root.tsx','packages/insomnia/src/main/offline-ui-locale.ts','packages/insomnia/src/ui/offline-locale.ts','packages/insomnia-smoke-test/playwright/pages/project/index.ts','packages/insomnia-smoke-test/tests/smoke/external-vault-integration.test.ts'}
+          assert paths and set(paths)<=allowed,paths
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: synchronize persisted language and repair offline UI regression imports'
+          git push origin HEAD:offline/final-source-fixes
+          git log -1 --format='%H %T'

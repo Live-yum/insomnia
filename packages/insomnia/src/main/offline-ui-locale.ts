@@ -2,12 +2,13 @@ import { OFFLINE_UI_LANGUAGE_KEY, parseOfflineUiLanguage, translateOfflineSource
 
 import { getElectronStorage } from './electron-storage';
 
-export const getNativeOfflineLocale = () => parseOfflineUiLanguage(getElectronStorage().getItem(OFFLINE_UI_LANGUAGE_KEY));
+// A concrete default prevents undefined from entering the native JSON store.
+export const getNativeOfflineLocale = () =>
+  parseOfflineUiLanguage(getElectronStorage().getItem(OFFLINE_UI_LANGUAGE_KEY, 'zh-CN'));
 
-/** Called only for source-authored native menu labels, not window/project titles. */
+/** Only authored menu labels, never dynamic window or project titles. */
 export const translateNativeOfflineUi = (source: string): string => {
   const locale = getNativeOfflineLocale();
   if (locale === 'en-US') return source;
-  const plain = source.replaceAll('&', '').trim();
-  return translateOfflineSource(plain, locale);
+  return translateOfflineSource(source.replaceAll('&', '').trim(), locale);
 };

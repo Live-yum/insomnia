@@ -1,18 +1,24 @@
-# Validate the released Windows entrypoint WITHOUT adding debugger flags to the
-# secure wrapper. Full UI/template regression runs on the identical packaged
-# resources immediately before wrapper construction. Neither test disables the
-# wrapper's mitigation policy, Chromium sandbox or TLS verification.
+# The actual secure wrapper is tested without debugger or sandbox-disabling arguments.
+param(
+    [string]$Executable = 'packages/insomnia/dist/win-unpacked/Insomnia.exe',
+    [string]$ReportFile = 'offline-test-results/windows-wrapper.json',
+    [switch]$RequireFreshPayload
+)
 $ErrorActionPreference = 'Stop'
-$binary = (Resolve-Path 'packages/insomnia/dist/win-unpacked/Insomnia.exe').Path
+$binary = (Resolve-Path -LiteralPath $Executable).Path
 $version = (Get-Content 'packages/insomnia/package.json' -Raw | ConvertFrom-Json).version
 $childName = "insomnia-$version"
+$payload = Join-Path (Split-Path $binary) 'insomnia.dll'
+$childFile = Join-Path (Split-Path $binary) "$childName.exe"
+if ($RequireFreshPayload -and (Test-Path -LiteralPath $childFile)) { throw 'Fresh wrapper acceptance requires no pre-created child executable' }
+$expectedPayloadHash = (Get-FileHash -LiteralPath $payload -Algorithm SHA256).Hash
 $profile = Join-Path ([IO.Path]::GetTempPath()) ("insomnia-offline-wrapper-" + [guid]::NewGuid())
-$results = Join-Path (Get-Location) 'offline-test-results'
-New-Item -ItemType Directory -Path $profile, $results -Force | Out-Null
+$reportPath = [IO.Path]::GetFullPath($ReportFile)
+New-Item -ItemType Directory -Path $profile, (Split-Path $reportPath) -Force | Out-Null
 $env:INSOMNIA_OFFLINE_DATA_PATH = $profile
-Remove-Item Env:INSOMNIA_DATA_PATH -ErrorAction SilentlyContinue
-Remove-Item Env:INSOMNIA_SESSION -ErrorAction SilentlyContinue
-Remove-Item Env:INSOMNIA_OFFLINE_BROWSER_ORIGINS -ErrorAction SilentlyContinue
+foreach ($name in @('INSOMNIA_DATA_PATH','INSOMNIA_SESSION','INSOMNIA_OFFLINE_BROWSER_ORIGINS','GH_TOKEN','GITHUB_TOKEN','NODE_AUTH_TOKEN','NPM_TOKEN','ELECTRON_RUN_AS_NODE')) {
+    Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+}
 $wrapper = $null
 $child = $null
 try {
@@ -33,8 +39,7 @@ try {
         Start-Sleep -Milliseconds 500
     }
     if (!$child -or $child.MainWindowHandle -eq 0 -or !$child.Responding) { throw 'Secure wrapper did not open a responsive application window' }
-    # A responsive empty window alone is insufficient: require the app's local
-    # database to have been initialized in this fresh, isolated test profile.
+    if ((Get-FileHash -LiteralPath $childFile -Algorithm SHA256).Hash -ne $expectedPayloadHash) { throw 'Spawned runtime bytes differ from the preserved payload' }
     $databaseDeadline = [DateTime]::UtcNow.AddSeconds(30)
     do {
         $dataFiles = @(Get-ChildItem -LiteralPath $profile -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^insomnia\..*\.db$' })
@@ -45,18 +50,20 @@ try {
     Start-Sleep -Seconds 3
     $child.Refresh()
     if ($child.HasExited -or !$child.Responding) { throw 'Wrapped app did not remain responsive' }
-    $report = @{ wrappedEntrypoint = $binary; childName = $child.ProcessName; title = $child.MainWindowTitle; databaseFiles = $dataFiles.Count; debuggerArguments = $false; sandboxDisabled = $false; status = 'passed' }
-    $report | ConvertTo-Json | Tee-Object -FilePath (Join-Path $results 'windows-wrapper.json')
+    $report = @{
+        wrappedEntrypoint=$binary; childName=$child.ProcessName; title=$child.MainWindowTitle;
+        databaseFiles=$dataFiles.Count; debuggerArguments=$false; sandboxDisabled=$false;
+        freshPayloadRequired=[bool]$RequireFreshPayload; runtimePayloadHashVerified=$true; status='passed'
+    }
+    $report | ConvertTo-Json | Tee-Object -FilePath $reportPath
 } catch {
-    $_ | Out-String | Set-Content (Join-Path $results 'windows-wrapper-error.txt')
+    $_ | Out-String | Set-Content ($reportPath + '.error.txt')
     throw
 } finally {
     if ($child) { try { $null = $child.CloseMainWindow() } catch {} }
-    if ($wrapper) {
-        if (!$wrapper.WaitForExit(10000)) {
-            # Restrict cleanup to this test's wrapper process tree.
-            & taskkill /PID $wrapper.Id /T /F 2>$null | Out-Null
-        }
+    if ($wrapper -and !$wrapper.WaitForExit(10000)) {
+        # Restrict cleanup to this test's process tree.
+        & taskkill /PID $wrapper.Id /T /F 2>$null | Out-Null
     }
     Remove-Item -LiteralPath $profile -Recurse -Force -ErrorAction SilentlyContinue
 }
