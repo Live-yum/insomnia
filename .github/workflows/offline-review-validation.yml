@@ -1,0 +1,161 @@
+name: Offline reviewed gap repair
+
+on:
+  push:
+    branches: [offline/review-fixes]
+    paths:
+      - scripts/offline/finish_review.py
+      - .github/workflows/offline-review-validation.yml
+      - packages/insomnia-inso/src/analytics.ts
+      - packages/insomnia-inso/src/analytics.test.ts
+      - packages/insomnia/src/templating/sandbox/sandbox-tag-actions.test.ts
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-reviewed-gap-repair
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+
+jobs:
+  validate:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/review-fixes'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Install locked build tools without repository write credentials
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/review-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/review-install.log"; exit 1; }
+      - name: Apply only the reviewed source repairs
+        run: python3 scripts/offline/finish_review.py > "$RUNNER_TEMP/review-repair.log" 2>&1 || { cat "$RUNNER_TEMP/review-repair.log"; exit 1; }
+      - name: Require zero-warning workspace lint without autofix
+        run: npm run lint --workspaces --if-present > "$RUNNER_TEMP/review-lint.log" 2>&1 || { cat "$RUNNER_TEMP/review-lint.log"; exit 1; }
+      - name: Require all workspace and generated-route types
+        run: npm run type-check --workspaces --if-present > "$RUNNER_TEMP/review-types.log" 2>&1 || { cat "$RUNNER_TEMP/review-types.log"; exit 1; }
+      - name: Compile application and CLI
+        run: |
+          set -euo pipefail
+          npm run app-build > "$RUNNER_TEMP/review-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/review-build.log"; exit 1; }
+          npm run build -w insomnia-inso > "$RUNNER_TEMP/review-cli-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/review-cli-build.log"; exit 1; }
+      - name: Select Node ABI for all actual unit suites
+        run: npm run install-libcurl-node > "$RUNNER_TEMP/review-abi.log" 2>&1 || { cat "$RUNNER_TEMP/review-abi.log"; exit 1; }
+      - name: Require complete workspace suites and CLI unit suite
+        run: |
+          set -euo pipefail
+          npm run test --workspaces --if-present > "$RUNNER_TEMP/review-unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |AssertionError|Unhandled Error' "$RUNNER_TEMP/review-unit.log" || true; tail -n 100 "$RUNNER_TEMP/review-unit.log"; exit 1; }
+          npm run test:unit -w insomnia-inso > "$RUNNER_TEMP/review-cli-unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/review-cli-unit.log"; exit 1; }
+      - name: Require cycle baseline, archive integrity and regression checks
+        run: |
+          set -euo pipefail
+          npm run check-cycle-references > "$RUNNER_TEMP/review-cycles.log" 2>&1 || { cat "$RUNNER_TEMP/review-cycles.log"; exit 1; }
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+          node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
+      - name: Export only the tested working-tree delta
+        run: |
+          git diff --check
+          git diff --binary HEAD > "$RUNNER_TEMP/review-source.patch"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-gap-source
+          path: ${{ runner.temp }}/review-source.patch
+          if-no-files-found: error
+          retention-days: 7
+      - name: Export locked local analysis tools, never git credentials or user data
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -d node_modules ]; then
+            mkdir -p "$RUNNER_TEMP/review-tools"
+            cp "$(command -v node)" "$RUNNER_TEMP/review-tools/node"
+            cp package-lock.json "$RUNNER_TEMP/review-tools/package-lock.json"
+            printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/review-tools/SOURCE-SHA"
+            python3 - <<'PY'
+          import os, pathlib, subprocess
+          paths = ['node_modules'] + [str(p) for p in pathlib.Path('packages').glob('*/node_modules') if p.is_dir()]
+          subprocess.run(['tar', '--exclude=.npmrc', '--exclude=.cache', '-czf', os.environ['RUNNER_TEMP'] + '/review-tools/dependencies.tar.gz', *paths], check=True)
+          PY
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: reviewed-gap-diagnostics
+          path: ${{ runner.temp }}/review-*.log
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: reviewed-gap-local-tools
+          path: ${{ runner.temp }}/review-tools/
+          if-no-files-found: error
+          retention-days: 3
+
+  commit:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-gap-source
+          path: ${{ runner.temp }}/review-source
+      - name: Commit exactly tested bytes without executing dependencies or plugins
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/review-fixes
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/review-source/review-source.patch"
+          git apply --check "$patch"
+          git apply --index "$patch"
+          python3 - <<'PY'
+          import subprocess
+          paths = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          for path in paths:
+              allowed = path.startswith('packages/') and ('/src/' in path or '/tests/' in path or path.endswith('/package.json'))
+              allowed |= path.startswith('.github/workflows/offline-') and path.endswith('.yml')
+              allowed |= path == 'scripts/circular-references/known-violations.json'
+              assert allowed and '/vendor/' not in path and '/vendored/' not in path, path
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: verified sandbox tag actions, disabled-plugin authorization, offline CLI and zero-warning checks'
+          git push origin HEAD:offline/review-fixes
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  portable:
+    needs: commit
+    uses: ./.github/workflows/offline-complete-build.yml
+    with:
+      source_sha: ${{ needs.commit.outputs.sha }}
+      publish: false
+    permissions:
+      contents: read

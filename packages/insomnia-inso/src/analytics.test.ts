@@ -1,37 +1,25 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const mockTrack = vi.fn();
-
-vi.mock('@segment/analytics-node', () => ({
-  Analytics: vi.fn(() => ({
-    track: mockTrack,
-    closeAndFlush: vi.fn(),
-  })),
+const { initializeClient, readSettings } = vi.hoisted(() => ({
+  initializeClient: vi.fn(() => { throw new Error('Offline telemetry must not initialize'); }),
+  readSettings: vi.fn(() => { throw new Error('Offline telemetry must not read user data'); }),
 }));
 
-vi.mock('./db/adapters/ne-db-adapter', () => ({
-  default: vi.fn().mockResolvedValue(null),
-}));
+vi.mock('@segment/analytics-node', () => ({ Analytics: initializeClient }));
+vi.mock('./db/adapters/ne-db-adapter', () => ({ default: readSettings }));
 
-describe('analytics', () => {
-  beforeEach(() => {
-    vi.stubEnv('NODE_ENV', 'production');
+afterEach(() => { vi.unstubAllEnvs(); vi.clearAllMocks(); });
+
+describe('offline CLI telemetry', () => {
+  it.each(['production', 'development', 'test'])('never creates a client or reads identifying data in %s', async mode => {
+    vi.stubEnv('NODE_ENV', mode);
+    vi.stubEnv('INSO_TELEMETRY_DISABLED', '');
     vi.resetModules();
-    mockTrack.mockClear();
-  });
-
-  it('should use the same anonymousId for multiple trackInsoEvent calls', async () => {
-    const { trackInsoEvent, InsoEvent } = await import('./analytics');
-
-    await trackInsoEvent(InsoEvent.lintSpec);
+    const { trackInsoEvent, flushAnalytics, InsoEvent } = await import('./analytics');
+    await trackInsoEvent(InsoEvent.lintSpec, { sensitive: 'must-not-leave-process' });
     await trackInsoEvent(InsoEvent.exportSpec);
-
-    expect(mockTrack).toHaveBeenCalledTimes(2);
-
-    const firstCallAnonymousId = mockTrack.mock.calls[0][0].anonymousId;
-    const secondCallAnonymousId = mockTrack.mock.calls[1][0].anonymousId;
-
-    expect(firstCallAnonymousId).toBe(secondCallAnonymousId);
-    expect(firstCallAnonymousId).toMatch(/^anon_/);
+    await flushAnalytics();
+    expect(initializeClient).not.toHaveBeenCalled();
+    expect(readSettings).not.toHaveBeenCalled();
   });
 });
