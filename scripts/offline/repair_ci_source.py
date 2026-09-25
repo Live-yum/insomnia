@@ -1,128 +1,77 @@
 #!/usr/bin/env python3
-"""Apply narrow, idempotent source fixes found by the actual offline CI run.
+"""Commit full-suite-tested offline test fixtures; do not change runtime policy.
 
-Only application-owned files are edited. Never imports or executes a downloaded
-plugin. Formatting uses the repository's existing, lockfile-pinned ESLint rules.
+The ordinary portable build never invokes this one-time source migration.
 """
 from __future__ import annotations
 
-import hashlib
-import json
 from pathlib import Path
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 APP = ROOT / 'packages/insomnia'
 FORMAT_FILES = [
-    'scripts/verify-bundle-plugins.ts',
-    'src/common/constants.ts',
-    'src/common/offline-policy.ts',
-    'src/common/__tests__/offline-origin-policy.test.ts',
-    'src/entry.main.ts',
-    'src/main/bundle-spectral-ruleset.ts',
-    'src/main/ipc/main.ts',
-    'src/main/offline-network.ts',
-    'src/main/window-utils.ts',
-    'src/plugins/index.ts',
-    'src/root.tsx',
-    'src/routes/organization.$organizationId.project.$projectId.delete.tsx',
-    'src/routes/organization.tsx',
+    'src/common/__tests__/insomnia-fetch.test.ts',
+    'src/main/__tests__/bundle-spectral-ruleset.test.ts',
+    'src/main/__tests__/bundle-spectral-offline.test.ts',
+    'src/plugins/__tests__/index.test.ts',
+    'src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
+    'src/ui/utils/router.test.ts',
 ]
-ENCODING_FILES = {
-    'scripts/offline/vendor_plugins.py': 5,
-    'scripts/offline/package_portable.py': 1,
-}
-ENCODING_TEST = '''    def test_metadata_readers_use_explicit_utf8(self):
-        import ast
-        root = Path(__file__).resolve().parent
-        for name in ('vendor_plugins.py', 'package_portable.py'):
-            tree = ast.parse((root / name).read_bytes().decode('utf-8'))
-            readers = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
-                       and isinstance(node.func, ast.Attribute) and node.func.attr == 'read_text']
-            self.assertTrue(readers)
-            for reader in readers:
-                with self.subTest(file=name, line=reader.lineno):
-                    self.assertTrue(any(keyword.arg == 'encoding' and isinstance(keyword.value, ast.Constant)
-                                        and keyword.value.value == 'utf-8' for keyword in reader.keywords))
-
-'''
 
 
-def replace_once(relative: str, before: str, after: str) -> None:
+def replace(relative: str, before: str, after: str) -> None:
     target = APP / relative
     text = target.read_text(encoding='utf-8')
-    if after in text and before not in text:
+    if after in text:
         return
     if text.count(before) != 1:
-        raise ValueError(f'Source changed; review the repair anchor in {relative}')
+        raise ValueError('Source changed; review anchor: ' + relative)
     target.write_text(text.replace(before, after, 1), encoding='utf-8', newline='\n')
 
 
 def main() -> None:
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
         raise ValueError('Repair requires a clean checkout')
-    replace_once(
-        'src/common/constants.ts',
-        'export const getAppBundlePlugins = () => appConfig.bundlePlugins;',
-        'export const getAppBundlePlugins = (): { name: string }[] => appConfig.bundlePlugins;',
+    # The latest branch already contains safe identical-member extraction and
+    # its regression tests. Preserve it instead of overwriting concurrent work.
+    replace(
+        'src/main/__tests__/bundle-spectral-ruleset.test.ts',
+        '// Mock fs and dns so no real files or DNS lookups are needed.',
+        "// Historical online-branch protections remain tested with inert network mocks.\n"
+        "// bundle-spectral-offline.test.ts independently tests the real offline flag.\n"
+        "vi.mock('~/common/offline-policy', async importOriginal => ({\n"
+        "  ...(await importOriginal<typeof import('~/common/offline-policy')>()),\n"
+        "  OFFLINE_BUILD: false,\n"
+        "}));\n\n"
+        '// Mock fs and dns so no real files or DNS lookups are needed.',
     )
-    replace_once(
-        'scripts/verify-bundle-plugins.ts',
-        "import { bundlePlugins } from '../config/config.json';",
-        "import appConfig from '../config/config.json';\n\nconst bundlePlugins: { name: string }[] = appConfig.bundlePlugins;",
-    )
-    replace_once(
-        'src/common/offline-policy.ts',
-        "    const code = character.charCodeAt(0);\n    return code <= 32 || code === 127 || character === '\\\\';",
-        "    const code = character.codePointAt(0);\n    return (code !== undefined && code <= 32) || code === 127 || character === '\\\\';",
-    )
-    replace_once(
-        'src/common/__tests__/offline-origin-policy.test.ts',
-        'String.fromCharCode(code)',
-        'String.fromCodePoint(code)',
-    )
-    # Windows Python 3.12 defaults to a legacy code page. The catalog, lockfiles
-    # and npm package manifests are UTF-8 regardless of the machine's locale.
-    for relative, expected_count in ENCODING_FILES.items():
-        target = ROOT / relative
-        text = target.read_text(encoding='utf-8')
-        count = text.count('.read_text()')
-        if count not in (0, expected_count):
-            raise ValueError('Unexpected metadata readers in ' + relative)
-        if count:
-            target.write_text(text.replace('.read_text()', ".read_text(encoding='utf-8')"), encoding='utf-8', newline='\n')
-    tests = ROOT / 'scripts/offline/test_vendor_regressions.py'
-    text = tests.read_text(encoding='utf-8')
-    if 'def test_metadata_readers_use_explicit_utf8' not in text:
-        anchor = 'class SnapshotRegressionTests(unittest.TestCase):\n'
-        if text.count(anchor) != 1:
-            raise ValueError('Unexpected regression test structure')
-        tests.write_text(text.replace(anchor, anchor + ENCODING_TEST, 1), encoding='utf-8', newline='\n')
-    subprocess.run(
-        ['node', str(ROOT / 'node_modules/eslint/bin/eslint.js'), '--fix', *FORMAT_FILES],
-        cwd=APP, check=True,
-    )
-    marker = ROOT / 'docs/OFFLINE-PLUGIN-LOADER-STATUS.json'
-    if marker.exists():
-        record = json.loads(marker.read_text(encoding='utf-8'))
-        record['sha256'] = hashlib.sha256((APP / 'src/plugins/index.ts').read_bytes()).hexdigest()
-        record['runtimeValidated'] = False
-        marker.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
-    status = ROOT / 'docs/OFFLINE-SOURCE-STATUS.json'
-    if status.exists():
-        record = json.loads(status.read_text(encoding='utf-8'))
-        for item in record['files']:
-            item['sha256'] = hashlib.sha256((ROOT / item['path']).read_bytes()).hexdigest()
-        record['buildValidated'] = False
-        status.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
-    permitted = {'packages/insomnia/' + name for name in FORMAT_FILES}
-    permitted.update(ENCODING_FILES)
-    permitted.update({'scripts/offline/test_vendor_regressions.py', 'docs/OFFLINE-PLUGIN-LOADER-STATUS.json', 'docs/OFFLINE-SOURCE-STATUS.json'})
+    replace('src/plugins/__tests__/index.test.ts',
+            "import { getAppBundlePlugins } from '~/common/constants';",
+            "import * as appConstants from '~/common/constants';")
+    replace('src/plugins/__tests__/index.test.ts',
+            'afterEach(() => {\n  _testOnlySetPlugins(null);\n});',
+            'afterEach(() => {\n  vi.restoreAllMocks();\n  _testOnlySetPlugins(null);\n});')
+    replace('src/plugins/__tests__/index.test.ts',
+            '    const bundlePluginName = getAppBundlePlugins()[0].name;',
+            "    const bundlePluginName = 'insomnia-plugin-test-bundle';\n"
+            "    vi.spyOn(appConstants, 'getAppBundlePlugins').mockReturnValue([{ name: bundlePluginName }]);")
+    replace('src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
+            '      pluginConfig: { [elevatedPluginName]: { disabled: false, elevated: true } },',
+            '      pluginConfig: {\n'
+            '        [elevatedPluginName]: { disabled: false, elevated: true },\n'
+            '        [sandboxedPluginName]: { disabled: false },\n'
+            '      },')
+    replace('src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
+            '    // Sorts second; left in the default sandboxed mode.',
+            '    // Explicitly enabled test fixture; still uses the default sandboxed mode.')
+    subprocess.run(['node', str(ROOT / 'node_modules/eslint/bin/eslint.js'), '--fix', *FORMAT_FILES], cwd=APP, check=True)
+    permitted = {'packages/insomnia/' + item for item in FORMAT_FILES}
     changed = set(subprocess.check_output(['git', 'diff', '--name-only'], cwd=ROOT, text=True).splitlines())
     if not changed <= permitted:
-        raise ValueError('Unexpected modified files: ' + repr(sorted(changed - permitted)))
+        raise ValueError('Unexpected source changes: ' + repr(sorted(changed - permitted)))
     subprocess.run(['git', 'diff', '--check'], cwd=ROOT, check=True)
-    print('Reviewed source repairs:', len(changed), 'files; no plugin entrypoints executed.')
+    print('Reviewed test source repairs:', sorted(changed), flush=True)
 
 
 if __name__ == '__main__':

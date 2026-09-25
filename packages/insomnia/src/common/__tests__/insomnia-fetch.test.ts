@@ -1,110 +1,59 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { insomniaFetch, setFetchImplementation } from '../insomnia-fetch';
+import { insomniaFetch, proxyAwareFetch, setFetchImplementation } from '../insomnia-fetch';
+import { OFFLINE_SERVICE_ERROR } from '../offline-policy';
 
-const jsonResponse = (body: unknown) =>
-  new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
-
-afterEach(() => {
-  setFetchImplementation((input, init) => globalThis.fetch(input, init));
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn());
 });
 
-describe('insomniaFetch', () => {
-  it('uses the injected fetch implementation', async () => {
-    const impl = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
-    setFetchImplementation(impl);
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
-    const result = await insomniaFetch<{ ok: boolean }>({
-      method: 'GET',
-      path: '/v1/test',
-      sessionId: 'ses_123',
-      origin: 'https://api.test',
-    });
+describe('offline vendor SDK transport', () => {
+  it.each(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const)(
+    'rejects %s without consulting either transport',
+    async method => {
+      const injected = vi.fn().mockResolvedValue(new Response('{}'));
+      setFetchImplementation(injected);
+      await expect(insomniaFetch({ method, path: '/v1/test', sessionId: 'ses_test' })).rejects.toThrow(
+        OFFLINE_SERVICE_ERROR,
+      );
+      expect(injected).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
 
-    expect(result).toEqual({ ok: true });
-    expect(impl).toHaveBeenCalledTimes(1);
-    const [url, init] = impl.mock.calls[0];
-    expect(url).toBe('https://api.test/v1/test');
-    expect(init.headers['X-Session-Id']).toBe('ses_123');
+  it.each(['https://api.test', 'http://127.0.0.1:8080', 'https://example.invalid'])(
+    'does not use an overridden vendor origin: %s',
+    async origin => {
+      const injected = vi.fn();
+      const onDeepLink = vi.fn();
+      setFetchImplementation(injected);
+      await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_test', origin, retries: 3, onDeepLink })).rejects.toThrow(OFFLINE_SERVICE_ERROR);
+      expect(injected).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+      expect(onDeepLink).not.toHaveBeenCalled();
+    },
+  );
+
+  it('fails closed through the proxy-aware SDK entry point too', async () => {
+    const injected = vi.fn();
+    setFetchImplementation(injected);
+    await expect(proxyAwareFetch('https://api.test/v1/test')).rejects.toThrow(OFFLINE_SERVICE_ERROR);
+    expect(injected).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('appends the error cause to opaque fetch failures', async () => {
-    setFetchImplementation(() => {
-      const err = new TypeError('fetch failed');
-      (err as Error & { cause?: unknown }).cause = { code: 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' };
-      return Promise.reject(err);
-    });
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      'fetch failed (UNABLE_TO_GET_ISSUER_CERT_LOCALLY)',
-    );
-  });
-
-  it('falls back to the cause message when there is no code', async () => {
-    setFetchImplementation(() => {
-      const err = new TypeError('fetch failed');
-      (err as Error & { cause?: unknown }).cause = { message: 'proxy connection refused' };
-      return Promise.reject(err);
-    });
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      'fetch failed (proxy connection refused)',
-    );
-  });
-
-  it('surfaces the code from an AggregateError cause with an empty message', async () => {
-    setFetchImplementation(() => {
-      const err = new TypeError('fetch failed');
-      const connectError = Object.assign(new Error('connect ECONNREFUSED ::1:443'), { code: 'ECONNREFUSED' });
-      // eslint-disable-next-line unicorn/error-message -- empty message is the point
-      (err as Error & { cause?: unknown }).cause = new AggregateError([connectError], '');
-      return Promise.reject(err);
-    });
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      'fetch failed (ECONNREFUSED)',
-    );
-  });
-
-  it('appends a string cause', async () => {
-    setFetchImplementation(() => {
-      const err = new TypeError('fetch failed');
-      (err as Error & { cause?: unknown }).cause = 'certificate has expired';
-      return Promise.reject(err);
-    });
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      'fetch failed (certificate has expired)',
-    );
-  });
-
-  it('rethrows errors without a cause unchanged', async () => {
-    setFetchImplementation(() => Promise.reject(new TypeError('fetch failed')));
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      /^fetch failed$/,
-    );
-  });
-
-  it('passes non-Error rejections through untouched', async () => {
-    setFetchImplementation(() => Promise.reject('boom'));
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toBe('boom');
-  });
-
-  it('reports timeouts with method and path', async () => {
-    setFetchImplementation(() => Promise.reject(new DOMException('The operation timed out.', 'TimeoutError')));
-
-    await expect(insomniaFetch({ method: 'POST', path: '/v1/slow', sessionId: 'ses_123' })).rejects.toThrow(
-      'insomniaFetch timed out: POST /v1/slow',
-    );
-  });
-
-  it('reports aborts as timeouts', async () => {
-    setFetchImplementation(() => Promise.reject(new DOMException('The operation was aborted.', 'AbortError')));
-
-    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_123' })).rejects.toThrow(
-      'insomniaFetch timed out: GET /v1/test',
-    );
+  it('cannot be re-enabled by replacing the injected implementation', async () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    setFetchImplementation(first);
+    setFetchImplementation(second);
+    await expect(insomniaFetch({ method: 'GET', path: '/v1/test', sessionId: 'ses_test' })).rejects.toThrow(OFFLINE_SERVICE_ERROR);
+    expect(first).not.toHaveBeenCalled();
+    expect(second).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

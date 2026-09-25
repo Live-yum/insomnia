@@ -16,6 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: utf-8
   SCARF_DO_NOT_TRACK: 'true'
   SCARF_ANALYTICS: 'false'
   DO_NOT_TRACK: '1'
@@ -29,7 +31,7 @@ jobs:
   prepare:
     if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     defaults:
       run:
         shell: bash
@@ -41,20 +43,25 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Install locked application dependencies and their required build patches
-        run: npm ci --no-audit --no-fund
-      - name: Apply reviewed type, lint and encoding fixes to owned source only
+      - name: Install locked application dependencies
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
+      - name: Apply the reviewed source repair before committing it
         run: python3 scripts/offline/repair_ci_source.py
-      - name: Require application lint without autofix
-        run: npm run lint -w insomnia 2>&1 | tee "$RUNNER_TEMP/offline-lint.log"
-      - name: Require full application and route type checks
-        run: npm run type-check -w insomnia 2>&1 | tee "$RUNNER_TEMP/offline-typecheck.log"
-      - name: Require offline policy and archive regression tests
+      - name: Require workspace lint without autofix
+        run: npm run lint --workspaces --if-present > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-lint.log"; exit 1; }
+      - name: Require complete application and route type checks
+        run: npm run type-check -w insomnia > "$RUNNER_TEMP/offline-typecheck.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-typecheck.log"; exit 1; }
+      - name: Compile the real application source
+        run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
+      - name: Use Node ABI for the full unit suite
+        run: npm run install-libcurl-node > "$RUNNER_TEMP/offline-node-abi.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-node-abi.log"; exit 1; }
+      - name: Require the full workspace unit suite
+        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { tail -n 180 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
+      - name: Require archive safety regressions and byte integrity
         run: |
-          npm run test -w insomnia -- src/common/__tests__/offline-origin-policy.test.ts 2>&1 | tee "$RUNNER_TEMP/offline-policy-tests.log"
-          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v 2>&1 | tee "$RUNNER_TEMP/offline-archive-tests.log"
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
           python3 scripts/offline/vendor_plugins.py verify
-      - name: Export reviewed source patch
+      - name: Export the tested source changes
         run: |
           git diff --check
           git diff --binary > offline-ci-repair.patch
@@ -64,14 +71,14 @@ jobs:
           name: offline-ci-reviewed-repair
           path: offline-ci-repair.patch
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: offline-ci-diagnostics
           path: ${{ runner.temp }}/offline-*.log
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 14
 
   commit:
     needs: prepare
@@ -90,11 +97,13 @@ jobs:
         with:
           name: offline-ci-reviewed-repair
           path: ${{ runner.temp }}/offline-repair
-      - name: Commit source edits without running dependency or plugin code
+      - name: Commit only the exact tested source without executing dependencies
         id: commit
         shell: bash
         run: |
           set -euo pipefail
+          git fetch origin offline/standalone-vendored
+          test "$(git rev-parse origin/offline/standalone-vendored)" = "$GITHUB_SHA"
           patch="$RUNNER_TEMP/offline-repair/offline-ci-repair.patch"
           if [ -s "$patch" ]; then
             git apply --check "$patch"
@@ -102,23 +111,21 @@ jobs:
             python3 - <<'PY'
           import subprocess
           permitted = {
-              'packages/insomnia/scripts/verify-bundle-plugins.ts',
-              'docs/OFFLINE-SOURCE-STATUS.json',
-              'docs/OFFLINE-PLUGIN-LOADER-STATUS.json',
               'scripts/offline/vendor_plugins.py',
-              'scripts/offline/package_portable.py',
-              'scripts/offline/test_vendor_regressions.py',
+              'packages/insomnia/src/common/__tests__/insomnia-fetch.test.ts',
+              'packages/insomnia/src/main/__tests__/bundle-spectral-ruleset.test.ts',
+              'packages/insomnia/src/main/__tests__/bundle-spectral-offline.test.ts',
+              'packages/insomnia/src/plugins/__tests__/index.test.ts',
+              'packages/insomnia/src/plugins/__tests__/plugin-load-order-quickjs-module-resolution.test.ts',
+              'packages/insomnia/src/ui/utils/router.test.ts',
           }
-          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
-          for name in names:
-              if not (name.startswith('packages/insomnia/src/') or name in permitted):
-                  raise SystemExit('Unexpected repair path: ' + name)
+          names = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines())
+          if not names <= permitted:
+              raise SystemExit('Unexpected repair paths: ' + repr(names - permitted))
           PY
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'fix: apply CI-verified offline types, imports, policy and UTF-8 repairs'
-            git fetch origin offline/standalone-vendored
-            git rebase origin/offline/standalone-vendored
+            git commit -m 'fix: commit full-suite-validated offline fixtures and idempotent archive extraction'
             git push origin HEAD:offline/standalone-vendored
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
