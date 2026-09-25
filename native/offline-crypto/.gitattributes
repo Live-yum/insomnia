@@ -1,0 +1,7 @@
+# Third-party sources retain their verified bytes, including upstream CRLF and
+# binary precomputed curve tables. Do not normalize cryptographic dependency
+# data to satisfy first-party formatting rules.
+vendor/** -text -whitespace
+*.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf
