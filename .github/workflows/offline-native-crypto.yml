@@ -1,0 +1,137 @@
+name: Native ShangMi crypto validation
+on:
+  push:
+    branches: [offline/shangmi-native]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-shangmi-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Vendor checksum-verified fixed dependencies without lifecycle scripts
+        working-directory: native/offline-crypto
+        env:
+          GOTOOLCHAIN: local
+        run: |
+          set -euo pipefail
+          go mod tidy
+          go mod verify
+          test "$(go list -m -f '{{.Version}}' github.com/emmansun/gmsm)" = v0.44.1
+          go mod vendor
+          gofmt -w main.go main_test.go
+          go vet -mod=vendor ./...
+          openssl version
+          go test -mod=vendor -count=1 -v ./...
+          mkdir -p "$RUNNER_TEMP/native"
+          CGO_ENABLED=0 go build -mod=vendor -trimpath -ldflags='-s -w' -o "$RUNNER_TEMP/native/offline-crypto-helper" .
+          test "$(stat -c %s "$RUNNER_TEMP/native/offline-crypto-helper")" -lt 16777216
+      - name: Export exact checked source and notices, not a second runtime
+        run: |
+          git add -N native/offline-crypto
+          git diff --check
+          git diff --binary -- native/offline-crypto > "$RUNNER_TEMP/native-source.patch"
+          git diff --stat -- native/offline-crypto
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: native-crypto-source
+          path: ${{ runner.temp }}/native-source.patch
+          if-no-files-found: error
+          retention-days: 7
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: native-crypto-source
+          path: ${{ runner.temp }}/patch
+      - id: commit
+        name: Commit only verified source without executing dependency code
+        run: |
+          set -euo pipefail
+          git fetch origin offline/shangmi-native
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check "$RUNNER_TEMP/patch/native-source.patch"
+          git apply --index "$RUNNER_TEMP/patch/native-source.patch"
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git','diff','--cached','--name-only'],text=True).splitlines()
+          assert names and all(name.startswith('native/offline-crypto/') for name in names)
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build: vendor verified ShangMi dependencies and formatted tested sources'
+          git push origin HEAD:offline/shangmi-native
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  native:
+    needs: commit
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            target: win32-x64
+            extension: .exe
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            extension: ''
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Native tests and independent OpenSSL interop with no module downloads
+        working-directory: native/offline-crypto
+        shell: bash
+        env:
+          CGO_ENABLED: '0'
+          GOTOOLCHAIN: local
+          GOPROXY: 'off'
+          GOSUMDB: 'off'
+          SUFFIX: ${{ matrix.extension }}
+        run: |
+          set -euo pipefail
+          openssl version
+          go test -mod=vendor -count=1 -v ./...
+          go build -mod=vendor -trimpath -ldflags='-s -w' -o "offline-crypto-helper$SUFFIX" .
+          python - <<'PY'
+          import json,os,pathlib,subprocess
+          file=pathlib.Path('offline-crypto-helper'+os.environ['SUFFIX']).resolve()
+          assert file.stat().st_size < 16*1024*1024
+          result=subprocess.run([str(file)],input=json.dumps({'action':'digest','algorithm':'sm3','input':'abc'}),capture_output=True,text=True,encoding='utf-8',check=True)
+          value=json.loads(result.stdout)
+          assert value['ok'] is True and value['result']['output']=='66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0'
+          print(json.dumps({'nativeBytes':file.stat().st_size,'realStdioProtocolPassed':True}))
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: shangmi-worker-${{ matrix.target }}
+          path: native/offline-crypto/offline-crypto-helper${{ matrix.extension }}
+          if-no-files-found: error
+          retention-days: 7
