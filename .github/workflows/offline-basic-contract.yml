@@ -1,0 +1,45 @@
+name: Compact basic distribution contract
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths:
+      - packages/insomnia/config/offline-basic.json
+      - packages/insomnia/electron-builder.basic.cjs
+      - scripts/offline/basic-budget.cjs
+      - scripts/offline/basic-budget.test.cjs
+      - .github/workflows/offline-basic-contract.yml
+  pull_request:
+    paths:
+      - packages/insomnia/config/offline-basic.json
+      - packages/insomnia/electron-builder.basic.cjs
+      - scripts/offline/basic-budget.cjs
+      - scripts/offline/basic-budget.test.cjs
+      - .github/workflows/offline-basic-contract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: basic-contract-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SCARF_DO_NOT_TRACK: 'true'
+      DO_NOT_TRACK: '1'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+      - name: Verify compact packaging and reject excessive files and bytes
+        run: node --test scripts/offline/basic-budget.test.cjs
+      - name: Retain existing reviewed crypto tests without npm or network installation
+        run: node --test scripts/offline/crypto.test.cjs
+      - name: Record the scope honestly
+        run: |
+          printf '%s\n' 'Profile and budget unit tests passed. Native size, full crypto coverage and actual Chinese UI are NOT certified by this job.' >> "$GITHUB_STEP_SUMMARY"
+          git diff --exit-code
