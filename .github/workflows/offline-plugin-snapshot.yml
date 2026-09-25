@@ -1,12 +1,13 @@
 name: Offline plugin snapshot
 
 on:
-  push:
-    branches: [offline/standalone-vendored]
-    paths:
-      - scripts/offline/vendor_plugins.py
-      - .github/workflows/offline-plugin-snapshot.yml
   workflow_dispatch:
+    inputs:
+      refresh_catalog:
+        description: Explicitly refresh the public catalog and pinned dependencies; review the resulting diff
+        type: boolean
+        required: true
+        default: false
 
 permissions:
   contents: read
@@ -17,7 +18,7 @@ concurrency:
 
 jobs:
   snapshot:
-    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored' && inputs.refresh_catalog
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
@@ -68,7 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: offline/standalone-vendored
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - name: Replace rather than overlay the previous catalog
         run: |
@@ -78,27 +79,23 @@ jobs:
         with:
           name: offline-plugin-snapshot
           path: vendor/offline-plugins/
-      - name: Materialize the reviewed plugin-loader source (never load plugin code here)
-        run: python3 scripts/offline/integrate_plugin_loader.py
-      - name: Commit source and verified package bytes without force-pushing
+      - name: Commit only the verified package snapshot without rewriting application code
         id: commit
+        env:
+          REVIEWED_SOURCE_SHA: ${{ github.sha }}
         shell: bash
         run: |
           set -euo pipefail
           test -s vendor/offline-plugins/manifest.json
           test -f vendor/offline-plugins/.gitattributes
+          git fetch origin offline/standalone-vendored
+          test "$(git rev-parse origin/offline/standalone-vendored)" = "$REVIEWED_SOURCE_SHA"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add --force --all -- vendor/offline-plugins
-          git add -- packages/insomnia/src/plugins/index.ts docs/OFFLINE-PLUGIN-LOADER-STATUS.json
           if ! git diff --cached --quiet; then
-            git commit -m 'feat: vendor full catalog bytes and integrate offline plugin activation'
-            for attempt in 1 2 3; do
-              git fetch origin offline/standalone-vendored
-              git rebase origin/offline/standalone-vendored
-              if git push origin HEAD:offline/standalone-vendored; then break; fi
-              if [ "$attempt" = 3 ]; then exit 1; fi
-            done
+            git commit -m 'chore: explicitly refresh the pinned public plugin catalog'
+            git push origin HEAD:offline/standalone-vendored
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git archive --format=tar --output=offline-source-review.tar HEAD scripts/offline docs packages package.json package-lock.json .nvmrc .npmrc .github
