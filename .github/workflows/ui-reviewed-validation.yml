@@ -34,6 +34,7 @@ jobs:
         run: |
           python3 scripts/offline/repair_native_storage_and_migration.py
           python3 scripts/offline/repair_local_ruleset_contract.py
+          python3 scripts/offline/repair_offline_route_contract.py
           python3 - <<'PY'
           import pathlib, subprocess
           file = pathlib.Path('packages/insomnia/src/main/secure-storage-policy.ts')
@@ -112,7 +113,7 @@ jobs:
           python3 - <<'PY'
           import subprocess
           names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
-          allowed = {'packages/insomnia/src/' + name for name in ['main/ipc/secret-storage.ts', 'main/secure-storage-policy.ts', 'main/__tests__/secure-storage-policy.test.ts', 'common/offline-project-migration.ts', 'common/__tests__/offline-project-migration.test.ts', 'ui/utils/router.ts', 'routes/git-migration.$.tsx']}
+          allowed = {'packages/insomnia/src/' + name for name in ['main/ipc/secret-storage.ts', 'main/secure-storage-policy.ts', 'main/__tests__/secure-storage-policy.test.ts', 'common/offline-project-migration.ts', 'common/__tests__/offline-project-migration.test.ts', 'ui/utils/router.ts', 'ui/utils/router-offline.test.ts', 'routes/git-migration.$.tsx']}
           allowed.update('packages/insomnia-smoke-test/' + name for name in ['playwright/pages/project/index.ts', 'playwright/pages/components/navigation-sidebar.ts', 'tests/migration/git-repo-onboarding.test.ts', 'tests/migration/local-to-cloud-projects.test.ts', 'tests/smoke/custom-lint-rules.test.ts', 'tests/smoke/invite.test.ts', 'tests/smoke/konnect.test.ts', 'tests/smoke/external-vault-integration.test.ts'])
           assert names and set(names) <= allowed, set(names) - allowed
           PY
