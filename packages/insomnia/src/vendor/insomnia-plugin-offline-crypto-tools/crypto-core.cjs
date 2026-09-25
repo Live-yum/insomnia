@@ -65,12 +65,12 @@ function hashName(algorithm, legacy = false) {
 function readKey(value, privateKey) {
   let options;
   if (typeof value === 'string') {
-    options = { key: text(value, 'PEM 密钥', 32768), format: 'pem' };
+    options = { key: text(value, 'PEM 密钥', 32_768), format: 'pem' };
   } else {
     object(value, '密钥');
     if (value.format === 'jwk') options = { key: object(value.data, 'JWK'), format: 'jwk' };
-    else if (value.format === 'der') options = { key: decode(text(value.data, 'DER 密钥', 32768), 'base64'), format: 'der', type: privateKey ? 'pkcs8' : 'spki' };
-    else if (value.format === 'pem') options = { key: text(value.data, 'PEM 密钥', 32768), format: 'pem' };
+    else if (value.format === 'der') options = { key: decode(text(value.data, 'DER 密钥', 32_768), 'base64'), format: 'der', type: privateKey ? 'pkcs8' : 'spki' };
+    else if (value.format === 'pem') options = { key: text(value.data, 'PEM 密钥', 32_768), format: 'pem' };
     else fail('密钥格式必须为 PEM、DER 或 JWK / Unsupported key format');
     if (value.passphrase !== undefined) options.passphrase = text(value.passphrase, '私钥口令', 1024);
   }
@@ -207,7 +207,7 @@ function jwtMac(options, algorithm, bytes) {
 function parseJwt(token) {
   text(token, 'JWT', 1024 * 1024);
   const parts = token.split('.');
-  if (parts.length !== 3 || parts.some(part => part === '')) fail('JWT 必须为三个非空段 / Expected compact signed JWT');
+  if (parts.length !== 3 || parts.includes('')) fail('JWT 必须为三个非空段 / Expected compact signed JWT');
   let header;
   let payload;
   try {
@@ -287,7 +287,7 @@ async function keygen(options) {
   if (kind === 'rsa') {
     const bits = options.bits ?? 3072;
     if (![2048, 3072, 4096].includes(bits)) fail('请选择 2048、3072 或 4096 位 / Unsupported RSA generation size');
-    type = 'rsa'; params = { modulusLength: bits, publicExponent: 65537 };
+    type = 'rsa'; params = { modulusLength: bits, publicExponent: 65_537 };
   } else if (['ES256', 'ES384', 'ES512'].includes(kind)) {
     type = 'ec'; params = { namedCurve: SIGNATURES[kind][2] };
   } else if (kind === 'EdDSA') {

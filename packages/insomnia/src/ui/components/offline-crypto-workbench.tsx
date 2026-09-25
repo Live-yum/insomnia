@@ -61,7 +61,7 @@ export const OfflineCryptoWorkbench = () => {
   const select = (label: string, value: string, values: string[], update: (value: string) => void) => (
     <label className="flex flex-col gap-1">
       <span>{label}</span>
-      <select className={controlClass} value={value} onChange={event => update(event.target.value)}>
+      <select aria-label={label} className={controlClass} value={value} onChange={event => update(event.target.value)}>
         {values.map(item => <option key={item} value={item}>{item}</option>)}
       </select>
     </label>
@@ -116,7 +116,7 @@ export const OfflineCryptoWorkbench = () => {
             <div className="grid grid-cols-2 gap-4">
               <label className="flex flex-col gap-1">
                 <span>{t('操作类别', 'Operation category')}</span>
-                <select className={controlClass} value={action} onChange={event => changeAction(event.target.value)}>
+                <select aria-label={t('操作类别', 'Operation category')} className={controlClass} value={action} onChange={event => changeAction(event.target.value)}>
                   {actions.map(([value, zh, en]) => <option key={value} value={value}>{t(zh, en)}</option>)}
                 </select>
               </label>
@@ -135,30 +135,30 @@ export const OfflineCryptoWorkbench = () => {
             </div>
             {!['keygen', 'random'].includes(action) && (
               <label className="flex flex-col gap-1"><span>{action === 'jwt' && operation === 'sign' ? t('JWT 声明（JSON 对象）', 'JWT claims (JSON object)') : t('输入正文', 'Input')}</span>
-                <textarea className={`${controlClass} min-h-24 font-mono`} spellCheck={false} value={input} onChange={event => setInput(event.target.value)} />
+                <textarea className={`${controlClass} min-h-24 font-mono`} spellCheck={false} aria-label={action === 'jwt' && operation === 'sign' ? t('JWT 声明（JSON 对象）', 'JWT claims (JSON object)') : t('输入正文', 'Input')} value={input} onChange={event => setInput(event.target.value)} />
               </label>
             )}
             {keyBased && (
               <div className="flex flex-col gap-2">
                 <label className="flex flex-col gap-1"><span>{t('密钥（仅保存在本次窗口内存中）', 'Key (kept only in this form memory)')}</span>
-                  <textarea className={`${controlClass} min-h-20 font-mono`} spellCheck={false} autoComplete="off" value={key} onChange={event => setKey(event.target.value)} style={{ WebkitTextSecurity: showKey ? 'none' : 'disc' } as CSSProperties} />
+                  <textarea className={`${controlClass} min-h-20 font-mono`} spellCheck={false} autoComplete="off" aria-label={t('密钥（仅保存在本次窗口内存中）', 'Key (kept only in this form memory)')} value={key} onChange={event => setKey(event.target.value)} style={{ WebkitTextSecurity: showKey ? 'none' : 'disc' } as CSSProperties} />
                 </label>
                 <label className="flex items-center gap-2"><input type="checkbox" checked={showKey} onChange={event => setShowKey(event.target.checked)} />{t('显示密钥', 'Show key')}</label>
-                {asymmetric && <label>{t('私钥口令（可选）', 'Private key passphrase (optional)')}<input className={controlClass} type="password" autoComplete="off" value={passphrase} onChange={event => setPassphrase(event.target.value)} /></label>}
+                {asymmetric && <label>{t('私钥口令（可选）', 'Private key passphrase (optional)')}<input className={controlClass} type="password" autoComplete="off" aria-label={t('私钥口令（可选）', 'Private key passphrase (optional)')} value={passphrase} onChange={event => setPassphrase(event.target.value)} /></label>}
               </div>
             )}
-            {action === 'cipher' && <label>{t('IV / Nonce（Hex；加密时留空自动生成）', 'IV / nonce (hex; leave empty to generate on encryption)')}<input className={controlClass} value={iv} onChange={event => setIv(event.target.value)} /></label>}
+            {action === 'cipher' && <label>{t('IV / Nonce（Hex；加密时留空自动生成）', 'IV / nonce (hex; leave empty to generate on encryption)')}<input className={controlClass} aria-label={t('IV / Nonce（Hex；加密时留空自动生成）', 'IV / nonce (hex; leave empty to generate on encryption)')} value={iv} onChange={event => setIv(event.target.value)} /></label>}
             {action === 'cipher' && algorithm.endsWith('gcm') && (
               <div className="grid grid-cols-2 gap-4">
                 <label>AAD (UTF-8)<input className={controlClass} value={aad} onChange={event => setAad(event.target.value)} /></label>
-                <label>{t('认证标签（解密必填，Hex）', 'Authentication tag (hex; required to decrypt)')}<input className={controlClass} value={tag} onChange={event => setTag(event.target.value)} /></label>
+                <label>{t('认证标签（解密必填，Hex）', 'Authentication tag (hex; required to decrypt)')}<input className={controlClass} aria-label={t('认证标签（解密必填，Hex）', 'Authentication tag (hex; required to decrypt)')} value={tag} onChange={event => setTag(event.target.value)} /></label>
               </div>
             )}
             {action === 'rsa' && <label>OAEP label (UTF-8)<input className={controlClass} value={aad} onChange={event => setAad(event.target.value)} /></label>}
-            {action === 'verify' && <label>{t('签名（Base64）', 'Signature (Base64)')}<textarea className={controlClass} value={signature} onChange={event => setSignature(event.target.value)} /></label>}
+            {action === 'verify' && <label>{t('签名（Base64）', 'Signature (Base64)')}<textarea className={controlClass} aria-label={t('签名（Base64）', 'Signature (Base64)')} value={signature} onChange={event => setSignature(event.target.value)} /></label>}
             {action === 'jwt' && operation === 'verify' && <div className="grid grid-cols-2 gap-4">
-              <label>{t('期望签发者 iss（可选）', 'Expected issuer (optional)')}<input className={controlClass} value={issuer} onChange={event => setIssuer(event.target.value)} /></label>
-              <label>{t('期望受众 aud（可选）', 'Expected audience (optional)')}<input className={controlClass} value={audience} onChange={event => setAudience(event.target.value)} /></label>
+              <label>{t('期望签发者 iss（可选）', 'Expected issuer (optional)')}<input className={controlClass} aria-label={t('期望签发者 iss（可选）', 'Expected issuer (optional)')} value={issuer} onChange={event => setIssuer(event.target.value)} /></label>
+              <label>{t('期望受众 aud（可选）', 'Expected audience (optional)')}<input className={controlClass} aria-label={t('期望受众 aud（可选）', 'Expected audience (optional)')} value={audience} onChange={event => setAudience(event.target.value)} /></label>
             </div>}
             {action === 'digest' && ['md5', 'sha1'].includes(algorithm) && <label className="flex items-center gap-2"><input type="checkbox" checked={legacy} onChange={event => setLegacy(event.target.checked)} />{t('我仅用于旧接口兼容，不用于安全认证', 'Legacy interface compatibility only, not security authentication')}</label>}
             {action === 'cipher' && !algorithm.endsWith('gcm') && <p role="note">{t('注意：CBC/CTR 不提供完整性认证；不能检测所有篡改。', 'CBC/CTR are not authenticated and cannot detect all tampering.')}</p>}
@@ -168,7 +168,7 @@ export const OfflineCryptoWorkbench = () => {
             </div>
             {error && <p role="alert" className="whitespace-pre-wrap text-(--color-danger)">{error}</p>}
             <label className="flex flex-col gap-1"><span>{t('结果（可能包含明文或私钥，请妥善处理）', 'Result (may contain plaintext or private keys)')}</span>
-              <textarea data-testid="offline-crypto-result" className={`${controlClass} min-h-36 font-mono`} readOnly spellCheck={false} value={result} />
+              <textarea data-testid="offline-crypto-result" className={`${controlClass} min-h-36 font-mono`} readOnly spellCheck={false} aria-label={t('结果（可能包含明文或私钥，请妥善处理）', 'Result (may contain plaintext or private keys)')} value={result} />
             </label>
           </Dialog>
         </Modal>
