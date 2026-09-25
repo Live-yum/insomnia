@@ -1,0 +1,86 @@
+name: Validate offline UI selector repairs
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-selector-repair.yml, scripts/offline/repair_ui_locators.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ui-selector-repair
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply reviewed selectors and format only the changed test files
+        run: |
+          python3 scripts/offline/repair_ui_locators.py
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          assert names and all(name.startswith('packages/insomnia-smoke-test/') and name.endswith('.ts') for name in names)
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *names], check=True)
+          PY
+      - name: Require zero-warning smoke lint and type checks
+        run: |
+          node node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 packages/insomnia-smoke-test/tests packages/insomnia-smoke-test/playwright
+          npm run type-check -w insomnia
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/selector-repair.patch"
+          git diff --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-selector-repair
+          path: ${{ runner.temp }}/selector-repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-selector-repair
+          path: ${{ runner.temp }}/repair
+      - name: Commit only reviewed tests, without npm or downloaded code execution
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check "$RUNNER_TEMP/repair/selector-repair.patch"
+          git apply --index "$RUNNER_TEMP/repair/selector-repair.patch"
+          python3 - <<'PY'
+          import subprocess
+          names = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines())
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name + '.test.ts' for name in ['insomnia-vault', 'pre-request-script-features', 'preferences-interactions', 'sidebar-focus-onboarding', 'socket-io', 'websocket', 'grpc-interactions', 'export-openapi-spec']}
+          allowed.add('packages/insomnia-smoke-test/playwright/pages/project/index.ts')
+          assert names and names <= allowed, names
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'test: fix ambiguous UI selectors without suppressing assertions'
+          git push origin HEAD:offline/ui-regression-diagnostics
+          git log -1 --format='%H %T'
