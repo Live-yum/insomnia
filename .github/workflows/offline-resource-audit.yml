@@ -1,0 +1,57 @@
+name: Offline resource audit
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths:
+      - .github/workflows/offline-resource-audit.yml
+      - scripts/offline/vendor_plugins.py
+      - scripts/offline/test_vendor*.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-resource-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Materialize verified bytes without installing or executing plugins
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/offline/vendor_plugins.py materialize --target linux-arm64 --output "$RUNNER_TEMP/offline-resources"
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'offline-resources'
+          catalog = json.loads((root / 'catalog.json').read_text(encoding='utf-8'))
+          failed = [item for item in catalog['entries'] if item['status'] == 'materialization-failed']
+          print(json.dumps({'materializationFailures': failed}, indent=2, ensure_ascii=True))
+          (pathlib.Path(os.environ['GITHUB_WORKSPACE']) / 'offline-resource-failures.json').write_text(json.dumps(failed, indent=2), encoding='utf-8')
+          sys.path.insert(0, 'scripts/offline')
+          import vendor_plugins as vendor
+          manifest = json.loads(pathlib.Path('vendor/offline-plugins/manifest.json').read_text(encoding='utf-8'))
+          names = {item['name'] for item in failed}
+          for entry in manifest['entries']:
+              if entry['name'] not in names:
+                  continue
+              print('ROOT METADATA', entry['name'], json.dumps(entry.get('rootArchive', {}), ensure_ascii=True))
+              print('DEPENDENCY LOCATIONS', entry['name'], json.dumps([{'location': p['location'], 'name': p['archive']['name'], 'version': p['archive']['version']} for p in entry['dependencies']], ensure_ascii=True))
+          if failed:
+              raise SystemExit('Resource audit failed; native release must remain blocked')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-resource-failures
+          path: offline-resource-failures.json
+          retention-days: 7
+          if-no-files-found: warn
