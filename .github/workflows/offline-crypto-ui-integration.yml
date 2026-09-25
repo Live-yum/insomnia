@@ -1,0 +1,104 @@
+name: Validate and integrate crypto workbench
+on:
+  push:
+    branches: [offline/basic-crypto-workbench]
+    paths: [.github/workflows/offline-crypto-ui-integration.yml, scripts/offline/wire-crypto-workbench.py, scripts/offline/test-crypto-workbench.mjs]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-crypto-ui-integration
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  DO_NOT_TRACK: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+  PYTHONUTF8: '1'
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked dependencies in isolated read-only build job
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/crypto-install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/crypto-install.log"; exit 1; }
+      - name: Wire reviewed UI and normalize only new implementation formatting
+        run: |
+          python3 scripts/offline/wire-crypto-workbench.py
+          node node_modules/eslint/bin/eslint.js --fix --max-warnings=0 packages/insomnia/src/routes/organization.tsx packages/insomnia/src/ui/offline-locale.ts packages/insomnia/src/ui/components/offline-crypto-workbench.tsx packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/crypto-core.cjs packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/index.cjs
+      - name: Require all workspace lint and type checks
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/crypto-lint.log" 2>&1 || { cat "$RUNNER_TEMP/crypto-lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present > "$RUNNER_TEMP/crypto-types.log" 2>&1 || { cat "$RUNNER_TEMP/crypto-types.log"; exit 1; }
+          node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs
+      - name: Build actual application
+        run: npm run app-build > "$RUNNER_TEMP/crypto-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/crypto-build.log"; exit 1; }
+      - name: Install lockfile Electron and preserve Chromium sandbox
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Real Chinese workbench, crypto, rejection and process-restart test
+        run: xvfb-run -a node scripts/offline/test-crypto-workbench.mjs > "$RUNNER_TEMP/crypto-ui.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/crypto-ui.log"; exit 1; }
+      - name: Save exact validated patch
+        run: |
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/crypto-validated.patch"
+          cat offline-test-results/crypto-workbench.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: crypto-validated-source
+          path: ${{ runner.temp }}/crypto-validated.patch
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: crypto-ui-diagnostics
+          path: |
+            offline-test-results/
+            ${{ runner.temp }}/crypto-*.log
+          if-no-files-found: error
+          retention-days: 7
+  commit:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: crypto-validated-source
+          path: ${{ runner.temp }}/patch
+      - name: Commit only tested source without running application or dependency code
+        run: |
+          set -euo pipefail
+          git fetch origin offline/basic-crypto-workbench
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check "$RUNNER_TEMP/patch/crypto-validated.patch"
+          git apply --index "$RUNNER_TEMP/patch/crypto-validated.patch"
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          allowed = {'packages/insomnia/src/' + name for name in ['routes/organization.tsx', 'ui/offline-locale.ts', 'ui/components/offline-crypto-workbench.tsx', 'vendor/insomnia-plugin-offline-crypto-tools/crypto-core.cjs', 'vendor/insomnia-plugin-offline-crypto-tools/index.cjs']}
+          assert names and set(names) <= allowed, names
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat: mount validated Chinese crypto workbench and format verified implementation'
+          git push origin HEAD:offline/basic-crypto-workbench
+          git log -1 --format='%H %T'

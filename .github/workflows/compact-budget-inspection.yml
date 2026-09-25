@@ -1,0 +1,26 @@
+name: Inspect compact package budget
+on:
+  push:
+    branches: [offline/basic-crypto-workbench]
+    paths: [.github/workflows/compact-budget-inspection.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read exact completed native diagnostics only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 36157096056 --repo Live-yum/insomnia --name offline-complete-diagnostics-linux-arm64 --dir linux-report
+          gh run download 36157096056 --repo Live-yum/insomnia --name offline-complete-diagnostics-windows-x64 --dir windows-report
+          python3 - <<'PY'
+          import json, pathlib
+          for root in ('linux-report', 'windows-report'):
+              for file in pathlib.Path(root).rglob('basic-budget-*.json'):
+                  assert file.is_file() and not file.is_symlink() and file.stat().st_size < 200000
+                  print(root, json.dumps(json.loads(file.read_text(encoding='utf-8')), ensure_ascii=True), flush=True)
+          PY
