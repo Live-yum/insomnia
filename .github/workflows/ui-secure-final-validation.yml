@@ -1,0 +1,178 @@
+name: Validate secure offline UI integration
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-secure-final-validation.yml, scripts/offline/repair_native_storage_and_migration.py, scripts/offline/repair_local_ruleset_contract.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: secure-offline-ui-integration
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply the reviewed security, migration and local ruleset repairs
+        run: |
+          python3 scripts/offline/repair_native_storage_and_migration.py
+          python3 scripts/offline/repair_local_ruleset_contract.py
+          python3 - <<'PY'
+          import pathlib, subprocess
+          file = pathlib.Path('packages/insomnia/src/main/secure-storage-policy.ts')
+          text = file.read_text(encoding='utf-8')
+          file.write_text(text.replace('!/^[\\da-f]+$/i.test(value)', '/[^\\da-f]/i.test(value)'), encoding='utf-8')
+          names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          names.extend(['packages/insomnia/src/main/secure-storage-policy.ts', 'packages/insomnia/src/main/__tests__/secure-storage-policy.test.ts', 'packages/insomnia/src/common/offline-project-migration.ts', 'packages/insomnia/src/common/__tests__/offline-project-migration.test.ts'])
+          names.extend('packages/insomnia-smoke-test/tests/' + name for name in ['migration/local-to-cloud-projects.test.ts', 'smoke/invite.test.ts', 'smoke/konnect.test.ts', 'smoke/external-vault-integration.test.ts'])
+          assert all(name.startswith(('packages/insomnia/src/', 'packages/insomnia-smoke-test/')) and name.endswith(('.ts', '.tsx')) for name in names)
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *sorted(set(names))], check=True)
+          PY
+      - name: Require zero-warning workspace lint and complete workspace types
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present
+      - name: Require the full unit suite on the actual source
+        run: |
+          npm run install-libcurl-node
+          npm test --workspaces --if-present > "$RUNNER_TEMP/unit.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/unit.log"; exit 1; }
+          tail -n 25 "$RUNNER_TEMP/unit.log"
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/repair.patch"
+          git diff --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-secure-integration
+          path: ${{ runner.temp }}/repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-secure-integration
+          path: ${{ runner.temp }}/repair
+      - name: Commit only the validated application and test changes without executing them
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git apply --check "$RUNNER_TEMP/repair/repair.patch"
+          git apply --index "$RUNNER_TEMP/repair/repair.patch"
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          allowed = {'packages/insomnia/src/' + name for name in ['main/ipc/secret-storage.ts', 'main/secure-storage-policy.ts', 'main/__tests__/secure-storage-policy.test.ts', 'common/offline-project-migration.ts', 'common/__tests__/offline-project-migration.test.ts', 'ui/utils/router.ts', 'routes/git-migration.$.tsx']}
+          allowed.update('packages/insomnia-smoke-test/' + name for name in ['playwright/pages/project/index.ts', 'tests/migration/git-repo-onboarding.test.ts', 'tests/migration/local-to-cloud-projects.test.ts', 'tests/smoke/custom-lint-rules.test.ts', 'tests/smoke/invite.test.ts', 'tests/smoke/konnect.test.ts', 'tests/smoke/external-vault-integration.test.ts'])
+          assert names and set(names) <= allowed, set(names) - allowed
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(security): reject plaintext storage and preserve offline local migration and ruleset boundaries'
+          git push origin HEAD:offline/ui-regression-diagnostics
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git log -1 --format='%H %T'
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install the real native keyring and GUI prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y gnome-keyring libsecret-tools libsecret-1-0 dbus-x11 xvfb xauth
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Install pinned Electron and keep Chromium sandbox enabled
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Run every UI test with a disposable unlocked OS keyring, no test filtering or retry
+        run: dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh npm run test:build -w insomnia-smoke-test -- --shard=${{ matrix.shard }}/6 --retries=0 > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 55 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Record actual assertion failures and relevant page state
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          root = pathlib.Path('packages/insomnia-smoke-test')
+          raw = (root/'test-results.xml').read_bytes()
+          assert len(raw) < 20 * 1024 * 1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures = []
+          for case in cases:
+              for error in list(case.findall('failure')) + list(case.findall('error')):
+                  failures.append({'file': case.get('classname'), 'name': case.get('name'), 'error': re.sub(r'\x1b\[[0-9;]*m', '', error.text or '')[:1600]})
+          report = {'cases': len(cases), 'failures': failures, 'skipped': sum(case.find('skipped') is not None for case in cases)}
+          (root/'failure-summary.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+          print(json.dumps(report), flush=True)
+          for file in sorted((root/'traces').rglob('error-context.md')):
+              snapshot = file.read_text(encoding='utf-8').split('# Page snapshot',1)[-1].split('# Test source',1)[0]
+              print(str(file) + '\n' + snapshot[-4000:], flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: secure-offline-ui-${{ matrix.shard }}
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            packages/insomnia-smoke-test/failure-summary.json
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
+  required:
+    if: ${{ always() }}
+    needs: [prepare, commit, ui]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require real success of every job, not a skipped or cancelled matrix
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          results = json.loads(os.environ['RESULTS'])
+          assert all(job['result'] == 'success' for job in results.values()), results
+          PY
