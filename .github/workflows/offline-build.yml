@@ -65,47 +65,53 @@ jobs:
         with:
           node-version-file: .nvmrc
           package-manager-cache: false
-      - name: Verify actual committed archives and local resource generation
+      - name: Verify committed archive bytes and complete resource generation
         run: |
           python -m unittest discover -s scripts/offline -p 'test_*.py' -v
           python scripts/offline/vendor_plugins.py verify
           test -f docs/OFFLINE-SOURCE-STATUS.json
           test -f docs/OFFLINE-PLUGIN-LOADER-STATUS.json
           python scripts/offline/vendor_plugins.py materialize --target '${{ matrix.target }}' --output packages/insomnia/offline-plugin-resources
-      - name: Install Linux GUI and test prerequisites
+      - name: Install Linux GUI and isolated-test prerequisites
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-0 libnss3 libasound2t64 libgbm1 libxss1 libsecret-1-0 xvfb xauth
+          sudo apt-get update > "$RUNNER_TEMP/offline-apt.log" 2>&1
+          sudo apt-get install -y libgtk-3-0 libnss3 libasound2t64 libgbm1 libxss1 libsecret-1-0 xvfb xauth iproute2 >> "$RUNNER_TEMP/offline-apt.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-apt.log"; exit 1; }
       - name: Install application build dependencies in the connected build zone
-        run: npm ci --no-audit --no-fund
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
       - name: Build the actual committed application source
-        run: npm run app-build
+        run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-build.log"; exit 1; }
       - name: Type-check application and generated routes
-        run: npm run type-check -w insomnia
-      - name: Create unpacked native application with all local plugin resources
+        run: npm run type-check -w insomnia > "$RUNNER_TEMP/offline-typecheck.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-typecheck.log"; exit 1; }
+      - name: Create the native unpacked application without publishing
         working-directory: packages/insomnia
-        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir ${{ matrix.flags }} --publish never
-      - name: Preserve every reviewed plugin resource byte without packaging filters
-        run: python scripts/offline/stage_resources.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}'
-      - name: Preserve the upstream Windows secure executable wrapper
+        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir ${{ matrix.flags }} --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
+      - name: Preserve every local plugin file and require all complete profiles
+        run: python scripts/offline/stage_resources.py --directory 'packages/insomnia/dist/${{ matrix.directory }}' --target '${{ matrix.target }}'
+      - name: Fresh-profile Windows UI, plugin and sandbox validation before wrapping
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.mjs 'packages/insomnia/dist/win-unpacked/Insomnia.exe' > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 180 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
+      - name: Build the unchanged Windows secure executable wrapper
         if: runner.os == 'Windows'
         run: |
-          if [ -d /c/msys64/mingw64/bin ]; then export PATH="/c/msys64/mingw64/bin:$PATH"; fi
-          ./build-secure-wrapper.sh CI
-      - name: Fresh-profile packaged application and plugin discovery smoke test (Windows)
+          export PATH="/c/msys64/mingw64/bin:$PATH"
+          ./build-secure-wrapper.sh CI > "$RUNNER_TEMP/offline-wrapper-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-wrapper-build.log"; exit 1; }
+      - name: Final Windows wrapper normal start with application outbound traffic blocked
         if: runner.os == 'Windows'
-        run: node scripts/offline/smoke.mjs packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
-      - name: Fresh-profile packaged application and plugin discovery smoke test (Linux)
+        shell: pwsh
+        run: ./scripts/offline/smoke_windows_wrapper.ps1
+      - name: Fresh-profile Linux UI and plugin validation with sandbox and no external network
         if: runner.os == 'Linux'
-        run: xvfb-run -a node scripts/offline/smoke.mjs packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
-      - name: Archive validated architecture with portable launchers and checksums
+        run: bash scripts/offline/smoke_linux.sh 'packages/insomnia/dist/linux-arm64-unpacked/insomnia' > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 180 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
+      - name: Archive the validated architecture, launchers, evidence and SHA-256
         run: |
-          python scripts/offline/package_portable.py --directory packages/insomnia/dist/${{ matrix.directory }} --target '${{ matrix.target }}' --output offline-dist
-          cp offline-resource-integrity.json offline-dist/offline-resource-integrity-${{ matrix.target }}.json
-          cp offline-smoke-report.json offline-dist/offline-smoke-report-${{ matrix.target }}.json
+          python scripts/offline/package_portable.py --target '${{ matrix.target }}' --directory 'packages/insomnia/dist/${{ matrix.directory }}' --output offline-dist
+          cp offline-smoke-report.json 'offline-dist/offline-smoke-report-${{ matrix.target }}.json'
+          cp offline-resource-integrity.json 'offline-dist/offline-resource-integrity-${{ matrix.target }}.json'
+          if [ '${{ matrix.target }}' = 'win32-x64' ]; then
+            cp offline-wrapper-report.json offline-dist/offline-wrapper-report-win32-x64.json
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: success()
         with:
           name: offline-portable-${{ matrix.target }}
           path: offline-dist/*
@@ -119,6 +125,8 @@ jobs:
           path: |
             offline-smoke-report.json
             offline-resource-integrity.json
+            offline-wrapper-report.json
             packages/insomnia/offline-plugin-resources/catalog.json
+            ${{ runner.temp }}/offline-*.log
           if-no-files-found: warn
           retention-days: 14

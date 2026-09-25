@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import os from 'node:os';
@@ -41,11 +43,13 @@ for (const entry of prepared) {
     expected.push(entry.name);
   }
 }
+const executableHash = createHash('sha256');
+for await (const chunk of createReadStream(executablePath)) executableHash.update(chunk);
 const profile = await mkdtemp(path.join(os.tmpdir(), 'insomnia-offline-smoke-'));
 const env = { ...process.env, INSOMNIA_OFFLINE_DATA_PATH: profile };
 for (const key of [
   'INSOMNIA_DATA_PATH', 'INSOMNIA_SESSION', 'INSOMNIA_SKIP_ONBOARDING', 'PLAYWRIGHT_TEST',
-  'INSOMNIA_OFFLINE_BROWSER_ORIGINS', 'INSOMNIA_OFFLINE_PLUGIN_DIR',
+  'INSOMNIA_OFFLINE_BROWSER_ORIGINS', 'INSOMNIA_OFFLINE_PLUGIN_DIR', 'ELECTRON_RUN_AS_NODE',
   'GH_TOKEN', 'GITHUB_TOKEN', 'NODE_AUTH_TOKEN', 'NPM_TOKEN',
 ]) delete env[key];
 let app;
@@ -61,11 +65,12 @@ const report = {
   catalogEntries: catalog.entries.length,
   materializedPlugins: prepared.length,
   expectedPlugins: expected.length,
+  electronImageSha256: executableHash.digest('hex'),
   incompatibleManifests,
   archiveExceptions: catalog.entries.filter(entry => entry.status !== 'materialized-unreviewed').map(entry => ({ name: entry.name, status: entry.status, error: entry.error })),
   passed: false,
   allCatalogPluginsUsable: false,
-  scope: 'Packaged startup, account-free local route, disabled-plugin enumeration and Chromium URL policy with a reachable loopback control. Not all plugin functionality or OS-level egress certification.',
+  scope: 'Packaged startup, real local route, disabled-plugin enumeration, renderer isolation and Chromium URL policy. Windows UI is tested before wrapping; the final secure wrapper has a separate normal-start test on identical Electron bytes. Not all plugin functionality or site egress certification.',
 };
 try {
   await new Promise((resolve, reject) => {
@@ -77,19 +82,38 @@ try {
   assert.equal(await control.text(), 'reachable-loopback-control');
   assert.equal(probeRequests, 1, 'Positive control must reach the live server.');
   probeRequests = 0;
-  app = await electron.launch({ executablePath, env, timeout: 120_000 });
+  // Playwright 1.59 defaults this to false; testing with that default silently
+  // adds --no-sandbox. Explicit true is mandatory for this distribution.
+  app = await electron.launch({ executablePath, env, chromiumSandbox: true, timeout: 120_000 });
   const page = await app.firstWindow({ timeout: 120_000 });
   page.setDefaultTimeout(120_000);
   await page.waitForURL(url => url.pathname.startsWith('/organization/org_offline/'));
   await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
+  const security = await app.evaluate(({ app: application, BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows().find(item => item.webContents.getURL().includes('/organization/org_offline/'));
+    if (!window) throw new Error('No real local-organization window');
+    const preferences = window.webContents.getLastWebPreferences();
+    return {
+      noSandboxArgument: application.commandLine.hasSwitch('no-sandbox'),
+      nodeIntegration: preferences.nodeIntegration,
+      nodeIntegrationInWorker: preferences.nodeIntegrationInWorker,
+      contextIsolation: preferences.contextIsolation,
+      sandbox: preferences.sandbox,
+    };
+  });
+  assert.equal(security.noSandboxArgument, false, 'The tested executable must not have --no-sandbox.');
+  assert.equal(security.nodeIntegration, false);
+  assert.equal(security.nodeIntegrationInWorker, false);
+  assert.equal(security.contextIsolation, true);
+  assert.equal(security.sandbox, true);
+  report.rendererSecurity = security;
+  report.chromiumSandboxEnabled = true;
   const plugins = await page.evaluate(() => window.main.plugins.getPlugins());
   const names = new Set(plugins.map(plugin => plugin.name));
   const missing = expected.filter(name => !names.has(name));
   assert.deepEqual(missing, [], 'Every prepared plugin with valid host metadata must be discoverable locally.');
   assert(plugins.every(plugin => plugin.config.disabled), 'Unreviewed plugins must not start enabled.');
   assert(names.has('insomnia-plugin-crypto'), 'Crypto Plugin must be present.');
-  // Main-process Chromium fetch bypasses renderer CSP/CORS and custom protocols.
-  // A DNS failure to a deliberately nonexistent hostname is not a valid positive test.
   const chromiumResult = await app.evaluate(async ({ net }, url) => {
     try {
       const response = await net.fetch(url, { bypassCustomProtocolHandlers: true, signal: AbortSignal.timeout(10_000) });
@@ -108,6 +132,7 @@ try {
   console.log(JSON.stringify(report, null, 2));
 } catch (error) {
   report.error = String(error?.stack || error);
+  if (app) console.error('Application windows:', await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().map(window => ({ title: window.getTitle(), url: window.webContents.getURL() }))).catch(() => []));
   throw error;
 } finally {
   await writeFile('offline-smoke-report.json', JSON.stringify(report, null, 2));
