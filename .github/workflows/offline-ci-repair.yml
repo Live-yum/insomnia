@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: offline-ci-source-repair
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   PYTHONUTF8: '1'
