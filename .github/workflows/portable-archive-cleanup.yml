@@ -1,0 +1,87 @@
+name: Validate clean portable Windows payload
+on:
+  push:
+    branches: [offline/portable-archive-cleanup]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: portable-archive-cleanup
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Test exact-file cleanup and failure boundaries
+        run: python -m unittest discover -s scripts/offline -p 'test_windows_payload_cleanup.py' -v
+      - name: Download the already-native-tested immutable candidate, not arbitrary external binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          github-token: ${{ github.token }}
+          run-id: 36184602005
+          name: insomnia-basic-windows-x64
+          path: downloaded
+      - name: Verify pinned candidate digest, extract safely and remove only identical test copies
+        id: extracted
+        shell: python
+        run: |
+          import hashlib,json,os,pathlib,sys,zipfile
+          sys.path.insert(0,'scripts/offline')
+          from safe_archive import extract_verified_archive
+          from windows_payload_cleanup import cleanup_windows_test_payload
+          file=pathlib.Path('downloaded/Insomnia-Offline-13.3.0-basic-windows-x64-portable.zip')
+          with file.open('rb') as stream:
+              assert hashlib.file_digest(stream,'sha256').hexdigest()=='52da93fc9e08757c73105faafd99c1b8780dfe868742f9d3f629259dcbcf1d6b'
+          basename='Insomnia-Offline-13.3.0-basic-windows-x64-portable'
+          manifest={}
+          with zipfile.ZipFile(file) as archive:
+              assert len(archive.infolist())<1500
+              for info in archive.infolist():
+                  assert info.filename.startswith(basename+'/') and not info.is_dir()
+                  with archive.open(info) as stream:
+                      digest=hashlib.file_digest(stream,'sha256').hexdigest()
+                  manifest[info.filename[len(basename)+1:]]={'bytes':info.file_size,'sha256':digest}
+          output=pathlib.Path(os.environ['RUNNER_TEMP'])/'portable-extraction'
+          output.mkdir()
+          root=extract_verified_archive(file,output,basename,manifest,True)
+          removed=cleanup_windows_test_payload(root,'13.3.0')
+          assert any(item['path']=='insomnia-13.3.0.exe' for item in removed)
+          pathlib.Path('cleanup-proof.json').write_text(json.dumps({'sourceCandidate':'1991c9cca93b9e0a5b6e4d4c5183d1a0b8e590a2','removed':removed},indent=2),encoding='utf-8')
+          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf-8') as out: out.write('directory='+str(root)+'\n')
+      - name: Require the real secure entrypoint to recreate and run its missing payload
+        shell: pwsh
+        env:
+          CLEAN_DIRECTORY: ${{ steps.extracted.outputs.directory }}
+        run: ./scripts/offline/smoke-windows-wrapper.ps1 -Executable (Join-Path $env:CLEAN_DIRECTORY 'Insomnia.exe') -ReportFile 'fresh-wrapper-proof.json' -RequireFreshPayload
+      - name: Re-archive the cleaned candidate and record the actual size change
+        shell: python
+        env:
+          CLEAN_DIRECTORY: ${{ steps.extracted.outputs.directory }}
+        run: |
+          import hashlib,json,os,pathlib,sys,zipfile
+          sys.path.insert(0,'scripts/offline')
+          from windows_payload_cleanup import cleanup_windows_test_payload
+          root=pathlib.Path(os.environ['CLEAN_DIRECTORY'])
+          cleanup_windows_test_payload(root,'13.3.0')
+          output=pathlib.Path(os.environ['RUNNER_TEMP'])/'clean-proof.zip'
+          files=[p for p in root.rglob('*') if p.is_file()]
+          with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
+              for file in sorted(files): archive.write(file,str(pathlib.Path(root.name)/file.relative_to(root)))
+          result=json.loads(pathlib.Path('cleanup-proof.json').read_text(encoding='utf-8'))
+          result.update(status='passed',originalArchiveBytes=307088070,cleanArchiveBytes=output.stat().st_size,
+                        cleanUnpackedBytes=sum(p.stat().st_size for p in files),physicalFileCount=len(files),
+                        freshWrapperRecreatedPayload=True,notReleased=True)
+          pathlib.Path('cleanup-proof.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
+          print(json.dumps(result,indent=2))
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: portable-cleanup-proof
+          path: |
+            cleanup-proof.json
+            fresh-wrapper-proof.json
+          if-no-files-found: error
