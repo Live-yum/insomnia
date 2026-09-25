@@ -1,0 +1,33 @@
+name: Inspect offline migration contracts
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/offline-source-contracts-inspect.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Print actual local migration and lint entrypoints without code execution
+        shell: python
+        run: |
+          import pathlib
+          root = pathlib.Path('packages/insomnia/src')
+          for file in sorted(root.rglob('*.ts*')):
+              text = file.read_text(encoding='utf-8')
+              lines = text.splitlines()
+              for i, line in enumerate(lines):
+                  definition = 'getInitialEntry' in line and ('function' in line or 'const getInitialEntry' in line)
+                  if definition:
+                      print(str(file) + '\n' + '\n'.join(f'{n+1}: {lines[n]}' for n in range(i,min(len(lines),i+230))), flush=True)
+          for name in ['git-migration._.tsx', 'onboarding._.tsx']:
+              file = root / 'routes' / name
+              if file.exists():
+                  print(str(file) + '\n' + file.read_text(encoding='utf-8')[:15000], flush=True)
+          file = pathlib.Path('packages/insomnia-smoke-test/tests/migration/local-to-cloud-projects.test.ts')
+          print(str(file) + '\n' + file.read_text(encoding='utf-8'), flush=True)
