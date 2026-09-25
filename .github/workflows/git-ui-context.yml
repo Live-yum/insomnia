@@ -1,0 +1,59 @@
+name: Inspect real Git form failures
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/git-ui-context.yml]
+permissions:
+  contents: read
+jobs:
+  git:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      SCARF_ANALYTICS: 'false'
+      NODE_OPTIONS: --max_old_space_size=6144
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Keep the pinned Electron sandbox enabled
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Exercise folder adoption and branch discovery
+        run: dbus-run-session -- npm run test:build -w insomnia-smoke-test -- --project=Smoke --retries=0 'git-local-repos.test.ts' > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 60 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Print actual error context rather than infer from timeouts
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import pathlib, re, os
+          for file in pathlib.Path('packages/insomnia-smoke-test/traces').rglob('error-context.md'):
+              print(str(file) + '\n' + file.read_text(encoding='utf-8')[-15000:], flush=True)
+          log = pathlib.Path(os.environ['RUNNER_TEMP'], 'ui.log')
+          if log.exists():
+              lines = re.sub(r'\x1b\[[0-9;]*m', '', log.read_text()).splitlines()
+              for i, line in enumerate(lines):
+                  if any(s in line for s in ['Could not fetch', 'Invalid Git', 'projectId', 'Git credentials', 'git.init', 'git.open', 'Failed to']):
+                      print('\n'.join(lines[max(0,i-1):i+10]), flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: git-form-context
+          path: |
+            packages/insomnia-smoke-test/traces/**/error-context.md
+            packages/insomnia-smoke-test/test-results.xml
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
