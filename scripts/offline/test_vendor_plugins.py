@@ -54,11 +54,19 @@ class VendorTests(unittest.TestCase):
             vendor.check_integrity(data.replace(b'\r\n', b'\n'), integrity)
 
     def test_strongest_integrity_wins(self):
-        data = b'actual bytes'
-        weak = 'sha1-' + base64.b64encode(hashlib.sha1(data).digest()).decode()
+        data = b'abc'
+        # Published SHA-1 test vector for "abc", retained only as untrusted
+        # legacy SRI input. Do not compute a weak cryptographic digest here.
+        weak = 'sha1-qZk+NkcGgWq6PiVxeFDCbJzQ2J0='
+        strong = 'sha512-' + base64.b64encode(hashlib.sha512(data).digest()).decode()
         wrong = 'sha512-' + base64.b64encode(hashlib.sha512(b'wrong').digest()).decode()
-        with self.assertRaises(ValueError):
-            vendor.check_integrity(data, weak + ' ' + wrong)
+        for integrity in (weak + ' ' + wrong, wrong + ' ' + weak):
+            with self.subTest(integrity=integrity), self.assertRaises(ValueError):
+                vendor.check_integrity(data, integrity)
+        # Positive control: the valid strong digest works in either ordering.
+        for integrity in (weak + ' ' + strong, strong + ' ' + weak):
+            with self.subTest(integrity=integrity):
+                vendor.check_integrity(data, integrity)
 
     def test_unsafe_paths(self):
         for name in ('../escape', '/absolute', 'package/../escape', 'package/a\\b', 'C:/drive', 'package/a:stream', 'package/\x00bad'):
