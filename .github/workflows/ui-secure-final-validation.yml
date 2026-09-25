@@ -29,7 +29,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 80 "$RUNNER_TEMP/install.log"; exit 1; }
-      - name: Apply the reviewed security, migration and local ruleset repairs
+      - name: Apply reviewed security, migration, ruleset and exact rename-target repairs
         run: |
           python3 scripts/offline/repair_native_storage_and_migration.py
           python3 scripts/offline/repair_local_ruleset_contract.py
@@ -38,6 +38,16 @@ jobs:
           file = pathlib.Path('packages/insomnia/src/main/secure-storage-policy.ts')
           text = file.read_text(encoding='utf-8')
           file.write_text(text.replace('!/^[\\da-f]+$/i.test(value)', '/[^\\da-f]/i.test(value)'), encoding='utf-8')
+          file = pathlib.Path('packages/insomnia/src/main/__tests__/secure-storage-policy.test.ts')
+          text = file.read_text(encoding='utf-8')
+          assert text.count("'aa\\n'") == 1
+          file.write_text(text.replace("'aa\\n'", "'aa\\n', 'abc\\n'"), encoding='utf-8')
+          file = pathlib.Path('packages/insomnia-smoke-test/playwright/pages/components/navigation-sidebar.ts')
+          text = file.read_text(encoding='utf-8')
+          old = "    await row.dblclick();\n    const textbox = row.getByRole('textbox');"
+          new = "    await row.click();\n    await expect(row).toHaveAttribute('data-selected', 'true');\n    // Only the editable name handles double-click; the wide row also contains badges.\n    await row.locator('[data-editable]').dblclick();\n    const textbox = row.getByRole('textbox');"
+          assert text.count(old) == 1
+          file.write_text(text.replace(old, new), encoding='utf-8')
           names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
           names.extend(['packages/insomnia/src/main/secure-storage-policy.ts', 'packages/insomnia/src/main/__tests__/secure-storage-policy.test.ts', 'packages/insomnia/src/common/offline-project-migration.ts', 'packages/insomnia/src/common/__tests__/offline-project-migration.test.ts'])
           names.extend('packages/insomnia-smoke-test/tests/' + name for name in ['migration/local-to-cloud-projects.test.ts', 'smoke/invite.test.ts', 'smoke/konnect.test.ts', 'smoke/external-vault-integration.test.ts'])
@@ -48,11 +58,29 @@ jobs:
         run: |
           npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
           npm run type-check --workspaces --if-present
+      - name: Compile the real application before running build-dependent tests
+        run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/build.log"; exit 1; }
       - name: Require the full unit suite on the actual source
         run: |
           npm run install-libcurl-node
-          npm test --workspaces --if-present > "$RUNNER_TEMP/unit.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/unit.log"; exit 1; }
-          tail -n 25 "$RUNNER_TEMP/unit.log"
+          set +e
+          npm test --workspaces --if-present > "$RUNNER_TEMP/unit.log" 2>&1
+          status=$?
+          set -e
+          python3 - <<'PY'
+          import os, pathlib, re
+          file = pathlib.Path(os.environ['RUNNER_TEMP'], 'unit.log')
+          lines = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', file.read_text(encoding='utf-8')).splitlines()
+          emitted = set()
+          for i, line in enumerate(lines):
+              if re.search(r'\bFAIL\b|Failed Tests|Failed Suites|Unhandled Error|Error:|AssertionError|Test Files.*failed', line):
+                  for n in range(max(0, i-2), min(len(lines), i+24)):
+                      if n not in emitted:
+                          print(lines[n][:1500], flush=True)
+                          emitted.add(n)
+          print('\n'.join(lines[-25:]), flush=True)
+          PY
+          test "$status" = 0
           git diff --check
           git diff --binary > "$RUNNER_TEMP/repair.patch"
           git diff --stat
@@ -62,6 +90,16 @@ jobs:
           path: ${{ runner.temp }}/repair.patch
           if-no-files-found: error
           retention-days: 3
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: secure-integration-quality-evidence
+          path: |
+            ${{ runner.temp }}/unit.log
+            ${{ runner.temp }}/lint.log
+            ${{ runner.temp }}/build.log
+          if-no-files-found: error
+          retention-days: 7
   commit:
     needs: prepare
     runs-on: ubuntu-24.04
@@ -90,7 +128,7 @@ jobs:
           import subprocess
           names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
           allowed = {'packages/insomnia/src/' + name for name in ['main/ipc/secret-storage.ts', 'main/secure-storage-policy.ts', 'main/__tests__/secure-storage-policy.test.ts', 'common/offline-project-migration.ts', 'common/__tests__/offline-project-migration.test.ts', 'ui/utils/router.ts', 'routes/git-migration.$.tsx']}
-          allowed.update('packages/insomnia-smoke-test/' + name for name in ['playwright/pages/project/index.ts', 'tests/migration/git-repo-onboarding.test.ts', 'tests/migration/local-to-cloud-projects.test.ts', 'tests/smoke/custom-lint-rules.test.ts', 'tests/smoke/invite.test.ts', 'tests/smoke/konnect.test.ts', 'tests/smoke/external-vault-integration.test.ts'])
+          allowed.update('packages/insomnia-smoke-test/' + name for name in ['playwright/pages/project/index.ts', 'playwright/pages/components/navigation-sidebar.ts', 'tests/migration/git-repo-onboarding.test.ts', 'tests/migration/local-to-cloud-projects.test.ts', 'tests/smoke/custom-lint-rules.test.ts', 'tests/smoke/invite.test.ts', 'tests/smoke/konnect.test.ts', 'tests/smoke/external-vault-integration.test.ts'])
           assert names and set(names) <= allowed, set(names) - allowed
           PY
           git config user.name 'github-actions[bot]'
