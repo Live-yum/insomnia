@@ -1,0 +1,156 @@
+name: Publish full-catalog portable preview
+
+on:
+  push:
+    branches: [offline/standalone-vendored]
+    paths:
+      - .github/workflows/offline-preview-release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: offline-full-catalog-preview-publication
+  cancel-in-progress: false
+
+env:
+  SOURCE_SHA: 6d43d0fee20edb2d56255470233fd5edd42e9972
+  VALIDATION_RUN: '36097383740'
+  RELEASE_TAG: offline-full-v13.3.0-rc.1
+
+jobs:
+  verify:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/standalone-vendored'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Require the full-suite and two native jobs to finish successfully
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run watch "$VALIDATION_RUN" --repo Live-yum/insomnia --exit-status --interval 20 > "$RUNNER_TEMP/validation-watch.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/validation-watch.log"; exit 1; }
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          path: validated-source
+          persist-credentials: false
+      - name: Download only the two validated native artifacts from that exact run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "$VALIDATION_RUN" --repo Live-yum/insomnia --name offline-portable-win32-x64 --dir incoming/windows
+          gh run download "$VALIDATION_RUN" --repo Live-yum/insomnia --name offline-portable-linux-arm64 --dir incoming/linux
+      - name: Verify source, reports, sandbox, final wrapper, catalog and archive digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 -m py_compile scripts/offline/verify_portable_release.py
+          python3 scripts/offline/verify_portable_release.py --source validated-source --assets incoming --output publication/assets --source-sha "$SOURCE_SHA" --run-id "$VALIDATION_RUN"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: offline-publication-verified
+          path: publication/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      # No repository checkout, npm, application or plugin execution in this
+      # write-enabled job. It handles only this workflow's verified inert files.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: offline-publication-verified
+          path: publication
+      - name: Verify every file again after the artifact transfer
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib, re
+          root = pathlib.Path('publication')
+          manifest = json.loads((root / 'publication-manifest.json').read_text(encoding='utf-8'))
+          files = {file.name: file for file in (root / 'assets').iterdir()}
+          assert set(files) == set(manifest), 'Unexpected publication files'
+          for name, record in manifest.items():
+              assert re.fullmatch(r'[A-Za-z0-9._-]+', name), 'Invalid asset filename'
+              file = files[name]
+              assert file.is_file() and not file.is_symlink()
+              assert file.stat().st_size == record['bytes']
+              with file.open('rb') as stream:
+                  assert hashlib.file_digest(stream, 'sha256').hexdigest() == record['sha256'], name
+          info = json.loads(files['BUILD-INFO.json'].read_text(encoding='utf-8'))
+          assert info['sourceCommit'] == os.environ['SOURCE_SHA']
+          assert info['validationRun'] == int(os.environ['VALIDATION_RUN'])
+          assert info['releaseKind'] == 'unmerged-branch-portable-preview'
+          print('Verified publication assets:', len(files), flush=True)
+      - name: Upload to a new draft without overwriting an existing release or tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$RELEASE_TAG" --repo Live-yum/insomnia >/dev/null 2>&1; then
+            echo 'Refusing to overwrite an existing release'; exit 1
+          fi
+          if gh api "repos/Live-yum/insomnia/git/ref/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            echo 'Refusing to reuse an existing tag'; exit 1
+          fi
+          gh release create "$RELEASE_TAG" publication/assets/* --repo Live-yum/insomnia --target "$SOURCE_SHA" --draft --prerelease --latest=false --title 'Insomnia Offline 13.3.0 — Full catalog portable RC 1' --notes-file publication/release-notes.md
+          id=$(gh release view "$RELEASE_TAG" --repo Live-yum/insomnia --json databaseId --jq .databaseId)
+          gh api "repos/Live-yum/insomnia/releases/$id" > publication/remote-draft.json
+          echo "RELEASE_ID=$id" >> "$GITHUB_ENV"
+      - name: Require all remote release assets to match their validated bytes
+        shell: python
+        run: |
+          import json, os, pathlib
+          root = pathlib.Path('publication')
+          manifest = json.loads((root / 'publication-manifest.json').read_text(encoding='utf-8'))
+          release = json.loads((root / 'remote-draft.json').read_text(encoding='utf-8'))
+          assert release['draft'] is True and release['prerelease'] is True
+          assert release['tag_name'] == os.environ['RELEASE_TAG']
+          assert release['target_commitish'] == os.environ['SOURCE_SHA']
+          assets = {asset['name']: asset for asset in release['assets']}
+          assert len(release['assets']) == len(assets) == len(manifest)
+          assert set(assets) == set(manifest)
+          for name, record in manifest.items():
+              asset = assets[name]
+              assert asset['state'] == 'uploaded', name
+              assert asset['size'] == record['bytes'], name
+              assert asset['digest'] == 'sha256:' + record['sha256'], name
+          print('All remote release asset digests match.', flush=True)
+      - name: Publish the fully uploaded and verified preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release edit "$RELEASE_TAG" --repo Live-yum/insomnia --draft=false --prerelease --latest=false
+          gh api "repos/Live-yum/insomnia/releases/$RELEASE_ID" > publication/published-release.json
+          python3 - <<'PY'
+          import json, os, pathlib
+          release = json.loads(pathlib.Path('publication/published-release.json').read_text(encoding='utf-8'))
+          assert release['draft'] is False and release['prerelease'] is True
+          assert release['tag_name'] == os.environ['RELEASE_TAG']
+          assert release['published_at']
+          print(release['html_url'], flush=True)
+          for asset in release['assets']:
+              print(asset['name'], asset['size'], asset['digest'], asset['browser_download_url'], flush=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: offline-publication-receipt
+          path: |
+            publication/publication-manifest.json
+            publication/remote-draft.json
+            publication/published-release.json
+          if-no-files-found: warn
+          retention-days: 14
