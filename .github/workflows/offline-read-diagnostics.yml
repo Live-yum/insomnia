@@ -1,0 +1,35 @@
+name: Read offline validation diagnostics
+on:
+  push:
+    branches: [offline/basic-crypto-workbench]
+    paths: [.github/workflows/offline-read-diagnostics.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  read:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read existing validation results without running repository or artifact code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, subprocess
+          for run in [36159913921, 36158822910, 36150716068]:
+              response = subprocess.run(['gh','run','view',str(run),'--repo','Live-yum/insomnia','--log-failed'], text=True, capture_output=True)
+              lines = re.sub(r'\x1b\[[0-9;]*m','',response.stdout).splitlines()
+              print('RUN',run,'LOG EXCERPTS',flush=True)
+              indexes = set()
+              for i,line in enumerate(lines):
+                  if any(term in line for term in ['Error:', 'error ', 'error:', 'Timeout', 'Traceback', 'Findings:', 'severity', 'ValueError', 'AssertionError']):
+                      indexes.update(range(max(0,i-2),min(len(lines),i+8)))
+              for index in sorted(indexes)[:160]: print(lines[index][:1800],flush=True)
+              print('\n'.join(lines[-15:]),flush=True)
+          result = subprocess.run(['gh','run','download','36159913921','--repo','Live-yum/insomnia','--name','crypto-ui-diagnostics','--dir','ui-report'],text=True,capture_output=True)
+          if result.returncode: raise RuntimeError(result.stderr)
+          for file in pathlib.Path('ui-report').rglob('crypto-ui-page.txt'):
+              text = file.read_text(encoding='utf-8')
+              for item in re.findall(r'<[^>]*role="alert"[^>]*>.*?</[^>]+>',text,re.S): print('UI ALERT',item[:4000],flush=True)
+          PY
