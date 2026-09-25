@@ -35,6 +35,11 @@ def replace(relative: str, before: str, after: str) -> None:
 def main() -> None:
     if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT).strip():
         raise ValueError('Repair requires a clean checkout')
+    # The service SDK supports five HTTP methods; the generic proxy entry point
+    # is tested separately. Do not widen production types for test fixtures.
+    replace('src/common/__tests__/insomnia-fetch.test.ts',
+            "['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const",
+            "['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const")
     # Preserve the independently committed archive extraction repair.
     replace(
         'src/main/__tests__/bundle-spectral-ruleset.test.ts',
