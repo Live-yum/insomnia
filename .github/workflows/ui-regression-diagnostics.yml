@@ -1,0 +1,37 @@
+name: Inspect offline UI regressions
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-regression-diagnostics.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Download only existing test reports from the identified failed run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 36134500174 --repo Live-yum/insomnia --pattern 'junit-results-98-shard-*' --dir reports
+      - name: Summarize every failure without executing downloaded code
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          cases = failures = skips = 0
+          for file in sorted(pathlib.Path('reports').rglob('test-results.xml')):
+              raw = file.read_bytes()
+              assert len(raw) < 20 * 1024 * 1024
+              assert b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+              for case in ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'):
+                  cases += 1
+                  skips += int(case.find('skipped') is not None)
+                  for error in list(case.findall('failure')) + list(case.findall('error')):
+                      failures += 1
+                      text = re.sub(r'\x1b\[[0-9;]*m', '', error.text or error.get('message', ''))
+                      lines = [line.strip() for line in text.splitlines() if line.strip()]
+                      useful = '\n'.join(lines[1:14])
+                      print(json.dumps({'file': case.get('classname'), 'case': case.get('name'), 'failure': useful[:700]}, ensure_ascii=True), flush=True)
+          print(json.dumps({'cases': cases, 'failures': failures, 'skips': skips}), flush=True)
