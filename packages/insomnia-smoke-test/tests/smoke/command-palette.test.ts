@@ -30,7 +30,7 @@ test('Command palette - can switch between requests and workspaces', async ({ ap
   await page.locator('body').press(process.platform === 'darwin' ? 'Meta+p' : 'Control+p');
   await page.getByPlaceholder('Search and switch between').fill('send js');
   // Results arrive asynchronously over IPC; do not press Enter on the previous search.
-  await page.getByRole('option').filter({ hasText: /sends.*json/i }).first().waitFor();
+  await page.getByRole('option').filter({ hasText: /send.*json/i }).first().waitFor();
   await page.getByPlaceholder('Search and switch between').press('ArrowDown');
   await page.getByPlaceholder('Search and switch between').press('Enter');
   await page.getByTestId('OneLineEditor').getByText('http://127.0.0.1:4010/pets/').click();

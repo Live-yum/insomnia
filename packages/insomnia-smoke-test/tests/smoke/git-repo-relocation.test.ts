@@ -6,6 +6,10 @@ import { expect } from '@playwright/test';
 
 import type { InsomniaApp } from '../../playwright/pages';
 import { test } from '../../playwright/test';
+
+// Explicitly approve only the local Git test service; production defaults remain deny-by-default.
+test.use({ browserOrigins: ['http://localhost:4010', 'http://127.0.0.1:4010'] });
+
 import { mockOpenDialogForDirectory } from '../../playwright/utils';
 
 const GIT_PROJECT_NAME = 'Relocation Test Project';

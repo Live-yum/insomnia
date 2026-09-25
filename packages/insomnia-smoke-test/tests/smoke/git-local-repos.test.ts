@@ -53,6 +53,9 @@ test.describe('Git repositories in user-chosen folders', () => {
 });
 
 test.describe('Git clone into a user-chosen folder', () => {
+  // Explicitly approve only the local Git test service; production defaults remain deny-by-default.
+test.use({ browserOrigins: ['http://localhost:4010', 'http://127.0.0.1:4010'] });
+
   test.slow();
 
   test.beforeEach(async ({ insomnia, request }) => {

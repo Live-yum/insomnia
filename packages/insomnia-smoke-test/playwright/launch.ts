@@ -1,5 +1,6 @@
 import type { ElectronApplication, PlaywrightWorkerArgs } from '@playwright/test';
 
+import { createOfflineVaultProof } from '../../insomnia/src/common/utils/offline-vault-proof';
 import { createOfflineTestProject } from './offline-project';
 import { bundleType, cwd, executablePath, mainPath } from './paths';
 
@@ -67,6 +68,23 @@ export async function launchInsomnia(
       const projects = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
       if (!projects.some(project => project.parentId === 'org_offline')) {
         await createOfflineTestProject(app, page);
+      }
+      if (envOptions.INSOMNIA_VAULT_KEY && envOptions.INSOMNIA_VAULT_SALT) {
+        // Legacy encrypted-data fixtures need a matching, real LOCAL key proof.
+        // Seed fixture state through the normal data/secret-storage APIs, never
+        // invent a vendor session or relax the application's verifier.
+        const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+        const proof = await createOfflineVaultProof(
+          envOptions.INSOMNIA_VAULT_KEY, envOptions.INSOMNIA_VAULT_SALT, session.accountId,
+        );
+        await page.evaluate(async ({ key, salt, proof }) => {
+          const encrypted = await window.main.secretStorage.encryptString(key);
+          await window._dataServicesInvoke('userSession', 'update', {
+            vaultKey: encrypted, vaultSalt: salt, offlineVaultProof: proof,
+          });
+        }, { key: envOptions.INSOMNIA_VAULT_KEY, salt: envOptions.INSOMNIA_VAULT_SALT, proof });
+        await page.reload();
+        await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
       }
       preparedBuildProfiles.add(dataPath);
     }

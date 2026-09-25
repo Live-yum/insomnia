@@ -285,10 +285,8 @@ export class ProjectPage extends BasePage {
     // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
     // a bare role locator matching both is a Playwright strict-mode violation.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
-    await this.page.getByRole('option', { name: /Magic/ }).click();
-    await this.page.getByRole('button', { name: /Magic/ }).click();
-    await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
+    // A local project must appear without switching to a cloud organization.
+    await this.page.getByRole('grid', { name: 'Project Navigation Tree' }).getByRole('row', { name, exact: true }).waitFor();
     await this.sidebar.selectProject(name);
   }
 
