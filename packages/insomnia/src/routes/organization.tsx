@@ -27,6 +27,7 @@ import { useDocBodyKeyboardShortcuts } from '~/ui/components/keydown-binder';
 import { showModal } from '~/ui/components/modals';
 import { KonnectOrgMigrationModal } from '~/ui/components/modals/konnect-org-migration-modal';
 import { SettingsModal, showSettingsModal } from '~/ui/components/modals/settings-modal';
+import { OfflineCryptoWorkbench } from '~/ui/components/offline-crypto-workbench';
 import { PresentUsers } from '~/ui/components/present-users';
 import { KonnectMovedOnboarding } from '~/ui/components/project/konnect-moved-onboarding';
 import { OrganizationSelect } from '~/ui/components/project/organization-select';
@@ -440,6 +441,7 @@ const Component = () => {
                         </TooltipTrigger>
                       )}
                     </div>
+                    {OFFLINE_BUILD && <OfflineCryptoWorkbench />}
                     <div className="flex shrink grow basis-1/3 justify-end">
                       <div className="flex items-center gap-2">
                         {OFFLINE_BUILD ? <span className="px-4 text-xs">Local storage · Cloud disabled</span> : (
