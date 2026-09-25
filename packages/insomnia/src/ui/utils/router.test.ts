@@ -1,6 +1,13 @@
 import type * as InsomniaData from 'insomnia-data';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// These original cloud-route fixtures are retained as regression tests for the dormant branch.
+// router-offline.test.ts separately checks real account-free startup and local persistence.
+vi.mock('~/common/offline', async importOriginal => ({
+  ...await importOriginal<Record<string, unknown>>(),
+  OFFLINE_BUILD: false,
+}));
+
 vi.mock('insomnia-data', async importOriginal => {
   const actual = await importOriginal<typeof InsomniaData>();
   return {

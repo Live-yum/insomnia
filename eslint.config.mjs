@@ -309,6 +309,29 @@ export default defineConfig([
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
     },
   },
+  // These reviewed entrypoints must remain CommonJS for the plugin host and builder.
+  {
+    files: [
+      'packages/insomnia/electron-builder.offline.cjs',
+      'packages/insomnia/src/vendor/insomnia-plugin-crypto/**/*.js',
+      'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/*.cjs',
+    ],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'readonly', console: 'readonly' },
+    },
+    rules: { 'unicorn/prefer-module': 'off' },
+  },
+  {
+    // Preserve the upstream snapshot SHA256; these are spelling/format preferences only.
+    files: ['packages/insomnia/src/vendor/insomnia-plugin-crypto/**/*.js'],
+    rules: {
+      'unicorn/prefer-node-protocol': 'off',
+      'unicorn/prefer-number-properties': 'off',
+      'unicorn/numeric-separators-style': 'off',
+      'unicorn/text-encoding-identifier-case': 'off',
+    },
+  },
   // Test files ESLint rules
   {
     files: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],

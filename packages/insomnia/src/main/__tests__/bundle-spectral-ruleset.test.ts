@@ -2,6 +2,13 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
 
+// Preserve all legacy SSRF cases using a test-only flag override.
+// Production remains OFFLINE_BUILD=true, tested independently in bundle-spectral-offline.test.ts.
+vi.mock('~/common/offline-policy', async importOriginal => ({
+  ...await importOriginal<Record<string, unknown>>(),
+  OFFLINE_BUILD: false,
+}));
+
 // Mock fs and dns so no real files or DNS lookups are needed.
 vi.mock('node:fs', () => ({
   default: {

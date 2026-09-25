@@ -13,7 +13,7 @@ it('executes unchanged upstream Mocha cases and offline crypto/policy regression
     'scripts/offline/policy.test.mjs',
   ], {
     cwd: root,
-    encoding: 'utf-8',
+    encoding: 'utf8',
     timeout: 30_000,
     maxBuffer: 2 * 1024 * 1024,
   });

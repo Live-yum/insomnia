@@ -14,12 +14,12 @@ import { servicesNodeImpl } from 'insomnia-data/node';
 
 import { insomniaFetch, setFetchImplementation } from '~/common/insomnia-fetch';
 import { OFFLINE_BUILD } from '~/common/offline-policy';
-import { installOfflineNetworkPolicy } from '~/main/offline-network';
 import { mainDatabase } from '~/main/database.main';
 import { initElectronStorage } from '~/main/electron-storage';
 import { runGitCredentialsMigration } from '~/main/git/migrations';
 import { registerPathHandlers } from '~/main/ipc/path';
 import { registerLLMConfigServiceAPI } from '~/main/llm-config-service';
+import { installOfflineNetworkPolicy } from '~/main/offline-network';
 import { isPermissionAllowed } from '~/main/permission-policy';
 import { initRuntime } from '~/runtimes';
 import { nodeRuntime } from '~/runtimes/runtime.node';

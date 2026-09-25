@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { app, session, type Session } from 'electron';
+import { app, type Session,session } from 'electron';
 
 import { isDevelopment } from '../common/constants';
 import { isOfflineBrowserUrlAllowed, parseOfflineOrigins } from '../common/offline-policy';
@@ -21,7 +21,7 @@ export function getOfflineBrowserOrigins(): ReadonlySet<string> {
     } catch {
       // Same fallback as the app's existing development URL.
     }
-    if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+    if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65_535) {
       throw new Error('Invalid offline development server port.');
     }
     origins.add(`http://localhost:${Number(port)}`);

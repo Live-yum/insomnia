@@ -26,7 +26,10 @@ export function parseOfflineOrigins(value: string | undefined): ReadonlySet<stri
       throw new Error('Invalid origin in INSOMNIA_OFFLINE_BROWSER_ORIGINS.');
     }
     if (
-      !networkProtocols.has(url.protocol) || /[\u0000-\u0020\u007f\\]/.test(item) ||
+      !networkProtocols.has(url.protocol) || Array.from(item).some(character => {
+        const code = character.codePointAt(0);
+        return (code !== undefined && code <= 32) || code === 127 || character === '\\';
+      }) ||
       !/^(?:https?|wss?):\/\//i.test(item) || url.username || url.password ||
       url.search || url.hash || (url.pathname !== '/' && url.pathname !== '') ||
       url.hostname.includes('*') || url.hostname.endsWith('.') ||
