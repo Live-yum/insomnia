@@ -34,7 +34,7 @@ for name in ['socket-io', 'websocket']:
     ])
 
 edit(SMOKE / 'grpc-interactions.test.ts', [
-    ("page.getByText('Start').click()", "page.getByRole('button', { name: 'Start', exact: true }).click()"),
+    ('page.getByText("Start").click()', "page.getByRole('button', { name: 'Start', exact: true }).click()"),
 ])
 edit(SMOKE / 'export-openapi-spec.test.ts', [
     ("page.getByText('Use example', { exact: true }).click()", "page.getByText('Use example').click()"),
