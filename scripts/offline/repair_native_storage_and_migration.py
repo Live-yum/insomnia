@@ -23,13 +23,12 @@ secret = ROOT / (app + 'main/ipc/secret-storage.ts')
 text = secret.read_text(encoding='utf-8')
 assert 'return raw;' in text and 'return cipherText;' in text
 start = text.index('export const encryptString')
-end = text.index('export const registerSecretStorageHandlers', start)
+assert text[start:].count('export const ') == 2
 text = text[:start] + '''// Failure is explicit: a missing/locked keyring must not silently persist raw
 // credentials, and a failed decrypt must never return input as a "secret".
 export const encryptString = (raw: string) => encryptWithNativeStorage(safeStorage, raw, process.platform);
 export const decryptString = (cipherText: string) => decryptWithNativeStorage(safeStorage, cipherText, process.platform);
-
-''' + text[end:]
+'''
 text = text.replace("import { safeStorage } from 'electron';", "import { safeStorage } from 'electron';\n\nimport { decryptWithNativeStorage, encryptWithNativeStorage } from '../secure-storage-policy';")
 secret.write_text(text, encoding='utf-8', newline='\n')
 changed.append(str(secret.relative_to(ROOT)))
