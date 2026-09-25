@@ -12,10 +12,11 @@ permissions: {}
 
 jobs:
   semgrep:
-    timeout-minutes: 5
+    timeout-minutes: 15
     name: Semgrep SAST
     runs-on: ubuntu-24.04
     permissions:
+      contents: read
       security-events: write
 
     if: (github.actor != 'dependabot[bot]')
@@ -29,4 +30,6 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - uses: Kong/public-shared-actions/security-actions/semgrep@a18abf762d6e2444bcbfd20de70451ea1e3bc1b1 # 4.0.1
+      # The pinned composite also pins setup-python, artifact upload and CodeQL
+      # upload-sarif to native Node 24 actions; no runtime-forcing environment flag.
+      - uses: Kong/public-shared-actions/security-actions/semgrep@a92df3beb1e69e27d86be56346488f15fecaf0de # 5.0.2

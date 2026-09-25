@@ -49,6 +49,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Record diagnostic source before checks
+        run: git rev-parse HEAD > "$RUNNER_TEMP/offline-source.log"
       - name: Verify committed source, archive protections and reviewed crypto
         run: |
           test -f docs/OFFLINE-CONSOLIDATION.json
@@ -57,27 +59,33 @@ jobs:
           node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
       - name: Install locked application build dependencies
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
-      - name: Workspace lint without autofix
-        run: npm run lint --workspaces --if-present > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-lint.log"; exit 1; }
+      - name: Workspace lint without autofix or warning allowances
+        run: npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-lint.log"; exit 1; }
+      - name: Uncached smoke test lint with zero warnings
+        run: node node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 packages/insomnia-smoke-test/tests > "$RUNNER_TEMP/offline-smoke-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-smoke-lint.log"; exit 1; }
       - name: Workspace and route type checks
         run: npm run type-check --workspaces --if-present > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
+      - name: Require the unchanged circular dependency gate
+        run: npm run check-cycle-references > "$RUNNER_TEMP/offline-cycles.log" 2>&1 || { cat "$RUNNER_TEMP/offline-cycles.log"; exit 1; }
       - name: Build real application before tests
         run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
       - name: Prepare Node ABI for the complete unit suite
         run: npm run install-libcurl-node > "$RUNNER_TEMP/offline-node-abi.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-node-abi.log"; exit 1; }
       - name: Complete workspace unit suites
         run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |Test Files |AssertionError|Unhandled Error' "$RUNNER_TEMP/offline-unit.log" || true; tail -n 200 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
+      - name: Complete Inso CLI unit suite including offline telemetry regression
+        run: npm run test:unit -w insomnia-inso > "$RUNNER_TEMP/offline-cli-unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-cli-unit.log"; exit 1; }
       - name: Record tested source
         run: |
           git diff --exit-code
           printf '{"status":"passed","sourceCommit":"%s"}\n' "$(git rev-parse HEAD)" > offline-quality.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           name: offline-complete-quality
           path: offline-quality.json
           if-no-files-found: error
           retention-days: 14
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         if: always()
         with:
           name: offline-complete-quality-diagnostics
@@ -160,14 +168,14 @@ jobs:
         run: bash scripts/offline/smoke-linux.sh > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
       - name: Archive only validated native output, reports and portable launchers
         run: python scripts/offline/package-complete.py '${{ matrix.target }}'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           name: insomnia-complete-${{ matrix.target }}
           path: offline-dist/*
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         if: always()
         with:
           name: offline-complete-diagnostics-${{ matrix.target }}

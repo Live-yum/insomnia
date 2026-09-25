@@ -33,7 +33,7 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
               f.write('## Checked-in plugin catalog\n\n```json\n' + json.dumps(report, indent=2) + '\n```\n\nArchives are not automatically enabled. Incomplete entries are listed in vendor/offline-plugins/EXCEPTIONS.json.\n')
           print(json.dumps(report, indent=2))
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           name: offline-catalog-report
           path: |

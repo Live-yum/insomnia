@@ -95,7 +95,7 @@ jobs:
           INSOMNIA_UPDATES_URL: http://localhost:4010
 
       - name: Upload smoke test traces
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         if: failure()
         with:
           if-no-files-found: ignore
@@ -103,7 +103,7 @@ jobs:
           path: packages/insomnia-smoke-test/traces
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-artifacts-${{ github.run_number }}

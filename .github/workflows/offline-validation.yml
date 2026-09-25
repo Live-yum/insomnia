@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
       - name: Export the exact public source revision without Git credentials
         run: git archive --format=tar --output=offline-source.tar HEAD
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
           name: offline-source-${{ github.sha }}
           path: offline-source.tar
