@@ -1,0 +1,42 @@
+name: Inspect local capability guards
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-source-inspection.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Read actual source anchors without running application or plugin code
+        shell: python
+        run: |
+          import pathlib
+          root = pathlib.Path('packages/insomnia/src')
+          for file in sorted(root.rglob('*.ts*')):
+              if 'vendor' in str(file):
+                  continue
+              text = file.read_text(encoding='utf-8')
+              patterns = []
+              if 'key-value-editor' in file.name:
+                  print('KEY VALUE SOURCE:', file, flush=True)
+                  patterns += ['focus', 'onAdd', 'handleAdd']
+              if '/sync/git/' in str(file) or '/main/' in str(file):
+                  patterns += ['User must be logged', 'Only local', 'isLocalOrganizationId', 'OFFLINE_BUILD']
+              if 'response-viewer' in file.name or 'preview' in file.name:
+                  patterns += ['iframe', 'pdf', 'plugins:']
+              lines = text.splitlines()
+              emitted = set()
+              for index, line in enumerate(lines):
+                  if any(pattern in line for pattern in patterns):
+                      for n in range(max(0, index-2), min(len(lines), index+5)):
+                          if n not in emitted:
+                              print(f'{file}:{n+1}: {lines[n]}', flush=True)
+                              emitted.add(n)
+          print('FOCUS TEST', flush=True)
+          print(pathlib.Path('packages/insomnia-smoke-test/tests/smoke/focus-and-keyboard.test.ts').read_text(), flush=True)
