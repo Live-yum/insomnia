@@ -1,0 +1,119 @@
+name: Offline complete quality repair
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths:
+      - .github/workflows/offline-complete-quality-repair.yml
+      - scripts/offline/repair_complete_quality.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-complete-source-quality
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/complete-portable'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      PYTHONUTF8: '1'
+      NODE_OPTIONS: --max_old_space_size=6144
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install locked build tools
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply reviewed source fixes without modifying upstream plugin snapshot bytes
+        run: python3 scripts/offline/repair_complete_quality.py
+      - name: Require full workspace lint and types
+        run: |
+          set -euo pipefail
+          npm run lint --workspaces --if-present > "$RUNNER_TEMP/lint.log" 2>&1 || { cat "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check --workspaces --if-present > "$RUNNER_TEMP/types.log" 2>&1 || { cat "$RUNNER_TEMP/types.log"; exit 1; }
+      - name: Require reviewed crypto, origin policy and archive regressions
+        run: |
+          node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+      - name: Build and prepare Node ABI for complete workspace unit suites
+        run: |
+          set -euo pipefail
+          npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/build.log"; exit 1; }
+          npm run install-libcurl-node > "$RUNNER_TEMP/abi.log" 2>&1 || { cat "$RUNNER_TEMP/abi.log"; exit 1; }
+      - name: Require complete workspace unit suites before committing
+        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |Test Files |AssertionError|Unhandled Error' "$RUNNER_TEMP/unit.log" || true; tail -n 200 "$RUNNER_TEMP/unit.log"; exit 1; }
+      - name: Export only tested source modifications
+        run: |
+          git diff --cached --check
+          git diff --cached --binary > "$RUNNER_TEMP/complete-quality.patch"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: complete-quality-source
+          path: ${{ runner.temp }}/complete-quality.patch
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: complete-quality-repair-diagnostics
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: warn
+          retention-days: 7
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: complete-quality-source
+          path: ${{ runner.temp }}/source
+      - name: Commit exactly tested source with no force push or dependency execution
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/complete-portable
+          test "$(git rev-parse origin/offline/complete-portable)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/source/complete-quality.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          changed = subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines()
+          for name in changed:
+              assert name == 'eslint.config.mjs' or (name.startswith('packages/insomnia/src/') and '/vendor/' not in name and '/vendored/' not in name and name.endswith(('.ts','.tsx'))), name
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'fix: commit full-suite-verified offline source lint and contract fixtures'
+            git push origin HEAD:offline/complete-portable
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  portable:
+    needs: commit
+    uses: ./.github/workflows/offline-complete-build.yml
+    with:
+      source_sha: ${{ needs.commit.outputs.sha }}
+      publish: false
+    permissions:
+      contents: write
