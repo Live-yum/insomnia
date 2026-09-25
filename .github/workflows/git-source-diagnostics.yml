@@ -14,19 +14,25 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
-      - name: Download the existing Git job log for bounded diagnostics
+      - name: Download only the preserved Git UI log artifact
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api repos/Live-yum/insomnia/actions/jobs/108089099023/logs > "$RUNNER_TEMP/git-ui.log"
+        run: gh run download 36140230533 --repo Live-yum/insomnia --name local-capability-ui-git --dir reports
       - name: Read error causes and precise local Git implementations
         shell: python
         run: |
-          import os, pathlib, re
-          text = pathlib.Path(os.environ['RUNNER_TEMP'], 'git-ui.log').read_text(encoding='utf-8-sig')
+          import pathlib, re
+          log = list(pathlib.Path('reports').rglob('ui.log'))
+          assert len(log) == 1
+          text = log[0].read_text(encoding='utf-8-sig')
           text = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', text)
+          seen = set()
           for line in text.splitlines():
-              if ('[electron' in line or '[renderer' in line) and any(s in line.lower() for s in ['git', 'error', 'denied', 'failed', 'invalid']):
-                  print(line[:1200], flush=True)
+              if ('[electron' in line or '[renderer' in line) and any(s in line.lower() for s in ['git', 'error', 'denied', 'failed', 'invalid']) and 'dbus/' not in line:
+                  normalized = re.sub(r'\d\d:\d\d:\d\d\.\d+[^a-zA-Z]*', '', line)
+                  if normalized not in seen:
+                      print(normalized[:1800], flush=True)
+                      seen.add(normalized)
           root = pathlib.Path('packages/insomnia/src')
           for file in root.rglob('*.ts*'):
               source = file.read_text(encoding='utf-8')
