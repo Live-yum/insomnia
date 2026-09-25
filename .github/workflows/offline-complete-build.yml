@@ -7,15 +7,23 @@ on:
         type: string
         required: true
       publish:
-        description: Reserved for compatibility; release publication uses offline-promote.yml only
+        description: Reserved for compatibility; this read-only workflow never publishes
         type: boolean
         default: false
+      edition:
+        description: Compact basic is the default; full is historical opt-in only
+        type: string
+        default: basic
   workflow_dispatch:
     inputs:
       source_sha:
         description: Exact source commit to validate
         type: string
         required: true
+      edition:
+        type: choice
+        options: [basic, full]
+        default: basic
 
 permissions:
   contents: read
@@ -32,6 +40,7 @@ env:
   npm_config_fund: 'false'
   npm_config_update_notifier: 'false'
   CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  INSOMNIA_OFFLINE_EDITION: ${{ inputs.edition }}
 
 jobs:
   quality:
@@ -51,12 +60,14 @@ jobs:
           cache: npm
       - name: Record diagnostic source before checks
         run: git rev-parse HEAD > "$RUNNER_TEMP/offline-source.log"
-      - name: Verify committed source, archive protections and reviewed crypto
+      - name: Verify source, retained archives, crypto and compact budgets
         run: |
+          test "$INSOMNIA_OFFLINE_EDITION" = basic || test "$INSOMNIA_OFFLINE_EDITION" = full
           test -f docs/OFFLINE-CONSOLIDATION.json
           python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
           python3 scripts/offline/vendor_plugins.py verify
           node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
+          node --test scripts/offline/basic-budget.test.cjs
       - name: Install locked application build dependencies
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
       - name: Workspace lint without autofix or warning allowances
@@ -90,7 +101,7 @@ jobs:
         with:
           name: offline-complete-quality-diagnostics
           path: ${{ runner.temp }}/offline-*.log
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14
 
   build:
@@ -129,15 +140,22 @@ jobs:
         with:
           ref: ${{ inputs.source_sha }}
           persist-credentials: false
+      - name: Record source and require a supported edition
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/offline-source.log"
+          test "$INSOMNIA_OFFLINE_EDITION" = basic || test "$INSOMNIA_OFFLINE_EDITION" = full
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
         with:
           node-version-file: .nvmrc
           cache: npm
-      - name: Prepare all pinned local plugin dependency trees without npm or lifecycle scripts
+      - name: Verify committed packaging and archive protections
         run: |
           test -f docs/OFFLINE-CONSOLIDATION.json
           python -m unittest discover -s scripts/offline -p 'test_*.py' -v
-          python scripts/offline/vendor_plugins.py materialize --target "$RESOURCE_TARGET" --output packages/insomnia/offline-plugin-resources
+          node --test scripts/offline/basic-budget.test.cjs
+      - name: Historical full edition only - materialize pinned community trees
+        if: inputs.edition == 'full'
+        run: python scripts/offline/vendor_plugins.py materialize --target "$RESOURCE_TARGET" --output packages/insomnia/offline-plugin-resources
       - name: Install Linux GUI and native prerequisites
         if: runner.os == 'Linux'
         run: |
@@ -151,14 +169,21 @@ jobs:
           npm run type-check -w insomnia > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
       - name: Compile actual committed source
         run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
-      - name: Package native application without automatic publishing
+      - name: Package selected native edition without publishing
         working-directory: packages/insomnia
-        run: npx --no-install electron-builder --config electron-builder.offline.cjs --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
-      - name: Require every full-catalog resource byte in the native output
+        run: |
+          config=electron-builder.basic.cjs
+          if [ "$INSOMNIA_OFFLINE_EDITION" = full ]; then config=electron-builder.offline.cjs; fi
+          npx --no-install electron-builder --config "$config" --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
+      - name: Historical full edition only - require every catalog byte
+        if: inputs.edition == 'full'
         run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" --target "$RESOURCE_TARGET"
+      - name: Basic edition - enforce size and physical-file budget
+        if: inputs.edition == 'basic'
+        run: node scripts/offline/basic-budget.cjs directory "$PACKAGE_DIRECTORY" > "$RUNNER_TEMP/offline-basic-budget.log"
       - name: Packaged critical tests for requests, scripts, code generation, custom CA and restart
         run: bash scripts/offline/run-critical-tests.sh
-      - name: Windows clean-profile UI, full catalog, crypto and business API smoke
+      - name: Windows clean-profile UI, selected plugin inventory and crypto smoke
         if: runner.os == 'Windows'
         run: node scripts/offline/smoke.mjs > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
       - name: Preserve the upstream Windows secure wrapper
@@ -173,11 +198,15 @@ jobs:
       - name: Linux full desktop smoke with only loopback network interfaces
         if: runner.os == 'Linux'
         run: bash scripts/offline/smoke-linux.sh > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
-      - name: Archive only validated native output, reports and portable launchers
+      - name: Basic edition - archive, extract afresh, verify hashes and measure time
+        if: inputs.edition == 'basic'
+        run: python scripts/offline/package-basic.py "$PACKAGE_TARGET"
+      - name: Historical full edition only - archive tested complete catalog
+        if: inputs.edition == 'full'
         run: python scripts/offline/package-complete.py "$PACKAGE_TARGET"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
-          name: insomnia-complete-${{ matrix.target }}
+          name: insomnia-${{ inputs.edition }}-${{ matrix.target }}
           path: offline-dist/*
           if-no-files-found: error
           retention-days: 14
@@ -187,9 +216,8 @@ jobs:
         with:
           name: offline-complete-diagnostics-${{ matrix.target }}
           path: |
-            offline-resource-integrity.json
             offline-test-results/
-            packages/insomnia/offline-plugin-resources/catalog.json
+            packages/insomnia/dist/basic-budget-*.json
             ${{ runner.temp }}/offline-*.log
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 14

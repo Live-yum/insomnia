@@ -1,6 +1,6 @@
+/* global require, module */
 'use strict';
-// Compact profile. Retain the historical full configuration for reproducibility,
-// but do not treat it as the newly requested default deliverable.
+// Compact profile: production code is in ASAR; no community dependency forest.
 const fs = require('node:fs');
 const path = require('node:path');
 const base = require('./electron-builder.offline.cjs');
@@ -12,9 +12,6 @@ module.exports = {
   ...base,
   asar: true,
   electronLanguages: profile.engineLocales,
-  // Both reviewed crypto modules are statically imported by offline-plugins.ts.
-  // Put their notices inside app.asar rather than copying another source/test
-  // tree outside the archive. Keep required native unpacking from the base.
   files: [
     ...base.files,
     {
@@ -28,8 +25,6 @@ module.exports = {
   extraMetadata: {
     ...base.extraMetadata,
     offlineEdition: profile.edition,
-    // Requested UI default only. Translating actual application strings is a
-    // separate release gate; including locales does not translate the UI.
     offlineRequestedUiLocale: profile.requestedDefaultUiLocale,
   },
   afterPack: async context => {
