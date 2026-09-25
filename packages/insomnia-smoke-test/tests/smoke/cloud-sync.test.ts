@@ -8,13 +8,11 @@ import { test } from '../../playwright/test';
 test.describe('Offline cloud boundary and local version history', () => {
   test('cloud storage is disabled while local storage remains available without an account', async ({ page }) => {
     await page.getByRole('button', { name: 'Create new Project' }).click();
-    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });
-    if (await change.isVisible()) await change.click();
-    await expect(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
-    await expect(page.getByLabel('Project Type: local', { exact: true })).toBeEnabled();
+    await expect.soft(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
+    await expect.soft(page.getByLabel('Project Type: local', { exact: true })).toBeEnabled();
     const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
-    expect(session.id).toBe('');
-    expect(session.accountId).toBe('');
+    expect.soft(session.id).toBe('');
+    expect.soft(session.accountId).toBe('');
   });
 
   test('remote project discovery is rejected instead of returning invented cloud projects', async ({ page }) => {
@@ -30,9 +28,9 @@ test.describe('Offline cloud boundary and local version history', () => {
         errors: results.map(result => result.status === 'rejected' ? String(result.reason) : null),
       };
     });
-    expect(result.errors).toHaveLength(2);
-    for (const error of result.errors) expect(error).toContain('Remote project discovery is disabled');
-    expect(result.after).toEqual(result.before);
+    expect.soft(result.errors).toHaveLength(2);
+    for (const error of result.errors) expect.soft(error).toContain('Remote project discovery is disabled');
+    expect.soft(result.after).toEqual(result.before);
   });
 
   test('cloud push and pull fail before creating or changing a local backend project', async ({ page }) => {
@@ -49,10 +47,10 @@ test.describe('Offline cloud boundary and local version history', () => {
         errors: results.map(result => result.status === 'rejected' ? String(result.reason) : null),
       };
     });
-    expect(result.before).toBe(false);
-    expect(result.after).toBe(false);
-    expect(result.errors).toHaveLength(2);
-    for (const error of result.errors) expect(error).toContain('Remote version-control operations are disabled');
+    expect.soft(result.before).toBe(false);
+    expect.soft(result.after).toBe(false);
+    expect.soft(result.errors).toHaveLength(2);
+    for (const error of result.errors) expect.soft(error).toContain('Remote version-control operations are disabled');
   });
 
   test('remote branch listing, comparison and deletion cannot mutate local projects', async ({ page }) => {
@@ -70,9 +68,9 @@ test.describe('Offline cloud boundary and local version history', () => {
         errors: results.map(result => result.status === 'rejected' ? String(result.reason) : null),
       };
     });
-    expect(result.errors).toHaveLength(3);
-    for (const error of result.errors) expect(error).toContain('Remote version-control operations are disabled');
-    expect(result.after).toEqual(result.before);
+    expect.soft(result.errors).toHaveLength(3);
+    for (const error of result.errors) expect.soft(error).toContain('Remote version-control operations are disabled');
+    expect.soft(result.after).toEqual(result.before);
   });
 
   // Preserve the original positive regression: concurrently activated workspaces
@@ -91,9 +89,9 @@ test.describe('Offline cloud boundary and local version history', () => {
       ]);
       return { activeA, activeB };
     }, { a: workspaceA, b: workspaceB });
-    expect(result.activeA?.rootDocumentId).toBe(workspaceA.id);
-    expect(result.activeB?.rootDocumentId).toBe(workspaceB.id);
-    expect(result.activeA?.id).not.toBe(result.activeB?.id);
+    expect.soft(result.activeA?.rootDocumentId).toBe(workspaceA.id);
+    expect.soft(result.activeB?.rootDocumentId).toBe(workspaceB.id);
+    expect.soft(result.activeA?.id).not.toBe(result.activeB?.id);
     await page.evaluate(async ({ a, b }) => {
       await window.main.sync.removeBackendProjectsForRoot(a.id);
       await window.main.sync.removeBackendProjectsForRoot(b.id);

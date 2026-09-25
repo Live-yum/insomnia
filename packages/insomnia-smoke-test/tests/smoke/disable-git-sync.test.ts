@@ -19,15 +19,13 @@ test.describe('Offline Git capability does not depend on vendor flags', () => {
       data: { features: { gitSync: { enabled: false } } },
     });
     await page.getByRole('button', { name: 'Create new Project' }).click();
-    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });
-    if (await change.isVisible()) await change.click();
-    await expect(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
-    await expect(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
+    await expect.soft(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
+    await expect.soft(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
     await page.getByLabel('Project Type Item: git', { exact: true }).click();
-    await expect(page.getByLabel('Git Setup Form')).toBeVisible();
-    await expect(page.getByLabel('Git Sync Feature Disabled Banner')).toBeHidden();
+    await expect.soft(page.getByLabel('Git Setup Form')).toBeVisible();
+    await expect.soft(page.getByLabel('Git Sync Feature Disabled Banner')).toBeHidden();
     const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
-    expect(session.id).toBe('');
+    expect.soft(session.id).toBe('');
   });
 
   test('vendor storage rules neither enable cloud nor disable local Git', async ({ page, request }) => {
@@ -35,10 +33,8 @@ test.describe('Offline Git capability does not depend on vendor flags', () => {
       data: { enableCloudSync: true, enableGitSync: false, enableLocalVault: false, isOverridden: true },
     });
     await page.getByRole('button', { name: 'Create new Project' }).click();
-    const change = page.getByRole('button', { name: 'Project type: Local Vault. Change', exact: true });
-    if (await change.isVisible()) await change.click();
-    await expect(page.getByLabel('Project Type: local', { exact: true })).toBeEnabled();
-    await expect(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
-    await expect(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
+    await expect.soft(page.getByLabel('Project Type: local', { exact: true })).toBeEnabled();
+    await expect.soft(page.getByLabel('Project Type: git', { exact: true })).toBeEnabled();
+    await expect.soft(page.getByLabel('Project Type: remote', { exact: true })).toBeDisabled();
   });
 });
