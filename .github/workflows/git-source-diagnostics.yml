@@ -1,0 +1,46 @@
+name: Inspect offline Git regressions
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/git-source-diagnostics.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Download the existing Git job log for bounded diagnostics
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api repos/Live-yum/insomnia/actions/jobs/108089099023/logs > "$RUNNER_TEMP/git-ui.log"
+      - name: Read error causes and precise local Git implementations
+        shell: python
+        run: |
+          import os, pathlib, re
+          text = pathlib.Path(os.environ['RUNNER_TEMP'], 'git-ui.log').read_text(encoding='utf-8-sig')
+          text = re.sub(r'\x1b\[[0-9;]*[a-zA-Z]', '', text)
+          for line in text.splitlines():
+              if ('[electron' in line or '[renderer' in line) and any(s in line.lower() for s in ['git', 'error', 'denied', 'failed', 'invalid']):
+                  print(line[:1200], flush=True)
+          root = pathlib.Path('packages/insomnia/src')
+          for file in root.rglob('*.ts*'):
+              source = file.read_text(encoding='utf-8')
+              patterns = ['fetchGitRemoteBranches', 'srpK', 'initCloneGitRepository', 'openExistingDirectory']
+              matches = [i for i,line in enumerate(source.splitlines()) if any(p in line for p in patterns)]
+              if not matches:
+                  continue
+              lines = source.splitlines()
+              emitted = set()
+              for i in matches:
+                  n = 80 if 'fetchGitRemoteBranches' in lines[i] and ('export' in lines[i] or 'async' in lines[i]) else 8
+                  for index in range(max(0,i-3), min(len(lines),i+n)):
+                      if index not in emitted:
+                          print(f'{file}:{index+1}: {lines[index]}', flush=True)
+                          emitted.add(index)
+          for name in ['git.init-clone.tsx', 'git-credentials.create.tsx']:
+              print(name, '\n', (root/'routes'/name).read_text(encoding='utf-8'), flush=True)
