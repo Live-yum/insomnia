@@ -1,0 +1,113 @@
+name: Consolidate offline full-plugin source
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths:
+      - scripts/offline/consolidate_source.py
+      - .github/workflows/offline-consolidate.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-consolidate
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/complete-portable'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install pinned build tools with no stored git credentials
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Integrate only selected catalog resources into the merged crypto baseline
+        run: python3 scripts/offline/consolidate_source.py
+      - name: Verify source types, reviewed crypto and archive safety before committing
+        run: |
+          set -euo pipefail
+          npm run type-check -w insomnia > "$RUNNER_TEMP/types.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/types.log"; exit 1; }
+          node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/policy.test.mjs
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+      - name: Export exact tested source patch
+        run: git diff --cached --binary > "$RUNNER_TEMP/consolidated-source.patch"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: consolidated-source
+          path: ${{ runner.temp }}/consolidated-source.patch
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: consolidation-diagnostics
+          path: ${{ runner.temp }}/*.log
+          retention-days: 7
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: consolidated-source
+          path: ${{ runner.temp }}/source
+      - name: Commit tested owned source without running dependencies or plugin code
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/complete-portable
+          test "$(git rev-parse origin/offline/complete-portable)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/source/consolidated-source.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          allowed = {
+            'packages/insomnia/src/plugins/offline-catalog.ts', 'packages/insomnia/src/plugins/index.ts',
+            'packages/insomnia/electron-builder.offline.cjs', 'scripts/offline/smoke.mjs',
+            'scripts/offline/vendor_plugins.py', 'scripts/offline/stage_resources.py',
+            'scripts/offline/test_stage_resources.py', 'scripts/offline/test_vendor_plugins.py',
+            'scripts/offline/test_vendor_regressions.py', 'scripts/offline/test_vendor_duplicates.py',
+            '.github/workflows/offline-build.yml', '.github/workflows/offline-plugin-snapshot.yml',
+            'docs/OFFLINE-CONSOLIDATION.json',
+          }
+          changed = set(subprocess.check_output(['git','diff','--cached','--name-only'], text=True).splitlines())
+          assert changed <= allowed, changed - allowed
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'feat: consolidate full offline plugin resources while preserving reviewed crypto and secure launchers'
+            git push origin HEAD:offline/complete-portable
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  portable:
+    needs: commit
+    uses: ./.github/workflows/offline-complete-build.yml
+    with:
+      source_sha: ${{ needs.commit.outputs.sha }}
+      publish: false
+    permissions:
+      contents: write
