@@ -1,0 +1,205 @@
+name: Publish validated offline portable release
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Merged full-plugin PR with an explicit successful validation run in its description
+        required: true
+        type: number
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: offline-release-promotion
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'Live-yum/insomnia' && (github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'offline/complete-portable'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Require a merged PR, identical Git trees and an explicitly selected successful validation
+        id: proof
+        env:
+          MANUAL_PR: ${{ inputs.pr_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, pathlib, re, urllib.request
+          repo = os.environ['GH_REPO']
+          def api(suffix):
+              url = 'https://api.github.com/repos/' + repo + '/' + suffix
+              req = urllib.request.Request(url, headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.load(response)
+          event = json.loads(pathlib.Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
+          number = int(os.environ.get('MANUAL_PR') or event['pull_request']['number'])
+          pr = api(f'pulls/{number}')
+          assert pr['merged'] and pr['base']['ref'] == 'develop'
+          assert pr['base']['repo']['full_name'] == pr['head']['repo']['full_name'] == repo
+          assert pr['head']['ref'] == 'offline/complete-portable'
+          source, merged = pr['head']['sha'], pr['merge_commit_sha']
+          assert re.fullmatch(r'[a-f0-9]{40}', source) and re.fullmatch(r'[a-f0-9]{40}', merged)
+          source_commit, merge_commit = api('commits/' + source), api('commits/' + merged)
+          assert source_commit['commit']['tree']['sha'] == merge_commit['commit']['tree']['sha'], 'Merged tree differs from tested source: rebuild required'
+          assert source in [parent['sha'] for parent in merge_commit['parents']], 'Use a normal merge retaining the tested head'
+          matches = re.findall(r'<!-- offline-validation-run: ([0-9]+) -->', pr['body'] or '')
+          assert len(matches) == 1, 'Select exactly one successful immutable validation run in the PR description'
+          run_id = int(matches[0])
+          run = api(f'actions/runs/{run_id}')
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['event'] == 'push' and run['head_branch'] == 'offline/complete-portable'
+          assert run['head_repository']['full_name'] == repo
+          assert run['path'] in {'.github/workflows/offline-build.yml', '.github/workflows/offline-complete-quality-repair.yml', '.github/workflows/offline-consolidate.yml'}
+          relation = api('compare/' + run['head_sha'] + '...' + source)
+          assert relation['status'] in {'identical', 'ahead'}, 'Validation workflow is not an ancestor of the tested source'
+          artifacts = api(f'actions/runs/{run_id}/artifacts?per_page=100')['artifacts']
+          required = {'insomnia-complete-windows-x64', 'insomnia-complete-linux-arm64', 'offline-complete-quality'}
+          selected = [a for a in artifacts if a['name'] in required]
+          assert len(selected) == 3 and {a['name'] for a in selected} == required
+          assert all(not a['expired'] for a in selected)
+          proof = {'repository': repo, 'pullRequest': number, 'sourceCommit': source, 'mergeCommit': merged,
+                   'identicalSourceTree': source_commit['commit']['tree']['sha'], 'validationRun': run_id,
+                   'validationWorkflowRevision': run['head_sha'], 'artifacts': [{k:a[k] for k in ('id','name','size_in_bytes','digest')} for a in selected]}
+          pathlib.Path('promotion-proof.json').write_text(json.dumps(proof, indent=2) + '\n', encoding='utf-8')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'run_id={run_id}\nsource={source}\ntag=offline-full-13.3.0-pr{number}-{source[:12]}\n')
+          print(json.dumps(proof, indent=2))
+          PY
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: insomnia-complete-*
+          merge-multiple: true
+          path: release-assets
+          run-id: ${{ steps.proof.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: offline-complete-quality
+          path: quality-evidence
+          run-id: ${{ steps.proof.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify both native archives and exact-source runtime evidence without executing any packaged code
+        env:
+          SOURCE: ${{ steps.proof.outputs.source }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, shutil
+          root = pathlib.Path('release-assets')
+          source = os.environ['SOURCE']
+          quality_path = pathlib.Path('quality-evidence/offline-quality.json')
+          quality = json.loads(quality_path.read_text(encoding='utf-8'))
+          assert quality['status'] == 'passed' and quality['sourceCommit'] == source
+          expected_names = set()
+          for target, resource_target in [('windows-x64','win32-x64'), ('linux-arm64','linux-arm64')]:
+              report_name = target + '-validation.json'
+              report = json.loads((root / report_name).read_text(encoding='utf-8'))
+              assert report['sourceCommit'] == source and report['platform'] == target
+              smoke = report['desktopSmoke']
+              assert smoke['status'] == 'passed' and smoke['sourceCommit'] == source and smoke['target'] == resource_target
+              for check in ['cleanProfileNoLogin','localProjectPersistence','authenticatedHmacBridge','browserReachableControlBlocked','realNativeLoopbackApiPassed']:
+                  assert smoke[check] is True, check
+              assert smoke['catalogEntries'] == 552 and smoke['materializedPlugins'] == 545
+              assert set(smoke['reviewedBundledPlugins']) == {'insomnia-plugin-crypto','insomnia-plugin-offline-crypto-tools'}
+              assert smoke['allCommunityPluginFunctionsVerified'] is False and smoke['siteSecurityCertification'] is False
+              if target == 'windows-x64':
+                  assert report['windowsWrapper']['status'] == 'passed'
+                  assert report['windowsWrapper']['debuggerArguments'] is False and report['windowsWrapper']['sandboxDisabled'] is False
+              name = report['archive']
+              extension = '.zip' if target == 'windows-x64' else '.tar.gz'
+              assert name == f'Insomnia-Offline-13.3.0-full-plugins-{target}-portable{extension}'
+              assert (root / name).stat().st_size == report['archiveBytes']
+              with (root / name).open('rb') as stream:
+                  assert hashlib.file_digest(stream, 'sha256').hexdigest() == report['archiveSha256']
+              checksum_name = name + '.sha256'
+              assert (root / checksum_name).read_text(encoding='utf-8').strip() == report['archiveSha256'] + '  ' + name
+              expected_names.update({name, checksum_name, report_name})
+          assert {p.name for p in root.iterdir()} == expected_names, 'Unexpected or missing release attachment'
+          shutil.copy2('promotion-proof.json', root / 'release-provenance.json')
+          shutil.copy2(quality_path, root / 'offline-quality.json')
+          proofs = []
+          for file in sorted(root.iterdir()):
+              with file.open('rb') as stream:
+                  digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+              proofs.append({'name':file.name, 'size':file.stat().st_size, 'digest':'sha256:' + digest})
+          pathlib.Path('expected-assets.json').write_text(json.dumps(proofs, indent=2), encoding='utf-8')
+          print(json.dumps(proofs, indent=2))
+          PY
+      - name: Stage a draft release with the tested immutable artifacts
+        env:
+          TAG: ${{ steps.proof.outputs.tag }}
+          SOURCE: ${{ steps.proof.outputs.source }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > notes.md <<'EOF'
+          ## Insomnia Offline — 全类别插件便携版
+          Windows x64 ZIP 与 Linux ARM64/AArch64 tar.gz 均是实际可执行便携包，不是源码。完整解压后运行 Start-Insomnia-Offline.cmd 或 start-insomnia-offline.sh，数据保存在程序旁 data/。
+
+          公开目录 552 条逐条对账，545 个完整依赖插件目录随包预置，7 个明确例外保留在 validation/EXCEPTIONS.json。已审核 Crypto 与 Offline Crypto Tools 启用，其他社区插件默认禁用，审核后本地启用。云服务、额外系统 CLI 和无法取得的依赖不伪装为离线功能；不声称所有社区插件功能均通过验证。
+
+          完整工作区质量检查、两平台原生打包、资源逐文件校验、干净配置免登录创建项目与持久化、认证 HMAC、真实回环业务 API、Chromium 拒绝控制均通过。Windows 安全启动器另以无调试/无关闭沙箱参数验证；Linux 使用仅回环的网络命名空间。
+
+          发布复用经过验证的原始附件，不在发布阶段更换二进制。标签指向真实构建源码；release-provenance.json 绑定该源码、合并提交、完全相同的 Git tree 和成功的 Actions run。每个平台附 SHA-256 与运行验证报告。
+
+          Linux 需要兼容系统库及可用的 Chromium 沙箱；没有捆绑 Git/Python/云 CLI/AI 模型。高安全内网仍须部署进程树出站白名单并进行现场抓包验收；本版本是候选发行版，不是安全认证。详情见包内 OFFLINE-README.md。
+          EOF
+          if gh release view "$TAG" --json isDraft --jq .isDraft > existing-draft.txt 2>/dev/null; then
+            test "$(cat existing-draft.txt)" = true
+            echo 'A prior draft exists; upload only missing attachments without overwriting existing bytes.'
+            gh api "repos/$GH_REPO/releases/tags/$TAG" > draft.json
+            python3 - <<'PY' > missing-assets.txt
+          import json
+          draft = json.load(open('draft.json'))
+          expected = json.load(open('expected-assets.json'))
+          existing = {a['name']: a for a in draft['assets']}
+          assert set(existing) <= {a['name'] for a in expected}
+          for item in expected:
+              if item['name'] in existing:
+                  assert existing[item['name']]['size'] == item['size'] and existing[item['name']]['digest'] == item['digest']
+              else:
+                  print('release-assets/' + item['name'])
+          PY
+            while IFS= read -r file; do gh release upload "$TAG" "$file"; done < missing-assets.txt
+          else
+            gh release create "$TAG" release-assets/* --draft --prerelease --target "$SOURCE" --title 'Insomnia Offline 13.3.0 — full plugin catalog portable' --notes-file notes.md
+          fi
+      - name: Publish only after server-side attachment size and SHA256 verification
+        env:
+          TAG: ${{ steps.proof.outputs.tag }}
+          SOURCE: ${{ steps.proof.outputs.source }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/releases/tags/$TAG" > draft.json
+          python3 - <<'PY'
+          import json, os
+          draft = json.load(open('draft.json'))
+          expected = json.load(open('expected-assets.json'))
+          assert draft['draft'] and draft['prerelease'] and draft['target_commitish'] == os.environ['SOURCE']
+          assert len(draft['assets']) == len(expected)
+          actual = {a['name']: a for a in draft['assets']}
+          for item in expected:
+              asset = actual[item['name']]
+              assert asset['state'] == 'uploaded' and asset['size'] == item['size'] and asset['digest'] == item['digest'], item['name']
+          PY
+          gh release edit "$TAG" --draft=false --prerelease --latest=false
+          gh api "repos/$GH_REPO/releases/tags/$TAG" > published-release.json
+          python3 - <<'PY'
+          import json
+          release = json.load(open('published-release.json'))
+          assert not release['draft']
+          print(json.dumps({'url':release['html_url'], 'tag':release['tag_name'], 'source':release['target_commitish'], 'assets':[{k:a[k] for k in ['name','size','digest','browser_download_url']} for a in release['assets']]}, indent=2))
+          PY
