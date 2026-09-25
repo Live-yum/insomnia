@@ -31,6 +31,16 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - name: Validate owned packaging script syntax without evaluating plugin code
+        run: |
+          python3 - <<'PY'
+          import ast
+          from pathlib import Path
+          for script in Path('scripts/offline').glob('*.py'):
+              ast.parse(script.read_text(encoding='utf-8'), filename=str(script))
+          PY
+          node --check scripts/offline/verify-complete-smoke.mjs
+          node --check scripts/offline/smoke.mjs
       - name: Install locked build tools
         run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/install.log"; exit 1; }
       - name: Apply reviewed source fixes without modifying upstream plugin snapshot bytes
@@ -116,4 +126,4 @@ jobs:
       source_sha: ${{ needs.commit.outputs.sha }}
       publish: false
     permissions:
-      contents: write
+      contents: read
