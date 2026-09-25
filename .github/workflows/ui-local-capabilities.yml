@@ -1,0 +1,162 @@
+name: Validate offline local capabilities
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-local-capabilities.yml, scripts/offline/repair_local_capabilities.py]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: offline-local-capabilities-validation
+  cancel-in-progress: true
+env:
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  PYTHONUTF8: '1'
+  NODE_OPTIONS: --max_old_space_size=6144
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/install.log"; exit 1; }
+      - name: Apply and format the reviewed local capability changes
+        run: |
+          python3 scripts/offline/repair_local_capabilities.py
+          python3 - <<'PY'
+          import subprocess
+          names = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
+          names.append('packages/insomnia/src/common/__tests__/offline-local-resources.test.ts')
+          assert all(name.startswith(('packages/insomnia/src/', 'packages/insomnia-smoke-test/')) and name.endswith(('.ts', '.tsx')) for name in names)
+          subprocess.run(['node', 'node_modules/eslint/bin/eslint.js', '--fix', '--max-warnings=0', *names], check=True)
+          PY
+      - name: Require zero warnings, full application types and focused security tests
+        run: |
+          npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/lint.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/lint.log"; exit 1; }
+          npm run type-check -w insomnia
+          npm test -w insomnia -- src/common/__tests__/offline-local-resources.test.ts src/common/__tests__/offline-origin-policy.test.ts
+          git diff --check
+          git diff --binary > "$RUNNER_TEMP/local-capability-repair.patch"
+          git diff --stat
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: reviewed-local-capability-repair
+          path: ${{ runner.temp }}/local-capability-repair.patch
+          if-no-files-found: error
+          retention-days: 3
+  commit:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: reviewed-local-capability-repair
+          path: ${{ runner.temp }}/repair
+      - name: Commit reviewed source without running npm, app or plugin code
+        id: commit
+        run: |
+          set -euo pipefail
+          git fetch origin offline/ui-regression-diagnostics
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          patch="$RUNNER_TEMP/repair/local-capability-repair.patch"
+          if [ -s "$patch" ]; then
+            git apply --check "$patch"
+            git apply --index "$patch"
+            python3 - <<'PY'
+          import subprocess
+          names = set(subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines())
+          app = 'packages/insomnia/src/'
+          smoke = 'packages/insomnia-smoke-test/'
+          allowed = {app + name for name in ['root.tsx', 'routes/organization.$organizationId.project.new.tsx', 'common/organization-storage-rules.ts', 'ui/hooks/use-organization-storage-rule.ts', 'ui/hooks/use-organization-features.tsx', 'common/offline-policy.ts', 'ui/components/.client/codemirror/one-line-editor.tsx', 'common/__tests__/offline-local-resources.test.ts']}
+          allowed.update(smoke + name for name in ['playwright/launch.ts', 'playwright/test.ts', 'tests/smoke/oauth.test.ts', 'tests/smoke/command-palette.test.ts'])
+          assert names and names <= allowed, names - allowed
+          PY
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'fix: restore account-free local capabilities with explicit browser policy and focus handoff'
+            git push origin HEAD:offline/ui-regression-diagnostics
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          git log -1 --format='%H %T'
+  ui:
+    needs: commit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: local
+            files: app.test.ts command-palette.test.ts focus-and-keyboard.test.ts import-deep-link.test.ts oauth.test.ts
+          - group: git
+            files: git-local-repos.test.ts git-repo-relocation.test.ts git-sync.test.ts
+          - group: selectors
+            files: export.test.ts export-openapi-spec.test.ts dashboard-interactions.test.ts grpc-interactions.test.ts socket-io.test.ts websocket.test.ts pre-request-script-features.test.ts sidebar-focus-onboarding.test.ts
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ needs.commit.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/install.log"; exit 1; }
+      - run: npm run app-build > "$RUNNER_TEMP/build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/build.log"; exit 1; }
+      - name: Install the locked Electron runtime and preserve its sandbox
+        working-directory: packages/insomnia
+        run: |
+          npx --no-install install-electron
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
+          test -f "$sandbox"
+          sudo chown root:root "$sandbox"
+          sudo chmod 4755 "$sandbox"
+      - name: Execute selected regressions against the real offline application
+        env:
+          TEST_FILES: ${{ matrix.files }}
+        run: npm run test:build -w insomnia-smoke-test -- --project=Smoke --retries=0 $TEST_FILES > "$RUNNER_TEMP/ui.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/ui.log"; exit 1; }
+      - name: Summarize actual assertions, preserving failures
+        if: ${{ !cancelled() }}
+        shell: python
+        run: |
+          import json, pathlib, re, xml.etree.ElementTree as ET
+          file = pathlib.Path('packages/insomnia-smoke-test/test-results.xml')
+          if not file.exists():
+              raise SystemExit('Missing UI report')
+          raw = file.read_bytes()
+          assert len(raw) < 20 * 1024 * 1024 and b'\0' not in raw and b'<!DOCTYPE' not in raw.upper() and b'<!ENTITY' not in raw.upper()
+          cases = list(ET.fromstring(raw.decode('utf-8-sig')).iter('testcase'))
+          failures = []
+          for case in cases:
+              for error in list(case.findall('failure')) + list(case.findall('error')):
+                  text = re.sub(r'\x1b\[[0-9;]*m', '', error.text or '')
+                  failure = {'file': case.get('classname'), 'name': case.get('name'), 'error': text[:2400]}
+                  failures.append(failure)
+                  print(json.dumps(failure, ensure_ascii=True), flush=True)
+          print(json.dumps({'cases': len(cases), 'failures': len(failures), 'skipped': sum(case.find('skipped') is not None for case in cases)}), flush=True)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ !cancelled() }}
+        with:
+          name: local-capability-ui-${{ matrix.group }}
+          path: |
+            packages/insomnia-smoke-test/test-results.xml
+            ${{ runner.temp }}/ui.log
+          if-no-files-found: error
+          retention-days: 7
