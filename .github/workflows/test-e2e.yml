@@ -103,11 +103,21 @@ jobs:
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Configure the trusted Electron sandbox helper without disabling sandboxing
+      - name: Download the lockfile-selected Electron binary before sandbox configuration
+        working-directory: packages/insomnia
         shell: bash
         run: |
           set -euo pipefail
-          sandbox="$GITHUB_WORKSPACE/node_modules/electron/dist/chrome-sandbox"
+          # Electron 43 installs its runtime on demand, not during npm ci.
+          # Resolve only the already-installed package; never install a new npm package.
+          npx --no-install install-electron
+          node -e 'const fs = require("node:fs"); const exe = require("electron"); if (!fs.statSync(exe).isFile()) throw new Error("Electron runtime is missing"); console.log("Installed Electron:", exe);'
+      - name: Configure the trusted Electron sandbox helper without disabling sandboxing
+        working-directory: packages/insomnia
+        shell: bash
+        run: |
+          set -euo pipefail
+          sandbox="$(node -p 'require("node:path").join(require("node:path").dirname(require("electron")), "chrome-sandbox")')"
           test -f "$sandbox"
           sudo chown root:root "$sandbox"
           sudo chmod 4755 "$sandbox"
