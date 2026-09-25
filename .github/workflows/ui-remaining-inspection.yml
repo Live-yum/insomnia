@@ -1,0 +1,38 @@
+name: Inspect remaining offline regressions
+on:
+  push:
+    branches: [offline/ui-regression-diagnostics]
+    paths: [.github/workflows/ui-remaining-inspection.yml]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Read the preserved reports, without running application or plugin code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 36144156656 --repo Live-yum/insomnia --pattern 'full-ui-regression-*' --dir reports
+      - name: Print bounded failure summaries and actual secret/migration implementation
+        shell: python
+        run: |
+          import json, pathlib
+          for file in sorted(pathlib.Path('reports').rglob('failure-summary.json')):
+              report = json.loads(file.read_text(encoding='utf-8'))
+              for failure in report['failures']:
+                  failure['error'] = failure['error'][:1400]
+              print(str(file), json.dumps(report), flush=True)
+          for root in ['packages/insomnia/src', 'packages/insomnia-smoke-test/playwright', 'packages/insomnia-data/src']:
+              for file in sorted(pathlib.Path(root).rglob('*.ts*')):
+                  source = file.read_text(encoding='utf-8')
+                  if any(part in file.name for part in ['secret-storage', 'git-migration']) or ('secretStorage.encryptString' in source and 'register' in source):
+                      print('SOURCE', str(file), '\n', source[:16000], flush=True)
+                  if file.name == 'user-session.ts' and ('services' in str(file) or 'service' in str(file)):
+                      print('SOURCE', str(file), '\n', source[:16000], flush=True)
+          for file in pathlib.Path('packages/insomnia/src/routes').glob('*git-migration*'):
+              print('MIGRATION ROUTE', str(file), '\n', file.read_text(encoding='utf-8')[:16000], flush=True)
