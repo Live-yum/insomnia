@@ -1,0 +1,46 @@
+name: Offline runtime review tools
+on:
+  push:
+    branches: [offline/review-fixes]
+    paths: [.github/workflows/offline-runtime-review.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      SCARF_DO_NOT_TRACK: 'true'
+      SCARF_ANALYTICS: 'false'
+      npm_config_audit: 'false'
+      npm_config_fund: 'false'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Prepare pinned runtime bytes in the connected build zone
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund > "$RUNNER_TEMP/runtime-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/runtime-install.log"; exit 1; }
+          node -e 'console.log(require("electron"))'
+          mkdir -p "$RUNNER_TEMP/runtime-review/electron-curl" "$RUNNER_TEMP/runtime-review/node-curl"
+          cp node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node "$RUNNER_TEMP/runtime-review/electron-curl/"
+          npm run install-libcurl-node
+          cp node_modules/@getinsomnia/node-libcurl/lib/binding/node_libcurl.node "$RUNNER_TEMP/runtime-review/node-curl/"
+          tar -czf "$RUNNER_TEMP/runtime-review/electron-runtime.tar.gz" node_modules/electron/dist node_modules/electron/path.txt
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/runtime-review/SOURCE-SHA"
+          cp package-lock.json "$RUNNER_TEMP/runtime-review/package-lock.json"
+          (cd "$RUNNER_TEMP/runtime-review" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pinned-offline-native-review-tools
+          path: ${{ runner.temp }}/runtime-review/
+          if-no-files-found: error
+          retention-days: 3
