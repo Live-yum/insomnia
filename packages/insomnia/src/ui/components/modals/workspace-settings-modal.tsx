@@ -1,3 +1,4 @@
+
 import type { MockServer, Project, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
@@ -18,6 +19,7 @@ import { useParams } from 'react-router';
 import { useGitProjectRepositoryTreeLoaderFetcher } from '~/routes/git.repository-tree';
 import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.update';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -150,7 +152,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
               >
                 <div className="flex items-center justify-between gap-2">
                   <Heading slot="title" className="flex items-center gap-2 text-2xl">
-                    {getWorkspaceLabel(workspace).singular} Settings{' '}
+                    {getWorkspaceLabel(workspace).singular} {translateOfflineUi("Settings")}{' '}
                   </Heading>
                   <Button
                     className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -168,7 +170,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                     onChange={setNameValue}
                     className="group relative flex max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                   >
-                    <Label className="text-sm text-(--hl)">Name</Label>
+                    <Label className="text-sm text-(--hl)">{translateOfflineUi("Name")}</Label>
                     <Input
                       autoFocus={!isScratchpadWorkspace}
                       placeholder="Awesome API"
@@ -196,7 +198,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                       className="group relative flex w-full max-w-full shrink-0 flex-col gap-2 overflow-hidden"
                     >
                       <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                        <span className="text-sm text-(--hl)">File name</span>
+                        <span className="text-sm text-(--hl)">{translateOfflineUi("File name")}</span>
 
                         <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                           <Input
@@ -215,9 +217,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   )}
                   {!models.workspace.isMockServer(workspace) && (
                     <>
-                      <Label className="text-sm text-(--hl)" aria-label="Description">
-                        Description
-                      </Label>
+                      <Label className="text-sm text-(--hl)" aria-label={translateOfflineUi("Description")}>{translateOfflineUi("Description")}</Label>
                       <MarkdownEditor
                         key={workspace._id}
                         historyKey={`workspace-description::${workspace._id}`}
@@ -273,9 +273,7 @@ export const WorkspaceSettingsModal = ({ workspace, gitFilePath, project, mockSe
                   <Button
                     type="submit"
                     className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                  >
-                    Update
-                  </Button>
+                  >{translateOfflineUi("Update")}</Button>
                 </div>
               </Form>
             </Dialog>

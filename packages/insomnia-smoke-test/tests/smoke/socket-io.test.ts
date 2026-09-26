@@ -20,17 +20,17 @@ test('can make socket.io connection', async ({ app, page, insomnia }) => {
 
   await insomnia.navigationSidebar.clickRequestOrFolder('Socket.IO Request');
   await expect.soft(page.locator('.app')).toContainText('http://localhost:4020');
-  await page.click('text=Connect');
+  await page.getByRole('button', { name: 'Connect', exact: true }).click();
   await expect.soft(statusTag).toContainText('Connected', { ignoreCase: true });
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('Connecting to http://localhost:4020');
-  await page.click('text=Disconnect');
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(responseBody).toContainText('io client disconnect');
 
-  await page.click('text=Connect');
+  await page.getByRole('button', { name: 'Connect', exact: true }).click();
   const connections = page.getByTestId('SocketIOSpinner__Connected');
   await expect.soft(connections).toHaveCount(1);
 
-  await page.click('text=Disconnect');
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(connections).toHaveCount(0);
 });

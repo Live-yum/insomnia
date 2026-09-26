@@ -1,3 +1,4 @@
+
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import { useEffect, useRef, useState } from 'react';
@@ -5,6 +6,7 @@ import { Button, Label, Radio, RadioGroup } from 'react-aria-components';
 
 import { Icon } from '~/basic-components/icon';
 import type { ProjectType } from '~/ui/components/project/utils';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface ProjectTypeItem {
   type: ProjectType;
@@ -89,9 +91,7 @@ export const ProjectTypeSelect = ({ value, onChange, storageRules }: Props) => {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label aria-label="Project Type" className="p-0 text-sm text-(--color-font)">
-        Type
-      </Label>
+      <Label aria-label={translateOfflineUi("Project Type")} className="p-0 text-sm text-(--color-font)">{translateOfflineUi("Type")}</Label>
       {listOpen || !currentType ? (
         <div
           ref={radioGroupContainerRef}

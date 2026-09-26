@@ -1,7 +1,9 @@
+
 import React, { type FC, useState } from 'react';
 
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CookiesModal } from '~/ui/components/modals/cookies-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const parseSetCookieHeader = (headerValue: string) => {
   const [nameValue = ''] = headerValue.split(';');
@@ -59,15 +61,15 @@ export const ResponseCookiesViewer: FC<Props> = props => {
     <div>
       {noticeMessage && (
         <div className="notice info margin-bottom no-margin-top">
-          <p>Automatic {noticeMessage} of cookies was disabled at the time this request was made</p>
+          <p>{translateOfflineUi("Automatic")} {noticeMessage} of cookies was disabled at the time this request was made</p>
         </div>
       )}
 
       <table className="table--fancy table--striped table--compact">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Value</th>
+            <th>{translateOfflineUi("Name")}</th>
+            <th>{translateOfflineUi("Value")}</th>
           </tr>
         </thead>
         <tbody>{!headers.length ? renderRow(null, -1) : headers.map(renderRow)}</tbody>

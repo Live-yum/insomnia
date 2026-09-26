@@ -1,3 +1,4 @@
+
 import { fetchMockbinLogs, type MockbinLogOutput } from 'insomnia-api';
 import type { MockRoute, MockServer, Response, ResponseTimelineEntry } from 'insomnia-data';
 import { services } from 'insomnia-data';
@@ -11,6 +12,7 @@ import { useRootLoaderData } from '~/root';
 import { useRequestNewMockSendActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new-mock-send';
 import { useMockRouteLoaderData } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { jsonPrettify } from '~/ui/utils/prettify/json';
 
 import { getMockServiceURL } from '../../../common/constants';
@@ -79,27 +81,19 @@ export const MockResponsePane = () => {
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
-          >
-            Preview
-          </Tab>
+          >{translateOfflineUi("Preview")}</Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
-          >
-            Headers
-          </Tab>
+          >{translateOfflineUi("Headers")}</Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
-          >
-            Console
-          </Tab>
+          >{translateOfflineUi("Console")}</Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="history"
-          >
-            History
-          </Tab>
+          >{translateOfflineUi("History")}</Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto" id="preview">
           <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">
@@ -198,8 +192,8 @@ const HistoryViewWrapperComponentFactory = ({
     <div className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
       <div className="box-border w-full flex-1 overflow-hidden overflow-y-scroll">
         <div className="grid grid-cols-[repeat(5,auto)] divide-y divide-solid divide-(--hl-sm)">
-          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Method</div>
-          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Size</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">{translateOfflineUi("Method")}</div>
+          <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">{translateOfflineUi("Size")}</div>
           <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Date</div>
           <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">IP</div>
           <div className="bg-(--hl-sm) p-2 text-left text-xs font-semibold uppercase focus:outline-hidden">Path</div>

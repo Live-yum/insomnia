@@ -28,7 +28,7 @@ test.describe('Design interactions', () => {
     await expect.soft(page.locator('.app')).toContainText('Tests passed');
 
     // Create a new test suite
-    await page.click('text=New test suite');
+    await page.getByText('New test suite', { exact: true }).click();
 
     // Rename test suite
     await page.getByRole('heading', { name: 'New Suite' }).locator('span').dblclick();

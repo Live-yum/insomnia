@@ -1,3 +1,4 @@
+
 import type { GrpcRequest, GrpcRequestHeader, RequestGroup } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { type FunctionComponent, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { getGrpcConnectionErrorDetails } from '~/ui/utils/grpc';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
@@ -391,9 +393,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
               <Tab
                 className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                 id="headers"
-              >
-                Headers
-              </Tab>
+              >{translateOfflineUi("Headers")}</Tab>
             </TabList>
             {methodType && (
               <TabPanel className={'h-full w-full overflow-y-auto'} id="method-type">
@@ -431,8 +431,7 @@ export const GrpcRequestPane: FunctionComponent<Props> = ({ grpcState, setGrpcSt
                       <button
                         className="btn btn--compact btn--clicky-small margin-left-sm bg-surprise"
                         onClick={() => window.main.grpc.commit(requestId)}
-                      >
-                        Commit <i className="fa fa-arrow-right" />
+                      >{translateOfflineUi("Commit")} <i className="fa fa-arrow-right" />
                       </button>
                     </div>
                   )}

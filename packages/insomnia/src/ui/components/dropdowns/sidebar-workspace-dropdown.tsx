@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import classNames from 'classnames';
 import {
@@ -39,6 +40,7 @@ import { useWorkspaceUpdateActionFetcher } from '~/routes/organization.$organiza
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
 import { plugins } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getProductName, SORT_ORDERS, type SortOrder, sortOrderName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -518,7 +520,7 @@ export const SidebarWorkspaceDropdown = ({
                 <div className="flex flex-col gap-4">
                   <div className="flex items-center justify-between gap-2">
                     <Heading className="text-2xl">
-                      {project.konnectControlPlaneId ? 'Remove' : 'Delete'} {getWorkspaceLabel(workspace).singular}
+                      {project.konnectControlPlaneId ? translateOfflineUi("Remove") : translateOfflineUi("Delete")} {getWorkspaceLabel(workspace).singular}
                     </Heading>
                     <Button
                       className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -592,7 +594,7 @@ export const SidebarWorkspaceDropdown = ({
                         aria-label="Delete Workspace"
                         className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
                       >
-                        {project.konnectControlPlaneId ? 'Remove' : 'Delete'}
+                        {project.konnectControlPlaneId ? translateOfflineUi("Remove") : translateOfflineUi("Delete")}
                       </Button>
                     </div>
                   </deleteWorkspaceFetcher.Form>

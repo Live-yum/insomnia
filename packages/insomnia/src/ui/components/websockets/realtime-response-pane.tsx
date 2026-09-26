@@ -1,3 +1,4 @@
+
 import classnames from 'classnames';
 import type {
   McpResponse,
@@ -28,6 +29,7 @@ import { docsMcpAuthentication } from '~/common/documentation';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRealtimeConnectionNotifications } from '~/ui/hooks/use-realtime-connection-notifications';
 import { useStreamSummary } from '~/ui/hooks/use-stream-summary';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import type { McpEvent } from '../../../main/mcp/types';
@@ -412,9 +414,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
-            >
-              Headers
-              {response.headers.length > 0 && (
+            >{translateOfflineUi("Headers")}{response.headers.length > 0 && (
                 <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {response.headers.length}
                 </span>
@@ -425,9 +425,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="cookies"
-            >
-              Cookies
-              {cookieHeaders.length > 0 && (
+            >{translateOfflineUi("Cookies")}{cookieHeaders.length > 0 && (
                 <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                   {cookieHeaders.length}
                 </span>
@@ -437,9 +435,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
-          >
-            Console
-          </Tab>
+          >{translateOfflineUi("Console")}</Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="events">
           <PanelGroup direction="vertical" className="grid h-full w-full grid-rows-[repeat(auto-fit,minmax(0,1fr))]">
@@ -465,10 +461,10 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                       onChange={e => setEventType(e.currentTarget.value as CurlEvent['type'])}
                     >
                       <option value="">All</option>
-                      <option value="message">Message</option>
-                      <option value="open">Open</option>
-                      <option value="close">Close</option>
-                      <option value="error">Error</option>
+                      <option value="message">{translateOfflineUi("Message")}</option>
+                      <option value="open">{translateOfflineUi("Open")}</option>
+                      <option value="close">{translateOfflineUi("Close")}</option>
+                      <option value="error">{translateOfflineUi("Error")}</option>
                     </select>
 
                     <SearchField
@@ -480,7 +476,7 @@ const RealtimeActiveResponsePane: FC<RealtimeActiveResponsePaneProps & { readySt
                       }}
                     >
                       <Input
-                        placeholder="Search"
+                        placeholder={translateOfflineUi("Search")}
                         className="w-full rounded-sm border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                       />
                       <div className="absolute top-0 right-0 flex h-full items-center px-2">

@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models } from 'insomnia-data';
@@ -30,6 +31,7 @@ import { useEnvironmentDuplicateActionFetcher } from '~/routes/organization.$org
 import { useEnvironmentUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.update';
 import { Tooltip } from '~/ui/components/tooltip';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { docsAfterResponseScript, docsTemplateTags } from '../../../common/documentation';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -265,9 +267,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
           {({ close }) => (
             <div className="flex h-full flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex items-center justify-between gap-2">
-                <Heading slot="title" className="text-2xl">
-                  Manage Environments
-                </Heading>
+                <Heading slot="title" className="text-2xl">{translateOfflineUi("Manage Environments")}</Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
@@ -293,7 +293,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                     ))}
                   </div>
                   <GridList
-                    aria-label="Environments"
+                    aria-label={translateOfflineUi("Environments")}
                     items={[baseEnvironment, ...subEnvironments]}
                     className="w-full flex-1 overflow-y-auto py-(--padding-xs) data-empty:py-0"
                     disallowEmptySelection
@@ -537,9 +537,7 @@ export const WorkspaceEnvironmentsEditModal = ({ onClose }: { onClose: () => voi
                   onPress={close}
                   isDisabled={updateEnvironmentFetcher.state !== 'idle'}
                   className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline aria-disabled:opacity-50"
-                >
-                  Close
-                </Button>
+                >{translateOfflineUi("Close")}</Button>
               </div>
             </div>
           )}

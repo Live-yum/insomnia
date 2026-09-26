@@ -66,7 +66,7 @@ test.describe('Dashboard', () => {
     await page.getByLabel('Files').getByLabel('test123').getByRole('button').click();
     await page.getByRole('menuitem', { name: 'Duplicate' }).click();
     await page.locator('input[name="name"]').fill('test123-duplicate');
-    await page.click('[role="dialog"] button:has-text("Duplicate")');
+    await page.getByRole('dialog').getByRole('button', { name: 'Duplicate', exact: true }).click();
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 
@@ -79,7 +79,7 @@ test.describe('Dashboard', () => {
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 
     // Rename collection
-    await page.click('text=API CollectionMy API Collectionjust now >> button');
+    await page.locator('text=API CollectionMy API Collectionjust now >> button').click();
     await page.getByRole('menuitem', { name: 'Rename' }).click();
     await page.locator('text=Rename API CollectionName Rename >> input[type="text"]').fill('collection123');
     await page.getByRole('button', { name: 'Rename' }).click();
@@ -89,7 +89,7 @@ test.describe('Dashboard', () => {
     await page.getByLabel('Files').getByLabel('collection123').getByRole('button').click();
     await page.getByRole('menuitem', { name: 'Duplicate' }).click();
     await page.locator('input[name="name"]').fill('collection123-duplicate');
-    await page.click('[role="dialog"] button:has-text("Duplicate")');
+    await page.getByRole('dialog').getByRole('button', { name: 'Duplicate', exact: true }).click();
 
     await page.getByTestId('workspace-breadcrumb-level-0').click();
 

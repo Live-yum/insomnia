@@ -28,6 +28,7 @@ import { getAppBundlePlugins } from '../common/constants';
 import * as pluginApp from '../plugins/context/app';
 import * as pluginNetwork from '../plugins/context/network';
 import * as pluginStore from '../plugins/context/store';
+import { getOfflinePluginDirectories, isOfflineCatalogPluginDirectory, readPluginDirectory } from './offline-catalog';
 import themes from './themes';
 
 let plugins: Plugin[] | null | undefined = null;
@@ -132,7 +133,7 @@ async function findDuplicatePluginNames(allPaths: string[]): Promise<Set<string>
       if (!fs.existsSync(p)) {
         continue;
       }
-      for (const filename of fs.readdirSync(p)) {
+      for (const filename of readPluginDirectory(p)) {
         const modulePath = path.resolve(p, filename);
         if (!fs.statSync(modulePath).isDirectory()) {
           continue;
@@ -201,7 +202,7 @@ async function traversePluginPath(
     const folders = (await fs.promises.readdir(p)).filter(f => f.startsWith('insomnia-plugin-'));
     folders.length && console.log('[plugin] Loading', folders.map(f => f.replace('insomnia-plugin-', '')).join(', '));
 
-    for (const filename of fs.readdirSync(p)) {
+    for (const filename of readPluginDirectory(p)) {
       // Captured as they're parsed so a load failure below can still identify which plugin failed.
       let modulePath = '';
       let pluginJson: { name?: string; description?: string; version?: string; insomnia?: any } | undefined;
@@ -301,12 +302,13 @@ async function traversePluginPath(
         // The collision set above is a snapshot taken before this walk's own await points below;
         // re-checking here catches a same-named folder that was created after that snapshot but
         // before this iteration was reached.
-        if ((await findDuplicatePluginNames(allPaths)).has(pluginName)) {
+        if ((!isOfflineCatalogPluginDirectory(modulePath) || allConfigs[pluginName]?.disabled === false) &&
+          (await findDuplicatePluginNames(allPaths)).has(pluginName)) {
           pluginMap[modulePath] = buildCollisionRow(pluginName, pluginJson, modulePath, parsedPermissions);
           continue;
         }
 
-        const config = pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: false };
+        const config = pluginJson.name in allConfigs ? allConfigs[pluginJson.name] : { disabled: isOfflineCatalogPluginDirectory(modulePath) };
 
         // L1/T1: a sandboxed user plugin's exports are discovered by evaluating its source *inside* the
         // sandbox (main process) instead of nodeRequire-ing it here — so installing/enabling it never
@@ -314,7 +316,9 @@ async function traversePluginPath(
         // nodeRequire-d so its hooks/actions/tags are live in-process functions. Decision is per-plugin
         // because `elevated` is per-plugin.
         let module: Plugin['module'];
-        if (shouldSandboxPlugin(settings, { directory: modulePath, config })) {
+        if (config.disabled) {
+          module = {};
+        } else if (shouldSandboxPlugin(settings, { directory: modulePath, config })) {
           const manifest = await discoverUserPluginExports(modulePath, pluginName, parsedPermissions.permissions);
           module = buildUserPluginModuleFromManifest(pluginName, manifest);
         } else {
@@ -441,7 +445,7 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
     // Also look in node_modules folder in each directory
     const basePaths = [pluginPath, ...extraPaths];
     const extendedPaths = basePaths.map(p => path.resolve(p, 'node_modules'));
-    const allPaths = [...basePaths, ...extendedPaths];
+    const allPaths = [...basePaths, ...extendedPaths, ...getOfflinePluginDirectories()];
 
     // Store plugins in a map so that plugins with the same name only get added once. Null-prototype so
     // a plugin named `toString`/`valueOf`/`hasOwnProperty`/etc. can't match an inherited Object.prototype

@@ -4,6 +4,7 @@
 // dynamic module loading, key storage, install scripts or background work.
 const crypto = require('node:crypto');
 const { Buffer } = require('node:buffer');
+const core = require('./crypto-core.cjs');
 
 function base64(value, label) {
   if (typeof value !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
@@ -28,7 +29,6 @@ function aesGcm(operation, input, keyBase64) {
   if (envelope.length < 31 || envelope.subarray(0, 3).toString() !== 'IG1') throw new Error('Invalid IG1 envelope');
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, envelope.subarray(3, 15));
   decipher.setAuthTag(envelope.subarray(15, 31));
-  // Never return partial plaintext before final() authenticates the ciphertext.
   return Buffer.concat([decipher.update(envelope.subarray(31)), decipher.final()]).toString('utf8');
 }
 function hmac(algorithm, input, key, encoding) {
@@ -53,7 +53,6 @@ function jwtPayload(token) {
   if (typeof token !== 'string') throw new Error('JWT must be text');
   const parts = token.split('.');
   if (parts.length !== 3 || !/^[A-Za-z0-9_-]+$/.test(parts[1])) throw new Error('Expected a three-part JWT');
-  // Decoding is NOT verification. This tag must never be used as an authentication decision.
   return JSON.stringify(JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')), null, 2);
 }
 const text = (displayName, secret = false) => ({ displayName, type: 'string', defaultValue: '', ...(secret ? { masked: true } : {}) });
@@ -68,4 +67,18 @@ module.exports.templateTags = [
     args: [choice('Algorithm', ['sha256', 'sha384', 'sha512']), text('Input'), text('Key (UTF-8)', true), choice('Encoding', ['hex', 'base64'])], run: (_context, ...args) => hmac(...args) },
   { name: 'offlineJwtPayload', displayName: 'Offline JWT payload (NOT verified)', description: 'Inspection only: decodes the payload WITHOUT verifying signature, issuer, audience or expiry.',
     args: [text('JWT')], run: (_context, token) => jwtPayload(token) },
+  { name: 'offlineCrypto', displayName: '离线加解密 / Offline cryptography',
+    description: 'AES, RSA, signatures, JWT verification, SM3/SM4 and encodings. JSON options; json returns the full result. No network or key persistence.',
+    args: [text('JSON options (may contain secrets)', true), { ...text('Result field: output, json, valid, publicKey, privateKey'), defaultValue: 'output' }],
+    run: async (_context, optionsJson, field = 'output') => {
+      if (typeof optionsJson !== 'string' || optionsJson.length > 8 * 1024 * 1024) throw new Error('参数必须是长度受限的 JSON / Invalid options');
+      let options;
+      try { options = JSON.parse(optionsJson); } catch { throw new Error('参数不是有效 JSON / Invalid JSON options'); }
+      const result = await core.execute(options);
+      if (field === 'json') return JSON.stringify(result);
+      if (typeof field !== 'string' || !Object.hasOwn(result, field)) throw new Error('结果字段不存在，请选择 json / Result field not available');
+      const value = result[field];
+      return typeof value === 'string' ? value : JSON.stringify(value);
+    },
+  },
 ];

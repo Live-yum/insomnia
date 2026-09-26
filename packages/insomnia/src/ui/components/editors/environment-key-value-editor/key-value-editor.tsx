@@ -1,3 +1,4 @@
+
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType } from 'insomnia-data';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { base64decode } from '~/common/utils/vault';
 import { getRuntime } from '~/runtimes';
 import { purgeCachedEditorStates } from '~/ui/components/.client/codemirror/editor-state-cache';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { generateId } from '../../../../common/misc';
 import { PromptButton } from '../../base/prompt-button';
@@ -537,8 +539,7 @@ export const EnvironmentKVEditor = ({
             handleAddItem();
           }}
         >
-          <Icon icon="plus" /> Add
-        </Button>
+          <Icon icon="plus" /> {translateOfflineUi("Add")}</Button>
         <PromptButton
           disabled={disabled || persistedPairs.length === 0}
           onClick={() => {

@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { StorageRules } from 'insomnia-api';
 import type { GitRepository, Project, WorkspaceScope } from 'insomnia-data';
@@ -26,6 +27,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { ImportModal } from '~/ui/components/modals/import-modal/import-modal';
 import { NewWorkspaceModal } from '~/ui/components/modals/new-workspace-modal';
 import { exportProjectToFile } from '~/ui/components/settings/import-export';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -252,7 +254,7 @@ export const ProjectDropdown: FC<Props> = ({
         }}
       >
         <Button
-          aria-label="Project Actions"
+          aria-label={translateOfflineUi("Project Actions")}
           className="hidden aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:flex group-hover:opacity-100 group-focus:flex group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm) data-pressed:flex data-pressed:opacity-100"
         >
           <Icon icon="ellipsis" />

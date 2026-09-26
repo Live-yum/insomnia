@@ -1,6 +1,8 @@
+
 import React, { type FC, memo, useState } from 'react';
 
 import { useRootLoaderData } from '~/root';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { docsBase } from '../../../common/documentation';
 import { Link } from '../base/link';
@@ -45,9 +47,7 @@ export const ResponseErrorViewer: FC<Props> = memo(({ error, docsLink, isMcpResp
     );
   } else {
     msg = (
-      <Link button className="btn btn--clicky" href={docsLink || docsBase}>
-        Documentation
-      </Link>
+      <Link button className="btn btn--clicky" href={docsLink || docsBase}>{translateOfflineUi("Documentation")}</Link>
     );
   }
 

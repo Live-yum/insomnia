@@ -1,7 +1,9 @@
+
 import { models, type ProtoDirectory, type ProtoFile, services } from 'insomnia-data';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { selectFileOrFolder } from '~/ui/utils/select-file-or-folder';
 
 import { type ChangeBufferEvent, database as db } from '../../../common/database';
@@ -353,9 +355,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
     <Modal ref={modalRef} onHide={onHide}>
       <ModalHeader>Select Proto File</ModalHeader>
       <ModalBody className="wide pad">
-        <div className="row-spaced margin-bottom bold">
-          Files
-          <span>
+        <div className="row-spaced margin-bottom bold">{translateOfflineUi("Files")}<span>
             <AsyncButton
               className="margin-right-sm"
               onClick={handleAddDirectory}
@@ -388,9 +388,7 @@ export const ProtoFilesModal: FC<Props> = ({ defaultId, onHide, onSave }) => {
                 onSave(selectedId || '');
               }
             }}
-          >
-            Save
-          </button>
+          >{translateOfflineUi("Save")}</button>
         </div>
       </ModalFooter>
     </Modal>

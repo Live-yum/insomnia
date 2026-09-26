@@ -1,3 +1,4 @@
+
 import { models, services } from 'insomnia-data';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Button, Link } from 'react-aria-components';
@@ -18,6 +19,7 @@ import {
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { clearPendingFocusUrlBar, shouldFocusUrlBar } from '~/ui/components/request-url-bar-focus';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { recordProjectRecentRequest } from '~/ui/utils/recent-project-requests';
 import { renderRealtimeConnectPayload } from '~/ui/utils/render-realtime-connect';
 
@@ -353,7 +355,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                   setCurrentTimeout(undefined);
                 }}
               >
-                {isRealtimeRequest ? 'Disconnect' : 'Cancel'}
+                {isRealtimeRequest ? translateOfflineUi("Disconnect") : translateOfflineUi("Cancel")}
               </button>
             ) : (
               <>
@@ -387,7 +389,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                       <DropdownItem aria-label="send-now">
                         <ItemContent
                           icon="arrow-circle-o-right"
-                          label="Send Now"
+                          label={translateOfflineUi("Send Now")}
                           hint={hotKeyRegistry.request_send}
                           onClick={sendOrConnect}
                         />
@@ -405,7 +407,7 @@ export const RequestUrlBar = forwardRef<RequestUrlBarHandle, Props>(
                         />
                       </DropdownItem>
                     </DropdownSection>
-                    <DropdownSection aria-label="Advanced Section" title="Advanced">
+                    <DropdownSection aria-label="Advanced Section" title={translateOfflineUi("Advanced")}>
                       <DropdownItem aria-label="Send After Delay">
                         <ItemContent
                           icon="clock-o"

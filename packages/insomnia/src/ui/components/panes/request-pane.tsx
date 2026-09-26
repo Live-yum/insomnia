@@ -1,3 +1,4 @@
+
 import type { RequestParameter, Settings } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { deconstructQueryStringToParams, getContentTypeFromHeaders } from 'insomnia-data/common';
@@ -9,6 +10,7 @@ import * as reactUse from 'react-use';
 
 import { extractQueryStringFromUrl } from '~/common/utils/url/querystring';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -124,7 +126,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
             id="params"
           >
-            <span>Params</span>
+            <span>{translateOfflineUi("Params")}</span>
             {parametersCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {parametersCount}
@@ -135,7 +137,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
             id="content-type"
           >
-            <span>Body</span>
+            <span>{translateOfflineUi("Body")}</span>
             {!isBodyEmpty && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -146,7 +148,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
             id="auth"
           >
-            <span>Auth</span>
+            <span>{translateOfflineUi("Auth")}</span>
 
             {!isNoneOrInherited && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
@@ -158,7 +160,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
             id="headers"
           >
-            <span>Headers</span>
+            <span>{translateOfflineUi("Headers")}</span>
             {headersCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {headersCount}
@@ -169,7 +171,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-focus-visible:ring-2 data-focus-visible:ring-(--hl-md) data-focus-visible:ring-inset"
             id="scripts"
           >
-            <span>Scripts</span>
+            <span>{translateOfflineUi("Scripts")}</span>
             {Boolean(activeRequest.preRequestScript || activeRequest.afterResponseScript) && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -210,9 +212,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                         window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestParamsImportFromURLClicked });
                       }}
                       className="flex h-full min-w-[14ch] shrink-0 items-center justify-start gap-2 rounded-xs px-2 py-1 text-sm text-(--color-font) ring-1 ring-transparent transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:ring-(--hl-md) focus:ring-inset aria-selected:bg-(--hl-xs) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm) data-pressed:bg-(--hl-sm)"
-                    >
-                      Import from URL
-                    </Button>
+                    >{translateOfflineUi("Import from URL")}</Button>
                     <ToggleButton
                       onChange={isSelected => {
                         patchSettings({
@@ -229,7 +229,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                             icon={isSelected ? 'toggle-on' : 'toggle-off'}
                             className={`${isSelected ? 'text-(--color-success)' : ''}`}
                           />
-                          <span>{isSelected ? 'Regular Edit' : 'Bulk Edit'}</span>
+                          <span>{isSelected ? 'Regular Edit' : translateOfflineUi("Bulk Edit")}</span>
                         </Fragment>
                       )}
                     </ToggleButton>
@@ -326,7 +326,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
                 window.main.trackAnalyticsEvent({ event: AnalyticsEvent.requestHeadersBulkEditToggled });
               }}
             >
-              {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
+              {settings.useBulkHeaderEditor ? 'Regular Edit' : translateOfflineUi("Bulk Edit")}
             </Button>
           </div>
         </TabPanel>
@@ -342,7 +342,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
-                  <span>Pre-request</span>
+                  <span>{translateOfflineUi("Pre-request")}</span>
                 </div>
                 {Boolean(activeRequest.preRequestScript) && (
                   <span className="rounded-lg p-2">
@@ -356,7 +356,7 @@ export const RequestPane: FC<Props> = ({ environmentId, settings, onPaste }) => 
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
-                  <span className="whitespace-nowrap">After-response</span>
+                  <span className="whitespace-nowrap">{translateOfflineUi("After-response")}</span>
                 </div>
                 {Boolean(activeRequest.afterResponseScript) && (
                   <span className="rounded-lg p-2">

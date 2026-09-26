@@ -248,7 +248,9 @@ export class NavigationSidebar {
 
   async renameRequestOrFolder(requestName: string, newName: string, workspaceName?: string): Promise<void> {
     const row = this.requestRow(requestName, workspaceName);
-    await row.dblclick();
+    await row.click();
+    await expect(row).toHaveAttribute('data-selected', 'true');
+    await row.locator('[data-editable]').dblclick();
     const input = row.getByRole('textbox');
     await input.fill(newName);
     await input.press('Enter');

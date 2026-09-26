@@ -1,0 +1,38 @@
+name: Offline review sources
+
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths: [.github/workflows/offline-review-sources.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sources:
+    if: github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Export tracked source only, without credentials or duplicate binary archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir review-sources
+          for name in develop offline/complete-portable offline/standalone-vendored; do
+            sha=$(git rev-parse "origin/$name")
+            short=${name##*/}
+            printf '%s %s\n' "$name" "$sha" >> review-sources/REVISIONS.txt
+            git archive --format=tar "$sha" -- . ':!vendor/offline-plugins/blobs' > "review-sources/$short.tar"
+          done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
+        with:
+          name: offline-review-sources
+          path: review-sources/
+          if-no-files-found: error
+          retention-days: 7

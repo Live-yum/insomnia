@@ -1,3 +1,4 @@
+
 import { getOrgUserPermissions, type Permission } from 'insomnia-api';
 import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
@@ -8,6 +9,7 @@ import { getAppWebsiteBaseURL } from '~/common/constants';
 import { getCurrentSessionId } from '~/ui/account/session';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { Tooltip } from '~/ui/components/tooltip';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from './icon';
 import { InviteModalContainer } from './modals/invite-modal/invite-modal';
@@ -157,9 +159,7 @@ const MissingSomeoneModal = ({ isOpen, onClose }: any) => {
         <Button
           className="mt-8 rounded-md bg-(--color-surprise) px-4 py-2 text-white hover:brightness-90 focus:brightness-90"
           onPress={handleClose}
-        >
-          Close
-        </Button>
+        >{translateOfflineUi("Close")}</Button>
       </div>
     </Modal>
   );

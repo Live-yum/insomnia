@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Button, Dialog, Heading, Input, Label, Modal, ModalOverlay, TextField } from 'react-aria-components';
 
 import { createPlugin } from '~/ui/plugins/create';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { docsPlugins } from '../../../common/documentation';
 import { Icon } from '../icon';
@@ -106,9 +108,7 @@ export const CreatePluginModal = ({ onClose, onComplete }: Props) => {
                       setError(err.message);
                     }
                   }}
-                >
-                  Generate
-                </Button>
+                >{translateOfflineUi("Generate")}</Button>
               </div>
             </div>
           )}

@@ -1,4 +1,7 @@
+
 import React, { type FC } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { COOKIE, HEADER, QUERY_PARAMS } from '../../../../network/api-key/constants';
 import { AuthInputRow } from './components/auth-input-row';
@@ -17,9 +20,9 @@ export const ApiKeyAuth: FC<{ disabled?: boolean; addToHeaderOnly?: boolean }> =
   addToHeaderOnly = false,
 }) => (
   <AuthTableBody>
-    <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
-    <AuthInputRow label="Key" property="key" disabled={disabled} />
-    <AuthInputRow label="Value" property="value" mask disabled={disabled} />
+    <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert disabled={disabled} />
+    <AuthInputRow label={translateOfflineUi("Key")} property="key" disabled={disabled} />
+    <AuthInputRow label={translateOfflineUi("Value")} property="value" mask disabled={disabled} />
     {!addToHeaderOnly && <AuthSelectRow label="Add to" property="addTo" options={options} disabled={disabled} />}
   </AuthTableBody>
 );

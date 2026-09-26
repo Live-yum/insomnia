@@ -1,8 +1,11 @@
+
 import { type HttpVersion, HttpVersions, isMac, strings, UpdateChannel } from 'insomnia-data/common';
 import React, { type FC, Fragment } from 'react';
 
+import { OFFLINE_BUILD } from '~/common/offline';
 import { useRootLoaderData } from '~/root';
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   EditorKeyMap,
@@ -18,6 +21,7 @@ import { CheckForUpdatesButton } from '../check-for-updates-button';
 import { BooleanSetting } from './boolean-setting';
 import { EnumSetting } from './enum-setting';
 import { NumberSetting } from './number-setting';
+import { OfflineLanguageSettings } from './offline-language';
 import { TextArraySetting } from './text-array-setting';
 import { TextSetting } from './text-setting';
 import { VaultKeyPanel } from './vault-key-panel';
@@ -28,72 +32,73 @@ export const General: FC = () => {
 
   return (
     <div className="relative p-4">
-      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">Application</h2>
+      <OfflineLanguageSettings />
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-2 pb-2 text-lg font-bold">{translateOfflineUi("Application")}</h2>
 
       <div className="">
         <div>
-          <BooleanSetting label="Use bulk header editor" setting="useBulkHeaderEditor" />
+          <BooleanSetting label={translateOfflineUi("Use bulk header editor")} setting="useBulkHeaderEditor" />
           <BooleanSetting
-            label="Use vertical layout"
+            label={translateOfflineUi("Use vertical layout")}
             setting="forceVerticalLayout"
-            help="If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px."
+            help={translateOfflineUi("If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px.")}
           />
           <BooleanSetting
-            label="Show variable source and value"
-            help="If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value."
+            label={translateOfflineUi("Show variable source and value")}
+            help={translateOfflineUi("If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value.")}
             setting="showVariableSourceAndValue"
           />
         </div>
         <div>
-          <BooleanSetting label="Reveal passwords" setting="showPasswords" />
-          {!isMac && <BooleanSetting label="Hide menu bar" setting="autoHideMenuBar" />}
-          <BooleanSetting label="Raw template syntax" setting="nunjucksPowerUserMode" />
+          <BooleanSetting label={translateOfflineUi("Reveal passwords")} setting="showPasswords" />
+          {!isMac && <BooleanSetting label={translateOfflineUi("Hide menu bar")} setting="autoHideMenuBar" />}
+          <BooleanSetting label={translateOfflineUi("Raw template syntax")} setting="nunjucksPowerUserMode" />
           <BooleanSetting
-            label="Sidebar focus for collections"
+            label={translateOfflineUi("Sidebar focus for collections")}
             setting="sidebarFocusForCollections"
-            help="If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible."
+            help={translateOfflineUi("If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible.")}
           />
           <BooleanSetting
-            label="Show legacy unit tests"
+            label={translateOfflineUi("Show legacy unit tests")}
             setting="enableLegacyUnitTests"
-            help="If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests."
+            help={translateOfflineUi("If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests.")}
           />
         </div>
       </div>
 
       <div className="row-fill row-fill--top pad-top-sm">
         <NumberSetting
-          label="Autocomplete popup delay (ms)"
+          label={translateOfflineUi("Autocomplete popup delay (ms)")}
           setting="autocompleteDelay"
-          help="Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay."
+          help={translateOfflineUi("Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay.")}
           min={0}
           max={3000}
           step={100}
         />
       </div>
 
-      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Font</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">{translateOfflineUi("Font")}</h2>
 
       <div className="row-fill row-fill--top">
         <div>
-          <BooleanSetting label="Indent with tabs" setting="editorIndentWithTabs" />
-          <BooleanSetting label="Wrap text editor lines" setting="editorLineWrapping" />
+          <BooleanSetting label={translateOfflineUi("Indent with tabs")} setting="editorIndentWithTabs" />
+          <BooleanSetting label={translateOfflineUi("Wrap text editor lines")} setting="editorLineWrapping" />
         </div>
         <div>
-          <BooleanSetting label="Font ligatures" setting="fontVariantLigatures" />
+          <BooleanSetting label={translateOfflineUi("Font ligatures")} setting="fontVariantLigatures" />
         </div>
       </div>
 
       <div className="form-row pad-top-sm">
         <div className="form-row">
           <TextSetting
-            label="Interface font"
+            label={translateOfflineUi("Interface font")}
             setting="fontInterface"
-            help="Enter a comma-separated list of fonts. If left empty, uses system defaults."
-            placeholder="-- System Default --"
+            help={translateOfflineUi("Enter a comma-separated list of fonts. If left empty, uses system defaults.")}
+            placeholder={translateOfflineUi("-- System Default --")}
           />
           <NumberSetting
-            label="Interface font size (px)"
+            label={translateOfflineUi("Interface font size (px)")}
             setting="fontSize"
             min={MIN_INTERFACE_FONT_SIZE}
             max={MAX_INTERFACE_FONT_SIZE}
@@ -106,7 +111,7 @@ export const General: FC = () => {
           label="Text editor font"
           setting="fontMonospace"
           help="Enter a comma-separated list of monospace fonts. If left empty, uses system defaults."
-          placeholder="-- System Default --"
+          placeholder={translateOfflineUi("-- System Default --")}
         />
         <NumberSetting
           label="Editor Font Size (px)"
@@ -153,11 +158,11 @@ export const General: FC = () => {
       <div className="row-fill row-fill--top">
         <div>
           <BooleanSetting
-            label="Validate certificates"
+            label={translateOfflineUi("Validate certificates")}
             setting="validateSSL"
             help="If checked, validate SSL certificates for API requests. This does not affect SSL certificate validation during authentication."
           />
-          <BooleanSetting label="Follow redirects" setting="followRedirects" />
+          <BooleanSetting label={translateOfflineUi("Follow redirects")} setting="followRedirects" />
           <BooleanSetting
             label="Filter responses by environment"
             setting="filterResponsesByEnv"
@@ -196,7 +201,7 @@ export const General: FC = () => {
           min={-1}
         />
         <NumberSetting
-          label="Request timeout (ms)"
+          label={translateOfflineUi("Request timeout (ms)")}
           setting="timeout"
           help="Enter the maximum milliseconds allotted before a request will timeout. Enter 0 to disable timeouts. "
           min={0}
@@ -219,7 +224,7 @@ export const General: FC = () => {
         />
       </div>
 
-      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Security</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">{translateOfflineUi("Security")}</h2>
       <div className="form-row pad-top-sm">
         <BooleanSetting
           label="Clear OAuth 2 session on start"
@@ -240,7 +245,7 @@ export const General: FC = () => {
           help="If checked, validates SSL certificates during authentication flows."
         />
       </div>
-      {isLoggedIn && <VaultKeyPanel />}
+      {(OFFLINE_BUILD || isLoggedIn) && <VaultKeyPanel />}
 
       <div className="form-row pad-top-sm">
         <TextArraySetting
@@ -265,7 +270,7 @@ export const General: FC = () => {
 
           <div className="for-row pad-top-sm">
             <EnumSetting<UpdateChannel>
-              label="Update channel"
+              label={translateOfflineUi("Update channel")}
               setting="updateChannel"
               values={[
                 { value: UpdateChannel.stable, name: 'Release (recommended)' },
@@ -284,7 +289,7 @@ export const General: FC = () => {
         </>
       )}
 
-      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">Plugins</h2>
+      <h2 className="sticky top-0 left-0 z-10 bg-(--color-bg) pt-5 pb-2 text-lg font-bold">{translateOfflineUi("Plugins")}</h2>
       <TextSetting
         label="Additional Plugin Path"
         setting="pluginPath"

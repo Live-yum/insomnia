@@ -26,14 +26,14 @@ test('can render schema and send GraphQL requests', async ({ app, page, insomnia
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
   await page.getByRole('menuitem', { name: 'Show Documentation' }).click();
-  await page.click('a:has-text("Query")');
+  await page.getByRole('link', { name: 'Query', exact: true }).click();
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer = page.locator('.graphql-explorer');
   await expect.soft(graphqlExplorer).toContainText('Characters who at any time bore a Ring of Power.');
-  await page.click('text=QueryRingBearer >> button');
+  await page.locator('text=QueryRingBearer >> button').click();
 
   // Send and assert GraphQL request
-  await page.click('[data-testid="request-pane"] >> text=Send');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
 
@@ -75,14 +75,14 @@ test('can render schema and send GraphQL requests with object variables', async 
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
   await page.getByRole('menuitem', { name: 'Show Documentation' }).click();
-  await page.click('a:has-text("Query")');
+  await page.getByRole('link', { name: 'Query', exact: true }).click();
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer2 = page.locator('.graphql-explorer');
   await expect.soft(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
-  await page.click('text=QueryRingBearer >> button');
+  await page.locator('text=QueryRingBearer >> button').click();
 
   // Send and assert GraphQL request
-  await page.click('[data-testid="request-pane"] >> text=Send');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
   const statusTag2 = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag2).toContainText('200 OK');
 
@@ -115,14 +115,14 @@ test('can render numeric environment', async ({ app, page, insomnia }) => {
   // Assert schema documentation stuff
   await page.getByRole('button', { name: 'schema' }).click();
   await page.getByRole('menuitem', { name: 'Show Documentation' }).click();
-  await page.click('a:has-text("Query")');
+  await page.getByRole('link', { name: 'Query', exact: true }).click();
   await page.locator('a:has-text("RingBearer")').click();
   const graphqlExplorer2 = page.locator('.graphql-explorer');
   await expect.soft(graphqlExplorer2).toContainText('Characters who at any time bore a Ring of Power.');
-  await page.click('text=QueryRingBearer >> button');
+  await page.locator('text=QueryRingBearer >> button').click();
 
   // Send and assert GraphQL request
-  await page.click('[data-testid="request-pane"] >> text=Send');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
   const statusTag2 = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag2).toContainText('200 OK');
 
@@ -148,7 +148,7 @@ test('can send GraphQL requests after editing and prettifying query', async ({ a
   await page.locator('pre[role="presentation"]:has-text("bearer")').click();
   await page.locator('.app').press('Enter');
   await page.locator('text=Prettify GraphQL').click();
-  await page.click('[data-testid="request-pane"] >> text=Send');
+  await page.getByTestId('request-pane').getByRole('button', { name: 'Send', exact: true }).click();
   const statusTag = page.locator('[data-testid="response-status-tag"]:visible');
   await expect.soft(statusTag).toContainText('200 OK');
 

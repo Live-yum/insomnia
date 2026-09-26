@@ -1,3 +1,4 @@
+
 import type { RequestGroup } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
@@ -6,6 +7,7 @@ import { useNavigate, useParams } from 'react-router';
 import { invariant } from '~/common/utils/invariant';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestGroupDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.duplicate';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import { revalidateWorkspaceActiveRequestByFolder } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -91,9 +93,7 @@ export const RequestGroupSettingsModal = ({
         <ModalBody className="pad">
           <div>
             <div className="form-control form-control--outlined">
-              <label>
-                Name
-                <input
+              <label>{translateOfflineUi("Name")}<input
                   autoFocus
                   type="text"
                   placeholder={requestGroup?.name || 'My Folder'}
@@ -135,18 +135,14 @@ export const RequestGroupSettingsModal = ({
                   disabled={!workspaceToCopyTo}
                   className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                   onClick={handleCopyToWorkspace}
-                >
-                  Copy
-                </button>
+                >{translateOfflineUi("Copy")}</button>
               </div>
               <div className="form-control form-control--no-label width-auto">
                 <button
                   disabled={!workspaceToCopyTo}
                   className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                   onClick={handleMoveToWorkspace}
-                >
-                  Move
-                </button>
+                >{translateOfflineUi("Move")}</button>
               </div>
             </div>
           </div>

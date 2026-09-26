@@ -69,10 +69,10 @@ jobs:
         id: inso-variables
         shell: bash
         run: |
-          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.${{ github.run_number }}"
+          INSO_VERSION="$(jq .version packages/insomnia-inso/package.json -rj)-run.$GITHUB_RUN_NUMBER"
           PKG_NAME="inso-ubuntu-24.04-$INSO_VERSION"
-          echo "pkg-name=$PKG_NAME" >> $GITHUB_OUTPUT
-          echo "inso-version=$INSO_VERSION" >> $GITHUB_OUTPUT
+          echo "pkg-name=$PKG_NAME" >> "$GITHUB_OUTPUT"
+          echo "inso-version=$INSO_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Package Inso CLI binary
         run: |
@@ -90,8 +90,8 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Upload Inso CLI artifacts
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
         with:
-          if-no-files-found: ignore
+          if-no-files-found: error
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts

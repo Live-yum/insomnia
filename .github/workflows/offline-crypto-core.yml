@@ -1,0 +1,25 @@
+name: Offline cryptography regression
+on:
+  push:
+    branches: [offline/complete-portable, develop]
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: crypto-core-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  crypto:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+      - name: Published vectors and fail-closed regression without installing packages
+        run: node --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs

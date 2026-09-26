@@ -1,7 +1,10 @@
+
 import classNames from 'classnames';
 import type { SocketIOEventListener, SocketIORequest } from 'insomnia-data';
 import React, { useMemo } from 'react';
 import { Button, GridList, GridListItem, Input, Switch } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { generateId } from '../../../common/misc';
 import { useRequestPatcher } from '../../hooks/use-request';
@@ -203,7 +206,7 @@ export const SocketIOEventTabPane = ({ request, eventListeners }: Props) => {
             <input
               className="w-full"
               defaultValue={item.desc}
-              placeholder="Description"
+              placeholder={translateOfflineUi("Description")}
               onChange={e => {
                 handleChange({ ...item, desc: e.target.value }, 'desc');
               }}

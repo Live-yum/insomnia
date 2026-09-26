@@ -1,3 +1,4 @@
+
 import type { EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentType } from 'insomnia-data';
 import React, { type FC, useRef, useState } from 'react';
@@ -5,6 +6,7 @@ import { Heading, Tab, TabList, TabPanel, Tabs, ToggleButton } from 'react-aria-
 
 import { getDataFromKVPair } from '~/common/utils/environment-utils';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getAuthObjectOrNull } from '../../../network/authentication';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -84,7 +86,7 @@ export const RequestGroupPane: FC = () => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="auth"
           >
-            <span>Auth</span>
+            <span>{translateOfflineUi("Auth")}</span>
             {!isNoneOrInherited && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -95,7 +97,7 @@ export const RequestGroupPane: FC = () => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
           >
-            <span>Headers</span>
+            <span>{translateOfflineUi("Headers")}</span>
             {headersCount > 0 && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {headersCount}
@@ -106,7 +108,7 @@ export const RequestGroupPane: FC = () => {
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="scripts"
           >
-            <span>Scripts</span>
+            <span>{translateOfflineUi("Scripts")}</span>
             {Boolean(activeRequestGroup.preRequestScript || activeRequestGroup.afterResponseScript) && (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -116,9 +118,7 @@ export const RequestGroupPane: FC = () => {
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="environment"
-          >
-            Environment
-          </Tab>
+          >{translateOfflineUi("Environment")}</Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="docs"
@@ -148,7 +148,7 @@ export const RequestGroupPane: FC = () => {
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-to-bracket" />
-                  <span className="whitespace-nowrap">Pre-request</span>
+                  <span className="whitespace-nowrap">{translateOfflineUi("Pre-request")}</span>
                 </div>
                 {Boolean(activeRequestGroup.preRequestScript) && (
                   <span className="rounded-lg p-2">
@@ -162,7 +162,7 @@ export const RequestGroupPane: FC = () => {
               >
                 <div className="flex flex-1 items-center gap-2">
                   <Icon icon="arrow-right-from-bracket" />
-                  <span className="whitespace-nowrap">After-response</span>
+                  <span className="whitespace-nowrap">{translateOfflineUi("After-response")}</span>
                 </div>
                 {Boolean(activeRequestGroup.afterResponseScript) && (
                   <span className="rounded-lg p-2">

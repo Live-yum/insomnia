@@ -5,84 +5,56 @@ import { test } from '../../playwright/test';
 
 test('Preferences through click', async ({ page }) => {
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
 });
 
 test('Preferences through keyboard shortcut', async ({ page }) => {
   await page.locator('.app').press(process.platform === 'darwin' ? 'Meta+,' : 'Control+,');
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
 });
 
-test('AI URL settings persist advanced options', async ({ page }) => {
-  await page.evaluate(async () => {
-    await window.main.llm.updateBackendConfig('url', {
-      url: 'https://llm.local/v1',
-      model: 'gpt-4o-mini',
-      apiKey: 'persisted-token',
-      temperature: 0.7,
-      topP: 0.95,
-      maxTokens: 4096,
-    });
+// AI cloud UI is intentionally disabled. Its local configuration store remains
+// editable through the typed API, and must retain its data without contacting a model.
+test('AI URL configuration persists locally while cloud UI stays disabled', async ({ page }) => {
+  const expected = {
+    url: 'https://llm.local/v1', model: 'gpt-4o-mini', apiKey: 'persisted-token',
+    temperature: 0.7, topP: 0.95, maxTokens: 4096,
+  };
+  await page.evaluate(async config => {
+    await window.main.llm.updateBackendConfig('url', config);
     await window.main.llm.setActiveBackend('url');
-  });
-
+  }, expected);
+  await page.reload();
+  await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
-  await page.getByRole('tab', { name: 'AI Settings' }).click();
-  await page.getByRole('button', { name: 'LLM URL Active' }).click();
-
-  await expect.soft(page.getByLabel('LLM URL')).toHaveValue('https://llm.local/v1');
-  await expect.soft(page.getByLabel('API Token')).toHaveValue('persisted-token');
-
-  await page.getByRole('button', { name: 'Advanced Options' }).click();
-  await expect.soft(page.getByLabel('Temperature (0-2):')).toHaveValue('0.7');
-  await expect.soft(page.getByLabel('Top P (0-1):')).toHaveValue('0.95');
-  await expect.soft(page.getByLabel('Max Tokens (1-128000):')).toHaveValue('4096');
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
+  await expect.soft(page.getByRole('tab', { name: 'AI Settings' })).toHaveCount(0);
+  const config = await page.evaluate(() => window.main.llm.getBackendConfig('url'));
+  expect.soft(config).toMatchObject({ backend: 'url', ...expected });
+  const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+  expect.soft(session.id).toBe('');
 });
 
-test('AI URL settings can deactivate active backend', async ({ page }) => {
-  await page.evaluate(async () => {
-    await window.main.llm.updateBackendConfig('url', {
-      url: 'https://llm-deactivate.local/v1',
-      model: 'gpt-4o-mini',
-      apiKey: 'activation-token',
-      temperature: 0.6,
-      topP: 0.9,
-      maxTokens: 8192,
-    });
+test('AI URL deactivation preserves the local configuration without enabling cloud UI', async ({ page }) => {
+  const expected = {
+    url: 'https://llm-deactivate.local/v1', model: 'gpt-4o-mini', apiKey: 'activation-token',
+    temperature: 0.6, topP: 0.9, maxTokens: 8192,
+  };
+  await page.evaluate(async config => {
+    await window.main.llm.updateBackendConfig('url', config);
     await window.main.llm.setActiveBackend('url');
-  });
-
+  }, expected);
+  expect.soft(await page.evaluate(() => window.main.llm.getActiveBackend())).toBe('url');
+  await page.evaluate(() => window.main.llm.clearActiveBackend());
+  await page.reload();
+  await page.getByTestId('offline-mode').waitFor({ state: 'visible' });
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
-  await page.getByRole('tab', { name: 'AI Settings' }).click();
-  await page.getByRole('button', { name: 'LLM URL Active' }).click();
-
-  await expect.soft(page.getByText('Active model:')).toBeVisible();
-  await expect.soft(page.getByText('gpt-4o-mini')).toBeVisible();
-  await expect.soft(page.getByRole('button', { name: 'Deactivate' })).toBeVisible();
-
-  await page.getByRole('button', { name: 'Deactivate' }).click();
-
-  await expect.soft(page.getByRole('button', { name: 'LLM URL' })).toBeVisible();
-  await expect.soft(page.getByRole('button', { name: 'LLM URL Active' })).toHaveCount(0);
-
-  const [activeBackend, backendConfig] = await page.evaluate(async () => {
-    const active = await window.main.llm.getActiveBackend();
-    const config = await window.main.llm.getBackendConfig('url');
-    return [active, config] as const;
-  });
-
+  await expect.soft(page.getByRole('tab', { name: 'AI Settings' })).toHaveCount(0);
+  const [activeBackend, config] = await page.evaluate(async () => [
+    await window.main.llm.getActiveBackend(), await window.main.llm.getBackendConfig('url'),
+  ] as const);
   expect.soft(activeBackend).toBeNull();
-  expect.soft(backendConfig).toMatchObject({
-    backend: 'url',
-    url: 'https://llm-deactivate.local/v1',
-    model: 'gpt-4o-mini',
-    apiKey: 'activation-token',
-    temperature: 0.6,
-    topP: 0.9,
-    maxTokens: 8192,
-  });
+  expect.soft(config).toMatchObject({ backend: 'url', ...expected });
 });
 
 // Quick reproduction for Kong/insomnia#5664 and INS-2267
@@ -96,19 +68,19 @@ test('Check filter responses by environment preference', async ({ app, page, ins
 
   // Send a request
   await insomnia.navigationSidebar.clickRequestOrFolder('example http');
-  await page.click('[data-testid="request-pane"] button:has-text("Send")');
-  await page.click('text=Console');
+  await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
+  await page.getByText("Console").click();
   await page.locator('text=HTTP/1.1 200 OK').click();
 
   // Set filter responses by environment
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.locator('text=Filter responses by environment').click();
   await page.locator('.app').press('Escape');
 
   // Re-send the request and check timeline
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
-  await page.click('text=Console');
+  await page.getByText("Console").click();
   await page.locator('text=HTTP/1.1 200 OK').click();
 });
 
@@ -116,7 +88,7 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   const responsePane = page.getByTestId('response-pane');
 
   await page.getByTestId('settings-button').click();
-  await page.locator('text=Insomnia Preferences').first().click();
+  await page.getByTestId('preference-modal').waitFor({ state: 'visible' });
   await page.locator('[name="timeout"]').fill('1000');
 
   await page.getByRole('tab', { name: 'Proxy' }).click();
@@ -136,6 +108,6 @@ test('Enable http and https proxies', async ({ app, page, insomnia }) => {
   // send the request and check timeline
   await insomnia.navigationSidebar.clickRequestOrFolder('proxyEnabled');
   await page.locator('[data-testid="request-pane"] button:has-text("Send")').click();
-  await page.click('text=Console');
+  await page.getByText("Console").click();
   await expect.soft(responsePane).toContainText('Trying 127.0.0.1:1111'); // updated proxy
 });

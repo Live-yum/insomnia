@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay, ToggleButton } from 'react-aria-components';
 import { useParams } from 'react-router';
@@ -8,6 +9,7 @@ import {
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId';
 import { CACertificate } from '~/ui/components/modals/workspace-certificates-modal';
 import { useRequestPatcher } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { Icon } from '../icon';
@@ -73,7 +75,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                             icon={isSelected ? 'toggle-on' : 'toggle-off'}
                             className={`${isSelected ? 'text-(--color-success)' : ''}`}
                           />
-                          <span>{isSelected ? 'Enabled' : 'Disabled'}</span>
+                          <span>{isSelected ? translateOfflineUi("Enabled") : translateOfflineUi("Disabled")}</span>
                         </>
                       )}
                     </ToggleButton>
@@ -90,9 +92,7 @@ export const MCPCertificatesModal = ({ onClose }: { onClose: () => void }) => {
                 <Button
                   onPress={close}
                   className="hover:bg-opacity-90 rounded-sm border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                >
-                  Done
-                </Button>
+                >{translateOfflineUi("Done")}</Button>
               </div>
             </div>
           )}

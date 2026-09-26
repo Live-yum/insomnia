@@ -59,15 +59,14 @@ const testWithPendingGitMigration = test.extend({
   userConfig: async ({ userConfig }, use) => {
     await use({
       ...userConfig,
-      // Do not pre-mark onboarding as seen — we want the v13 onboarding to appear
-      // immediately after the migration completes.
+      // Exercise the real startup and migration route, without fixture onboarding shortcuts.
       skipOnboarding: false,
     });
   },
 });
 
 testWithPendingGitMigration(
-  'shows Git migration first, then the v13 onboarding immediately after it completes',
+  'runs required Git migration before opening the account-free offline workspace',
   async ({ page }) => {
     // Migration may take a moment; avoid timing out before the min-display window elapses.
     test.slow();
@@ -86,8 +85,17 @@ testWithPendingGitMigration(
     // 3. Migration completes successfully.
     await expect.soft(page.getByRole('heading', { name: 'Update Successful' })).toBeVisible({ timeout: 30_000 });
 
-    // 4. Opening Insomnia from the completed migration lands on the v13 onboarding.
+    // 4. Opening Insomnia returns to local data, never login or online onboarding.
     await page.getByRole('link', { name: 'Open Insomnia' }).click();
-    await expect.soft(page.getByRole('heading', { name: /Welcome to Insomnia 13/ })).toBeVisible();
+    await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+    await expect.soft(page.getByRole('heading', { name: /Welcome to Insomnia 13/ })).toBeHidden();
+    const state = await page.evaluate(async () => ({
+      project: await window._dataServicesInvoke('project', 'getById', 'proj_smoketestgit'),
+      repository: await window._dataServicesInvoke('gitRepository', 'getById', 'git_smoketestpending'),
+      session: await window._dataServicesInvoke('userSession', 'get'),
+    }));
+    expect.soft(state.project).toMatchObject({ name: 'Git Migration Smoke Project', parentId: 'org_offline', remoteId: null });
+    expect.soft(state.repository?.repoMigrationVersion).toBeGreaterThan(0);
+    expect.soft(state.session.id).toBe('');
   },
 );

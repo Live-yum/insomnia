@@ -1,0 +1,254 @@
+name: Offline complete portable validation
+
+on:
+  workflow_call:
+    inputs:
+      source_sha:
+        type: string
+        required: true
+      publish:
+        description: Compatibility input only; this read-only workflow never publishes
+        type: boolean
+        default: false
+      edition:
+        description: Basic is the default; full is historical opt-in only
+        type: string
+        default: basic
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Exact source commit
+        type: string
+        required: true
+      edition:
+        type: choice
+        options: [basic, full]
+        default: basic
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: '1'
+  PYTHONIOENCODING: utf-8
+  NODE_OPTIONS: --max_old_space_size=6144
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+  SCARF_DO_NOT_TRACK: 'true'
+  SCARF_ANALYTICS: 'false'
+  DO_NOT_TRACK: '1'
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  npm_config_update_notifier: 'false'
+  CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+  INSOMNIA_OFFLINE_EDITION: ${{ inputs.edition }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Record exact source and edition
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/offline-source.log"
+          test "$INSOMNIA_OFFLINE_EDITION" = basic || test "$INSOMNIA_OFFLINE_EDITION" = full
+      - name: Verify source, archive protections, crypto and compact budgets
+        run: |
+          test -f docs/OFFLINE-CONSOLIDATION.json
+          python3 -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          python3 scripts/offline/vendor_plugins.py verify
+          node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs scripts/offline/policy.test.mjs
+          node --test scripts/offline/basic-budget.test.cjs
+      - name: Install locked application build dependencies
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
+      - name: Prepare pinned Electron before any parallel import
+        uses: ./.github/actions/prepare-electron
+      - name: Workspace lint without autofix or warning allowances
+        run: npm run lint --workspaces --if-present -- --max-warnings=0 > "$RUNNER_TEMP/offline-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-lint.log"; exit 1; }
+      - name: Uncached smoke test lint with zero warnings
+        run: node node_modules/eslint/bin/eslint.js --no-cache --max-warnings=0 packages/insomnia-smoke-test/tests > "$RUNNER_TEMP/offline-smoke-lint.log" 2>&1 || { cat "$RUNNER_TEMP/offline-smoke-lint.log"; exit 1; }
+      - name: Workspace and route type checks
+        run: npm run type-check --workspaces --if-present > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
+      - name: Require unchanged circular dependency gate
+        run: npm run check-cycle-references > "$RUNNER_TEMP/offline-cycles.log" 2>&1 || { cat "$RUNNER_TEMP/offline-cycles.log"; exit 1; }
+      - name: Build actual application before tests
+        run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
+      - name: Prepare Node ABI for complete units
+        run: npm run install-libcurl-node > "$RUNNER_TEMP/offline-node-abi.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-node-abi.log"; exit 1; }
+      - name: Complete workspace unit suites
+        run: npm run test --workspaces --if-present > "$RUNNER_TEMP/offline-unit.log" 2>&1 || { grep -n -B 3 -A 25 -E 'FAIL |Test Files |AssertionError|Unhandled Error' "$RUNNER_TEMP/offline-unit.log" || true; tail -n 100 "$RUNNER_TEMP/offline-unit.log"; exit 1; }
+      - name: Complete Inso CLI unit suite
+        run: npm run test:unit -w insomnia-inso > "$RUNNER_TEMP/offline-cli-unit.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-cli-unit.log"; exit 1; }
+      - name: Native interoperation and localization boundaries
+        run: node --test scripts/offline/crypto-openssl-interop.test.cjs scripts/offline/localize-ui.test.cjs
+      - name: Record tested source
+        run: |
+          git diff --exit-code
+          printf '{"status":"passed","sourceCommit":"%s"}\n' "$(git rev-parse HEAD)" > offline-quality.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: offline-complete-quality
+          path: offline-quality.json
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: offline-complete-quality-diagnostics
+          path: ${{ runner.temp }}/offline-*.log
+          if-no-files-found: error
+          retention-days: 14
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            target: windows-x64
+            resource_target: win32-x64
+            platform: win
+            arch: x64
+            directory: win-unpacked
+            executable: Insomnia.exe
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+            resource_target: linux-arm64
+            platform: linux
+            arch: arm64
+            directory: linux-arm64-unpacked
+            executable: insomnia
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    env:
+      INSOMNIA_OFFLINE_SMOKE_EXE: packages/insomnia/dist/${{ matrix.directory }}/${{ matrix.executable }}
+      RESOURCE_TARGET: ${{ matrix.resource_target }}
+      PACKAGE_TARGET: ${{ matrix.target }}
+      PACKAGE_PLATFORM: ${{ matrix.platform }}
+      PACKAGE_ARCH: ${{ matrix.arch }}
+      PACKAGE_DIRECTORY: packages/insomnia/dist/${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ inputs.source_sha }}
+          persist-credentials: false
+      - name: Record source and require supported edition
+        run: |
+          git rev-parse HEAD > "$RUNNER_TEMP/offline-source.log"
+          test "$INSOMNIA_OFFLINE_EDITION" = basic || test "$INSOMNIA_OFFLINE_EDITION" = full
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Verify committed packaging and archive protections
+        run: |
+          test -f docs/OFFLINE-CONSOLIDATION.json
+          python -m unittest discover -s scripts/offline -p 'test_*.py' -v
+          node --test scripts/offline/basic-budget.test.cjs
+      - name: Historical full edition only - materialize pinned community trees
+        if: inputs.edition == 'full'
+        run: python scripts/offline/vendor_plugins.py materialize --target "$RESOURCE_TARGET" --output packages/insomnia/offline-plugin-resources
+      - name: Install Linux GUI, native library and real keyring prerequisites
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libgtk-3-0 libnss3 libasound2t64 libgbm1 libxss1 libsecret-1-0 libcurl4-openssl-dev xvfb xauth gnome-keyring libsecret-tools dbus-x11
+      - name: Install locked build dependencies
+        run: npm ci --no-audit --no-fund > "$RUNNER_TEMP/offline-install.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-install.log"; exit 1; }
+      - name: Validate crypto and complete application types
+        run: |
+          node --experimental-strip-types --test scripts/offline/crypto.test.cjs scripts/offline/crypto-core.test.cjs scripts/offline/portable-crypto.test.cjs scripts/offline/policy.test.mjs
+          npm run type-check -w insomnia > "$RUNNER_TEMP/offline-types.log" 2>&1 || { cat "$RUNNER_TEMP/offline-types.log"; exit 1; }
+      - name: Compile exact committed source
+        run: npm run app-build > "$RUNNER_TEMP/offline-build.log" 2>&1 || { tail -n 100 "$RUNNER_TEMP/offline-build.log"; exit 1; }
+      - name: Package selected native edition without publishing
+        working-directory: packages/insomnia
+        run: |
+          config=electron-builder.basic.cjs
+          if [ "$INSOMNIA_OFFLINE_EDITION" = full ]; then config=electron-builder.offline.cjs; fi
+          npx --no-install electron-builder --config "$config" --dir "--$PACKAGE_PLATFORM" "--$PACKAGE_ARCH" --publish never > "$RUNNER_TEMP/offline-package.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-package.log"; exit 1; }
+      - name: Historical full edition - require every catalog byte
+        if: inputs.edition == 'full'
+        run: python scripts/offline/stage_resources.py --directory "$PACKAGE_DIRECTORY" --target "$RESOURCE_TARGET"
+      - name: Basic edition - enforce physical file and byte budget
+        if: inputs.edition == 'basic'
+        run: node scripts/offline/basic-budget.cjs directory "$PACKAGE_DIRECTORY" > "$RUNNER_TEMP/offline-basic-budget.log"
+      - name: Critical packaged requests, scripts, code generation, custom CA and restart
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh bash scripts/offline/run-critical-tests.sh
+          else
+            bash scripts/offline/run-critical-tests.sh
+          fi
+      - name: Real default Chinese desktop and persistent language selection
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            sandbox="$PACKAGE_DIRECTORY/chrome-sandbox"
+            test -f "$sandbox"
+            sudo chown root:root "$sandbox"
+            sudo chmod 4755 "$sandbox"
+            dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh xvfb-run -a node scripts/offline/test-chinese-interface.mjs > "$RUNNER_TEMP/offline-chinese-ui.log" 2>&1 || { cat "$RUNNER_TEMP/offline-chinese-ui.log"; exit 1; }
+          else
+            node scripts/offline/test-chinese-interface.mjs > "$RUNNER_TEMP/offline-chinese-ui.log" 2>&1 || { cat "$RUNNER_TEMP/offline-chinese-ui.log"; exit 1; }
+          fi
+      - name: Packaged crypto workbench, real authenticated algorithms and restart
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh xvfb-run -a node scripts/offline/run-crypto-acceptance.mjs > "$RUNNER_TEMP/offline-crypto-ui.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-crypto-ui.log"; exit 1; }
+          else
+            node scripts/offline/run-crypto-acceptance.mjs > "$RUNNER_TEMP/offline-crypto-ui.log" 2>&1 || { tail -n 120 "$RUNNER_TEMP/offline-crypto-ui.log"; exit 1; }
+          fi
+      - name: Windows clean-profile offline desktop smoke
+        if: runner.os == 'Windows'
+        run: node scripts/offline/smoke.mjs > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
+      - name: Preserve Windows secure entrypoint
+        if: runner.os == 'Windows'
+        run: |
+          export PATH="/c/mingw64/bin:$PATH"
+          bash ./build-secure-wrapper.sh CI
+      - name: Verify secure wrapper without debugger or sandbox-disabling arguments
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/offline/smoke-windows-wrapper.ps1
+      - name: Linux desktop smoke with only loopback interfaces
+        if: runner.os == 'Linux'
+        run: dbus-run-session -- bash scripts/offline/run-with-ci-keyring.sh bash scripts/offline/smoke-linux.sh > "$RUNNER_TEMP/offline-smoke.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/offline-smoke.log"; exit 1; }
+      - name: Bind actual Chinese and crypto acceptance to the basic package metadata
+        if: inputs.edition == 'basic'
+        run: python scripts/offline/record-basic-validation.py
+      - name: Basic edition - archive, extract afresh, verify hashes and startup
+        if: inputs.edition == 'basic'
+        run: python scripts/offline/package-basic.py "$PACKAGE_TARGET"
+      - name: Historical full edition - archive tested catalog
+        if: inputs.edition == 'full'
+        run: python scripts/offline/package-complete.py "$PACKAGE_TARGET"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: insomnia-${{ inputs.edition }}-${{ matrix.target }}
+          path: offline-dist/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: offline-complete-diagnostics-${{ matrix.target }}
+          path: |
+            offline-test-results/
+            packages/insomnia/dist/basic-budget-*.json
+            ${{ runner.temp }}/offline-*.log
+          if-no-files-found: error
+          retention-days: 14

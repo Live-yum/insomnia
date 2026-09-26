@@ -1,3 +1,4 @@
+
 import type { GrpcRequest, McpRequest, Request, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
@@ -8,6 +9,7 @@ import { invariant } from '~/common/utils/invariant';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { useRequestDuplicateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.$requestId.duplicate';
 import { useReadyState } from '~/ui/hooks/use-ready-state';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { isNotNullOrUndefined } from '../../../common/misc';
 import { revalidateWorkspaceActiveRequest } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -117,14 +119,12 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
   return (
     <OverlayContainer onContextMenu={e => e.stopPropagation()}>
       <Modal ref={modalRef} onHide={onHide}>
-        <ModalHeader>
-          Request Settings <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
+        <ModalHeader>{translateOfflineUi("Request Settings")} <span className="txt-sm selectable faint monospace">{request ? request._id : ''}</span>
         </ModalHeader>
         <ModalBody className="pad">
           <div>
             <div className="form-control form-control--outlined">
-              <label>
-                Name <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
+              <label>{translateOfflineUi("Name")} <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
                 <input
                   autoFocus
                   type="text"
@@ -173,8 +173,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </div>
                   </div>
                   <div className="form-control form-control--outlined">
-                    <label>
-                      Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+                    <label>{translateOfflineUi("Follow redirects")} <span className="txt-sm faint italic">(overrides global setting)</span>
                       <select
                         defaultValue={request.settingFollowRedirects}
                         name="settingFollowRedirects"
@@ -182,7 +181,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       >
                         <option value={'global'}>Use global setting</option>
                         <option value={'off'}>Don't follow redirects</option>
-                        <option value={'on'}>Follow redirects</option>
+                        <option value={'on'}>{translateOfflineUi("Follow redirects")}</option>
                       </select>
                     </label>
                   </div>
@@ -222,18 +221,14 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       disabled={!workspaceToCopyTo}
                       className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
-                    >
-                      Copy
-                    </button>
+                    >{translateOfflineUi("Copy")}</button>
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
                       className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
-                    >
-                      Move
-                    </button>
+                    >{translateOfflineUi("Move")}</button>
                   </div>
                 </div>
               </>
@@ -396,8 +391,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                     </div>
                   </div>
                   <div className="form-control form-control--outlined">
-                    <label>
-                      Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
+                    <label>{translateOfflineUi("Follow redirects")} <span className="txt-sm faint italic">(overrides global setting)</span>
                       <select
                         defaultValue={request.settingFollowRedirects}
                         name="settingFollowRedirects"
@@ -409,7 +403,7 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       >
                         <option value={'global'}>Use global setting</option>
                         <option value={'off'}>Don't follow redirects</option>
-                        <option value={'on'}>Follow redirects</option>
+                        <option value={'on'}>{translateOfflineUi("Follow redirects")}</option>
                       </select>
                     </label>
                   </div>
@@ -449,18 +443,14 @@ export const RequestSettingsModal = ({ request, onHide }: ModalProps & RequestSe
                       disabled={!workspaceToCopyTo}
                       className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleCopyToWorkspace}
-                    >
-                      Copy
-                    </button>
+                    >{translateOfflineUi("Copy")}</button>
                   </div>
                   <div className="form-control form-control--no-label width-auto">
                     <button
                       disabled={!workspaceToCopyTo}
                       className="h-(--line-height-xs) rounded-md border border-solid border-(--hl-lg) px-(--padding-md) hover:bg-(--hl-xs)"
                       onClick={handleMoveToWorkspace}
-                    >
-                      Move
-                    </button>
+                    >{translateOfflineUi("Move")}</button>
                   </div>
                 </div>
               </>

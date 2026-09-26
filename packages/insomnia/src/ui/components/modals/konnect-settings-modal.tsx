@@ -1,3 +1,4 @@
+
 import { services } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Button, Dialog, Form, Heading, Modal, ModalOverlay } from 'react-aria-components';
@@ -7,6 +8,7 @@ import { fetchKonnectOrganizationId, validatePat } from '~/konnect/api';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
 import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useSettingsPatcher } from '../../hooks/use-request';
 import { Icon } from '../icon';
@@ -131,7 +133,7 @@ export const KonnectSettingsModal = ({
                   {showDisconnectConfirm ? 'Disconnect Kong Konnect?' : 'Kong Konnect settings'}
                 </Heading>
                 <Button
-                  aria-label="Close"
+                  aria-label={translateOfflineUi("Close")}
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset"
                   onPress={close}
                 >
@@ -149,9 +151,7 @@ export const KonnectSettingsModal = ({
                     <Button
                       className="rounded-xs border border-solid border-(--hl-sm) px-4 py-2 text-sm text-(--color-font) hover:bg-(--hl-xs)"
                       onPress={() => setShowDisconnectConfirm(false)}
-                    >
-                      Cancel
-                    </Button>
+                    >{translateOfflineUi("Cancel")}</Button>
                     <Button
                       className="rounded-xs bg-(--color-danger) px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                       isDisabled={isDisconnecting}
@@ -240,9 +240,7 @@ export const KonnectSettingsModal = ({
                         className="rounded-xs px-3 py-1.5 text-sm text-(--color-font) hover:bg-(--hl-xs)"
                         onPress={() => setShowDisconnectConfirm(true)}
                         isDisabled={status === 'validating'}
-                      >
-                        Disconnect
-                      </Button>
+                      >{translateOfflineUi("Disconnect")}</Button>
                     )}
                   </div>
                 </Form>

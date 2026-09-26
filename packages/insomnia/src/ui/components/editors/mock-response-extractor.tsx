@@ -1,3 +1,4 @@
+
 import { models } from 'insomnia-data';
 import React, { useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -9,6 +10,7 @@ import {
   useMockRoutePatcher,
 } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId';
 import { useCurrentPlan } from '~/ui/hooks/use-account-server-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getContentTypeName, getMimeTypeFromContentType } from '../../../common/constants';
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
@@ -227,7 +229,7 @@ If you want to create a self-hosted mock server route from a request response in
             type="submit"
             className="mr-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline focus:ring-(--hl-md) aria-pressed:bg-(--color-surprise)/80"
           >
-            {selectedMockRoute ? 'Overwrite' : 'Create'}
+            {selectedMockRoute ? 'Overwrite' : translateOfflineUi("Create")}
           </Button>
           <Button
             isDisabled={!selectedMockServer || !selectedMockRoute}

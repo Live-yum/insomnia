@@ -20,6 +20,7 @@ import { test } from '../../playwright/test';
 // into a displayed "Error" status. Asserting via the Console tab (console.log output) instead of an
 // echoed response body sidesteps template-rendering entirely.
 // TODO(INS-3890): re-enable once the QuickJS sandbox setting is un-hidden in scripting-settings.tsx.
+// eslint-disable-next-line playwright/no-skipped-test -- Existing upstream INS-3890: the experimental QuickJS setting is hidden; not a new skip.
 test.describe.skip('QuickJS script sandbox', () => {
   test.slow(process.platform === 'darwin' || process.platform === 'win32', 'Slow app start on these platforms');
 

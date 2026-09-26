@@ -1,9 +1,12 @@
+
 import { exportRequestsToFile } from 'insomnia/src/ui/components/settings/import-export';
 import type { GrpcRequest, Request, RequestGroup, SocketIORequest, WebSocketRequest } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { type FC, type ReactNode, useEffect, useState } from 'react';
 import { Button, Checkbox, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   type Child,
@@ -352,9 +355,7 @@ export const ExportRequestsModal = ({
                 <Button
                   onPress={close}
                   className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                >
-                  Cancel
-                </Button>
+                >{translateOfflineUi("Cancel")}</Button>
                 <Button
                   onPress={() => {
                     if (state?.treeRoot) {
@@ -372,8 +373,7 @@ export const ExportRequestsModal = ({
                   isDisabled={isExportDisabled}
                   className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) bg-(--color-surprise) px-3 py-2 text-(--color-font-surprise) transition-colors hover:bg-(--color-surprise)/90 hover:no-underline"
                 >
-                  <Icon icon="save" /> Export
-                </Button>
+                  <Icon icon="save" /> {translateOfflineUi("Export")}</Button>
               </div>
             </div>
           )}

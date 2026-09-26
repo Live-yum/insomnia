@@ -1,3 +1,4 @@
+
 import type { ResponseHeader } from 'insomnia-data';
 import React, { useState } from 'react';
 import {
@@ -17,6 +18,7 @@ import { useParams } from 'react-router';
 import { useMockRouteUpdateActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.$mockRouteId.update';
 import { useMockRouteNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.mock-server.mock-route.new';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HTTP_METHODS } from '../../../common/constants';
 import { Icon } from '../icon';
@@ -211,9 +213,7 @@ export const MockRouteModal = ({
                     onPress={requestClose}
                     isDisabled={currentFetcher.state !== 'idle'}
                     className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors"
-                  >
-                    Cancel
-                  </Button>
+                  >{translateOfflineUi("Cancel")}</Button>
                   <Button
                     type="submit"
                     isDisabled={currentFetcher.state !== 'idle'}

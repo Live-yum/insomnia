@@ -1,3 +1,4 @@
+
 import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
@@ -14,6 +15,7 @@ import uiEventBus, { KONNECT_SYNC_TRIGGER } from '~/ui/event-bus';
 import { useKonnectSync } from '~/ui/hooks/use-konnect-sync';
 import insomniaLogo from '~/ui/images/insomnia-logo.svg';
 import { refreshKonnectAccess, useKonnectSyncEnabled } from '~/ui/organization-utils';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../../icon';
 
@@ -238,9 +240,7 @@ export function KonnectSyncActionsRow({
           aria-label="Cancel sync"
           onPress={cancelSync}
           className="flex h-full items-center justify-center gap-1 rounded-xs border border-solid border-(--hl-sm) px-2 text-sm text-(--color-font) transition-all hover:bg-(--hl-xs) focus:outline-none"
-        >
-          Cancel
-          <Icon icon="stop-circle" />
+        >{translateOfflineUi("Cancel")}<Icon icon="stop-circle" />
         </Button>
       ) : (
         <TooltipTrigger delay={300}>

@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from 'react';
 import { Button, Input, SearchField } from 'react-aria-components';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
@@ -6,6 +7,7 @@ import type { McpNotificationEvent } from '~/main/mcp/types';
 import { Icon } from '~/ui/components/icon';
 import { McpEventView } from '~/ui/components/mcp/event-view';
 import { EventLogView } from '~/ui/components/websockets/event-log-view';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 export interface McpNotificationTabProps {
   allEvents: McpNotificationEvent[];
@@ -50,7 +52,7 @@ export const McpNotificationTab = ({ allEvents }: McpNotificationTabProps) => {
             }}
           >
             <Input
-              placeholder="Search"
+              placeholder={translateOfflineUi("Search")}
               className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
             />
             <div className="absolute top-0 right-0 flex h-full items-center px-2">

@@ -1,5 +1,8 @@
+
 import type { GraphQLType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLDefaultValue } from './graph-ql-default-value';
@@ -21,7 +24,7 @@ export class GraphQLExplorerField extends PureComponent<Props> {
     const { field, onNavigateType } = this.props;
     return (
       <Fragment>
-        <h2 className="graphql-explorer__subheading">Type</h2>
+        <h2 className="graphql-explorer__subheading">{translateOfflineUi("Type")}</h2>
         <GraphQLExplorerTypeLink type={field.type} onNavigate={onNavigateType} />
       </Fragment>
     );

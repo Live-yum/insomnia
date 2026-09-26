@@ -4,8 +4,8 @@ import path from 'node:path';
 
 import YAML from 'yaml';
 
-import { ALLOWED_EXTENDS_IDENTIFIERS, toArray, validateSpectralRuleset } from '../common/spectral-ruleset-validator';
 import { OFFLINE_BUILD } from '../common/offline-policy';
+import { ALLOWED_EXTENDS_IDENTIFIERS, toArray, validateSpectralRuleset } from '../common/spectral-ruleset-validator';
 import { isPrivateOrLoopbackHost } from './private-host';
 
 const MAX_EXTENDS_DEPTH = 5;

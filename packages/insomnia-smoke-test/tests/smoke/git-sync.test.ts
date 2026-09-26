@@ -3,7 +3,19 @@ import { expect } from '@playwright/test';
 import type { InsomniaApp } from '../../playwright/pages';
 import { test } from '../../playwright/test';
 
+// Explicitly approve only the local Git test service; production defaults remain deny-by-default.
+test.use({ browserOrigins: ['http://localhost:4010', 'http://127.0.0.1:4010'] });
+
 const GIT_PROJECT_NAME = 'Git Sync Test Project';
+
+async function openGitProjectDashboard(insomnia: InsomniaApp): Promise<void> {
+  // Creating a collection navigates into its editor and removes the project Git
+  // menu. Wait for creation to finish, then return through the real navigation UI.
+  await insomnia.page.getByRole('dialog').waitFor({ state: 'hidden' });
+  await insomnia.navigationSidebar.backToAllProjects();
+  await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
+  await insomnia.projectPage.waitForProjectDashboard();
+}
 
 test.describe('Git Sync', () => {
   test.slow();
@@ -43,6 +55,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await openGitProjectDashboard(insomnia);
     await page.getByTestId('git-dropdown').click();
     await expect.soft(page.getByRole('menuitemradio', { name: 'Commit' })).toBeVisible();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
@@ -83,10 +96,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('collection_1');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
-    // Creating the collection focused the sidebar on it; back out before selecting the project.
-    await insomnia.navigationSidebar.backToAllProjects();
-    await insomnia.navigationSidebar.selectProject(GIT_PROJECT_NAME);
+    await openGitProjectDashboard(insomnia);
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
     await page.locator('button[name="Stage all changes"]').click();
@@ -119,12 +129,14 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('push_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await openGitProjectDashboard(insomnia);
 
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();
     await page.locator('button[name="Stage all changes"]').click();
     await page.getByRole('textbox', { name: 'Message' }).fill('push test commit');
     await page.getByRole('button', { name: 'Commit', exact: true }).click();
+    await page.getByRole('heading', { name: 'Commit Changes' }).waitFor({ state: 'hidden' });
 
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Push' }).click();
@@ -170,7 +182,7 @@ test.describe('Git Sync', () => {
     await page.getByRole('textbox', { name: 'File name' }).press('ControlOrMeta+a');
     await page.getByRole('textbox', { name: 'File name' }).fill('discard_test_collection');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
-    await page.getByText('Create a new API Collection').waitFor({ state: 'hidden' });
+    await openGitProjectDashboard(insomnia);
 
     await page.getByTestId('git-dropdown').click();
     await page.getByRole('menuitemradio', { name: 'Commit' }).click();

@@ -1,3 +1,4 @@
+
 import type { MergeConflict } from 'insomnia-vcs';
 import { type FC, useEffect, useState } from 'react';
 import {
@@ -20,6 +21,7 @@ import { useGitProjectNewBranchActionFetcher } from '~/routes/git.branch.new';
 import { useGitProjectBranchesLoaderFetcher } from '~/routes/git.branches';
 import { useGitProjectChangesFetcher } from '~/routes/git.changes';
 import { SyncMergeModal } from '~/ui/components/modals/sync-merge-modal';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { PromptButton } from '../base/prompt-button';
 import { Icon } from '../icon';
@@ -100,9 +102,7 @@ const LocalBranchItem = ({
               <Icon
                 icon={deleteBranchFetcher.state !== 'idle' ? 'spinner' : 'trash'}
                 className={`w-5 text-(--color-danger) ${deleteBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
-              />
-              Delete
-            </PromptButton>
+              />{translateOfflineUi("Delete")}</PromptButton>
           )}
           <Button
             className="flex items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -190,9 +190,7 @@ const LocalBranchItem = ({
               }
             }}
           >
-            <Icon icon={'code-merge'} className={`w-5`} />
-            Merge
-          </PromptButton>
+            <Icon icon={'code-merge'} className={`w-5`} />{translateOfflineUi("Merge")}</PromptButton>
         </div>
       </div>
       {errMsg && <div className="text-right whitespace-break-spaces text-(--color-danger)">{errMsg}</div>}
@@ -323,9 +321,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
           {({ close }) => (
             <div className="flex flex-1 flex-col gap-4 overflow-hidden">
               <div className="flex shrink-0 items-center justify-between gap-2">
-                <Heading slot="title" className="text-2xl">
-                  Branches
-                </Heading>
+                <Heading slot="title" className="text-2xl">{translateOfflineUi("Branches")}</Heading>
                 <Button
                   className="flex aspect-square h-6 shrink-0 items-center justify-center rounded-xs text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                   onPress={close}
@@ -349,7 +345,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                 className="flex shrink-0 flex-col gap-2"
               >
                 <TextField className="flex flex-col gap-2">
-                  <Label className="col-span-4">New branch name:</Label>
+                  <Label className="col-span-4">{translateOfflineUi("New branch name:")}</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       required
@@ -366,9 +362,7 @@ export const GitProjectBranchesModal: FC<Props> = ({ currentBranch, branches, on
                       <Icon
                         className={`w-5 ${createBranchFetcher.state !== 'idle' ? 'animate-spin' : ''}`}
                         icon={createBranchFetcher.state !== 'idle' ? 'spinner' : 'plus'}
-                      />{' '}
-                      Create
-                    </Button>
+                      />{' '}{translateOfflineUi("Create")}</Button>
                   </div>
                 </TextField>
                 {createNewBranchError && (

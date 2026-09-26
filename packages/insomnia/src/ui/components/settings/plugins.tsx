@@ -1,3 +1,4 @@
+
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 import {
   Button,
@@ -18,6 +19,7 @@ import { validatePluginName } from '~/common/utils/plugin-name';
 import { useRootLoaderData } from '~/root';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
 import { reload } from '~/ui/templating/renderer-safe';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { ACCEPTED_NODE_CA_FILE_EXTS, PLUGIN_HUB_BASE } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
@@ -144,7 +146,7 @@ export const Plugins: FC = () => {
       <p className="notice info no-margin-top">
         Plugins are built and maintained by third-party developers. Thank you! Insomnia does not review, endorse, or
         support any particular plugin unless explicitly noted. Plugins are still an experimental feature. See{' '}
-        <Link href={docsPlugins}>Documentation</Link> for more info.
+        <Link href={docsPlugins}>{translateOfflineUi("Documentation")}</Link> for more info.
       </p>
 
       <div className="flex flex-col gap-6">
@@ -172,9 +174,7 @@ export const Plugins: FC = () => {
           </div>
         )}
         <div className="flex w-full flex-col">
-          <Label className="text-lg font-bold" slot="label">
-            Install Plugin
-          </Label>
+          <Label className="text-lg font-bold" slot="label">{translateOfflineUi("Install Plugin")}</Label>
 
           <div className="mt-2 flex flex-col gap-2">
             <div className="flex gap-2">
@@ -237,7 +237,7 @@ export const Plugins: FC = () => {
                     }
                   }}
                 >
-                  {isInstallingFromNpm ? 'Installing...' : 'Install Plugin'}
+                  {isInstallingFromNpm ? 'Installing...' : translateOfflineUi("Install Plugin")}
                 </Button>
               </div>
             </div>
@@ -331,9 +331,7 @@ export const Plugins: FC = () => {
                   onPress={() => {
                     patchSettings({ pluginNodeExtraCerts: '' });
                   }}
-                >
-                  Clear
-                </Button>
+                >{translateOfflineUi("Clear")}</Button>
               </div>
             </div>
           )}
@@ -398,9 +396,7 @@ export const Plugins: FC = () => {
                     setState(state => ({ ...state, npmRegistryUrl: '', npmRegistryUrlError: null }));
                     patchSettings({ npmRegistryUrl: '' });
                   }}
-                >
-                  Clear
-                </Button>
+                >{translateOfflineUi("Clear")}</Button>
               )}
             </div>
             <Label slot="description" className="p-0 text-sm text-(--hl)">
@@ -423,9 +419,7 @@ export const Plugins: FC = () => {
                   onPress={() => {
                     handleReloadPlugins();
                   }}
-                >
-                  Reload
-                </Button>
+                >{translateOfflineUi("Reload")}</Button>
 
                 <Button
                   className="flex h-(--line-height-xs) items-center justify-center gap-2 rounded-md border border-solid border-(--hl-lg) px-(--padding-md) py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -465,18 +459,18 @@ export const Plugins: FC = () => {
                         />
                       </div>
                     </Checkbox>
-                    <span className="text-xs font-bold text-(--hl-xl) uppercase">Name</span>
+                    <span className="text-xs font-bold text-(--hl-xl) uppercase">{translateOfflineUi("Name")}</span>
                   </div>
                   <div className="flex items-center gap-6">
                     <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Version</span>
-                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">Folder</span>
+                    <span className="w-[10ch] text-center text-xs font-bold text-(--hl-xl) uppercase">{translateOfflineUi("Folder")}</span>
                   </div>
                 </div>
                 <Separator className="mt-2" />
               </div>
             )}
             <GridList
-              aria-label="Installed Plugins"
+              aria-label={translateOfflineUi("Installed Plugins")}
               selectionMode="multiple"
               items={pluginRows}
               className="flex flex-col divide-y divide-(--hl-sm)"

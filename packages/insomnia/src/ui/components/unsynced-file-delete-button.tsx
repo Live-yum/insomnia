@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from 'react';
 import { Button, Dialog, Heading, Modal, ModalOverlay, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 import { useInsomniaSyncDeleteRemoteFileActionFetcher } from '~/routes/organization.$organizationId.insomnia-sync.delete-remote-file';
 import { Icon } from '~/ui/components/icon';
 import { showToast } from '~/ui/components/toast-notification';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface Props {
   organizationId: string;
@@ -83,9 +85,7 @@ export const UnsyncedFileDeleteButton = ({ organizationId, backendProjectId, nam
                         close();
                       }}
                       className="rounded-xs border border-solid border-(--hl-md) bg-(--color-danger) px-3 py-2 text-(--color-font-danger) transition-colors hover:bg-(--color-danger)/90 hover:no-underline"
-                    >
-                      Delete
-                    </Button>
+                    >{translateOfflineUi("Delete")}</Button>
                   </div>
                 </div>
               )}

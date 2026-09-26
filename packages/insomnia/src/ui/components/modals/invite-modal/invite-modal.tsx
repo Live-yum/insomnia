@@ -1,3 +1,4 @@
+
 import { isAfter } from 'date-fns';
 import {
   type Collaborator,
@@ -42,6 +43,7 @@ import { Icon } from '~/ui/components/icon';
 import { AlertModal } from '~/ui/components/modals/alert-modal';
 import { showModal } from '~/ui/components/modals/index';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { InviteForm } from './invite-form';
 import { OrganizationMemberRolesSelector, SELECTOR_TYPE } from './organization-member-roles-selector';
@@ -540,7 +542,7 @@ const MemberListItem: FC<{
           }}
         >
           <Icon icon={isAcceptedMember || isGroup ? 'trash' : 'square-minus'} />
-          {isAcceptedMember || isGroup ? 'Remove' : 'Revoke'}
+          {isAcceptedMember || isGroup ? translateOfflineUi("Remove") : 'Revoke'}
         </PromptButton>
       </div>
     </ListBoxItem>

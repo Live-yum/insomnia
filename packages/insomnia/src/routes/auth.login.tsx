@@ -1,3 +1,4 @@
+
 import { models } from 'insomnia-data';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-aria-components';
@@ -7,6 +8,7 @@ import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
 import { Tooltip } from '~/ui/components/tooltip';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 
 import type { Route } from './+types/auth.login';
@@ -84,11 +86,11 @@ const Component = () => {
         <div className="text-sm font-extrabold text-balance">
           <span className="inline-flex h-[calc(var(--text-sm)*(var(--leading-tight)))] flex-col overflow-hidden text-indigo-300">
             <ul className="animate-text-slide-4 block text-right leading-tight [&_li]:block">
-              <li>Debug</li>
-              <li>Design</li>
-              <li>Test</li>
+              <li>{translateOfflineUi("Debug")}</li>
+              <li>{translateOfflineUi("Design")}</li>
+              <li>{translateOfflineUi("Test")}</li>
               <li>Mock</li>
-              <li aria-hidden="true">Debug</li>
+              <li aria-hidden="true">{translateOfflineUi("Debug")}</li>
             </ul>
           </span>
           <span className="ml-1 text-(--color-font)">APIs locally, on Git or in the Cloud.</span>

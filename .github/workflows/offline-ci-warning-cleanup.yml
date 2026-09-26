@@ -1,0 +1,96 @@
+name: Offline CI warning cleanup
+
+on:
+  push:
+    branches: [offline/complete-portable]
+    paths: [.github/workflows/offline-ci-warning-cleanup.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: offline-ci-warning-source-cleanup
+  cancel-in-progress: false
+
+jobs:
+  apply-validated-source:
+    if: github.repository == 'Live-yum/insomnia' && github.ref == 'refs/heads/offline/complete-portable'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      VALIDATED_BASE: b9f60fd0f21b0e576c0d51357eb9378042c3f158
+      VALIDATED_RUN: '36118247514'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - name: Require the successful exact-source validation job, not the failed workflow-write attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/Live-yum/insomnia/actions/runs/$VALIDATED_RUN" > "$RUNNER_TEMP/validated-run.json"
+          gh api "repos/Live-yum/insomnia/actions/runs/$VALIDATED_RUN/jobs?filter=latest&per_page=100" > "$RUNNER_TEMP/validated-jobs.json"
+          python3 - <<'PY'
+          import json, os, pathlib
+          tmp = pathlib.Path(os.environ['RUNNER_TEMP'])
+          run = json.loads((tmp / 'validated-run.json').read_text())
+          assert run['head_sha'] == os.environ['VALIDATED_BASE']
+          assert run['head_branch'] == 'offline/complete-portable'
+          assert run['repository']['full_name'] == 'Live-yum/insomnia'
+          assert run['path'] == '.github/workflows/offline-ci-warning-cleanup.yml'
+          jobs = json.loads((tmp / 'validated-jobs.json').read_text())['jobs']
+          jobs = [job for job in jobs if job['name'] == 'prepare']
+          assert len(jobs) == 1 and jobs[0]['conclusion'] == 'success'
+          results = {step['name']: step['conclusion'] for step in jobs[0]['steps']}
+          for name in ['Require all workspace lint and smoke test lint without any warnings', 'Require workspace types and portable workflow regressions', 'Require the unchanged circular dependency gate', 'Require deterministic sandbox vendor regeneration', 'Build application and run all workspace and CLI unit tests', 'Export validated source patch and inventory']:
+              assert results.get(name) == 'success', name
+          print('Verified successful complete validation at the pinned source; failed workflow write is not treated as success.')
+          PY
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, Node 24
+        with:
+          name: ci-warning-cleanup-validated-source
+          run-id: 36118247514
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/validated-source
+      - name: Commit reviewed source only; workflow changes require the maintainer connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin offline/complete-portable
+          test "$(git rev-parse origin/offline/complete-portable)" = "$GITHUB_SHA"
+          git merge-base --is-ancestor "$VALIDATED_BASE" HEAD
+          git diff --exit-code "$VALIDATED_BASE" HEAD -- packages eslint.config.mjs scripts/circular-references/known-violations.json
+          patch="$RUNNER_TEMP/validated-source/validated.patch"
+          test -s "$patch"
+          git apply --check --exclude='.github/*' "$patch"
+          git apply --index --exclude='.github/*' "$patch"
+          python3 - <<'PY'
+          import json, subprocess
+          tests = {'graphql', 'export-openapi-spec', 'design-interactions', 'dashboard-interactions', 'grpc-interactions', 'openapi', 'pre-request-script-window', 'preferences-interactions', 'socket-io', 'spec-toolbar', 'websocket', 'grpc-mtls', 'mtls', 'plugin-load-order-sandbox-engine-integrity', 'plugin-missing-dependency', 'plugin-reload-tag-cache', 'plugin-vanish-name-collision', 'plugin-vanish-sibling-missing-dependency', 'response-bodypath-read-scope', 'sandbox-template-tags', 'quickjs-script-sandbox', 'quickjs-sendrequest-bridge'}
+          allowed = {'packages/insomnia-smoke-test/tests/smoke/' + name + '.test.ts' for name in tests} | {'eslint.config.mjs', 'packages/insomnia/scripts/sandbox-vendored-lib.ts', 'packages/insomnia/src/templating/sandbox/vendored/ajv.generated.ts', 'packages/insomnia/src/templating/sandbox/vendored/uuid.generated.ts', 'scripts/circular-references/known-violations.json'}
+          names = subprocess.check_output(['git', 'diff', '--cached', '--name-only'], text=True).splitlines()
+          assert names and set(names) <= allowed, names
+          assert not any(name.startswith('.github/') for name in names)
+          baseline = 'scripts/circular-references/known-violations.json'
+          before = json.loads(subprocess.check_output(['git', 'show', 'HEAD:' + baseline], text=True))
+          after = json.loads(subprocess.check_output(['git', 'show', ':' + baseline], text=True))
+          assert set(before) == set(after)
+          assert all(set(after[key]) <= set(before[key]) for key in before)
+          assert all(before[key] == after[key] for key in before if key != 'insomnia')
+          assert len(before['insomnia']) - len(after['insomnia']) == 5
+          print('Allowed source files:', len(names))
+          PY
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix(test): apply zero-warning CI-validated interactions, vendor comments and reduced cycle baseline'
+          git push origin HEAD:offline/complete-portable
+          git log -1 --format='%H %s'

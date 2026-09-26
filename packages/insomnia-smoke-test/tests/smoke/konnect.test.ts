@@ -2,39 +2,32 @@ import { expect } from '@playwright/test';
 
 import { test } from '../../playwright/test';
 
-test.describe('Control Planes organization', () => {
-  test('shows intro card without a PAT, configure it, then sync', async ({ page }) => {
-    await page.getByRole('button', { name: 'Organizations' }).click();
-    await page.getByRole('option', { name: 'Control Planes' }).click();
-    await expect.soft(page.getByText('Auto-sync your gateway service routes')).toBeVisible();
-
-    await page.getByRole('button', { name: 'Configure' }).click();
-    await page.getByLabel('Personal Access Token').fill('kpat_test');
-    await page.getByRole('button', { name: 'Connect & Sync' }).click();
-    await expect.soft(page.getByRole('heading', { name: 'Kong Konnect settings' })).toBeHidden();
-
-    // The Sync button and settings gear are both available even with zero projects synced yet.
-    await expect.soft(page.getByRole('button', { name: 'Sync Konnect' })).toBeVisible();
-    await expect.soft(page.getByRole('button', { name: 'Konnect settings' })).toBeVisible();
-    // The Konnect organization never offers manual project creation.
-    await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeHidden();
+test.describe('Offline control-plane boundary', () => {
+  test('opens local projects without offering Konnect configuration or cloud sync', async ({ page }) => {
+    await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+    await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeVisible();
+    await expect.soft(page.getByRole('button', { name: 'Organizations' })).toHaveCount(0);
+    await expect.soft(page.getByRole('button', { name: 'Sync Konnect' })).toHaveCount(0);
+    await expect.soft(page.getByRole('button', { name: 'Konnect settings' })).toHaveCount(0);
+    await expect.soft(page.getByLabel('Personal Access Token', { exact: true })).toHaveCount(0);
+    const session = await page.evaluate(() => window._dataServicesInvoke('userSession', 'get'));
+    expect.soft(session.id).toBe('');
+    expect.soft(session.accountId).toBe('');
   });
 
-  test.describe('without the Konnect control planes entitlement', () => {
-    test.beforeEach(async ({ request }) => {
-      await request.post('http://127.0.0.1:4010/v1/test-utils/user/entitlements', {
-        data: { entitlements: [] },
-      });
-    });
-
-    test.afterEach(async ({ request }) => {
+  test('vendor entitlements do not change the offline organization or connect control planes', async ({ page, request }) => {
+    const projects = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
+    await request.post('http://127.0.0.1:4010/v1/test-utils/user/entitlements', { data: { entitlements: [] } });
+    try {
+      await page.reload();
+      await expect.soft(page.getByTestId('offline-mode')).toBeVisible();
+      await expect.soft(page.getByRole('option', { name: 'Control Planes' })).toHaveCount(0);
+      await expect.soft(page.getByRole('button', { name: 'Connect & Sync' })).toHaveCount(0);
+      await expect.soft(page.getByRole('button', { name: 'Create new Project' })).toBeVisible();
+      const after = await page.evaluate(() => window._dataServicesInvoke('project', 'list'));
+      expect.soft(after.map(project => project._id).sort()).toEqual(projects.map(project => project._id).sort());
+    } finally {
       await request.post('http://127.0.0.1:4010/v1/test-utils/user/entitlements', { data: {} });
-    });
-
-    test('hides the Control Planes organization', async ({ page }) => {
-      await page.reload({ waitUntil: 'networkidle' });
-      await page.getByRole('button', { name: 'Organizations' }).click();
-      await expect.soft(page.getByRole('option', { name: 'Control Planes' })).toBeHidden();
-    });
+    }
   });
 });

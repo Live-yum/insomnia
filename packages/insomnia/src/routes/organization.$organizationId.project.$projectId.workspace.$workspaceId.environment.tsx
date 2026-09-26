@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { Environment, EnvironmentKvPairData } from 'insomnia-data';
 import { EnvironmentKvPairDataType, EnvironmentType, models, services } from 'insomnia-data';
@@ -45,6 +46,7 @@ import { Tooltip } from '~/ui/components/tooltip';
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useOrganizationPermissions } from '~/ui/hooks/use-organization-features';
 import { useToggleEnvironmentType } from '~/ui/hooks/use-toggle-environment-type';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import type { Route } from './+types/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment';
 
@@ -307,7 +309,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
             ))}
           </div>
           <GridList
-            aria-label="Environments"
+            aria-label={translateOfflineUi("Environments")}
             items={[baseEnvironment, ...subEnvironments]}
             className="w-full flex-1 shrink-0 overflow-y-auto py-(--padding-xs) data-empty:py-0"
             disallowEmptySelection
@@ -370,7 +372,7 @@ const Component = ({ loaderData, params }: Route.ComponentProps) => {
                     {item.parentId !== workspaceId && (
                       <MenuTrigger>
                         <Button
-                          aria-label="Project Actions"
+                          aria-label={translateOfflineUi("Project Actions")}
                           className="flex aspect-square h-6 items-center justify-center rounded-xs text-sm text-(--color-font) opacity-0 ring-1 ring-transparent transition-all group-hover:opacity-100 group-focus:opacity-100 hover:bg-(--hl-xs) hover:opacity-100 focus:opacity-100 focus:ring-(--hl-md) focus:ring-inset data-pressed:bg-(--hl-sm) data-pressed:opacity-100"
                         >
                           <Icon icon="caret-down" />

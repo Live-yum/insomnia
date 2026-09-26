@@ -1,0 +1,24 @@
+name: Prepare pinned Electron before parallel tests
+description: Install the lockfile-selected runtime once; do not let concurrent worker imports extract it on demand.
+runs:
+  using: composite
+  steps:
+    - name: Install the already-locked Electron runtime serially
+      shell: bash
+      working-directory: packages/insomnia
+      run: |
+        set -euo pipefail
+        npx --no-install install-electron
+        node - <<'JS'
+        const fs = require('node:fs');
+        const path = require('node:path');
+        const executable = require('electron');
+        if (typeof executable !== 'string' || !fs.statSync(executable).isFile()) {
+          throw new Error('The pinned Electron runtime is not a regular file');
+        }
+        const pkg = require('electron/package.json');
+        const lock = require('../../package-lock.json');
+        const locked = Object.values(lock.packages).filter(p => p && p.version === pkg.version && p.resolved?.includes('/electron/-/electron-'));
+        if (locked.length !== 1) throw new Error('Installed Electron does not match the unique lockfile entry');
+        console.log('Prepared Electron', pkg.version, 'at', path.basename(executable));
+        JS

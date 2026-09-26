@@ -1,3 +1,4 @@
+
 import type { IconName, IconProp } from '@fortawesome/fontawesome-svg-core';
 import type { GitProject, GitRepository } from 'insomnia-data';
 import type { MergeConflict } from 'insomnia-vcs';
@@ -28,6 +29,7 @@ import { ProjectModal } from '~/ui/components/modals/project-modal';
 import { showSettingsModal } from '~/ui/components/modals/settings-modal';
 import { useGitCredentials } from '~/ui/hooks/use-git-credentials';
 import { useOrganizationStorageRule } from '~/ui/hooks/use-organization-storage-rule';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { resolveGitRepoBaseDir } from '~/ui/utils/git-repo-path';
 
 import { GitNonOriginBranchBanner } from '../git/git-non-origin-branch-banner';
@@ -685,7 +687,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
               className="flex h-[25px] items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
             >
               <Icon icon="plug" />
-              <span className="text-(--color-font-secondary)">Connect</span>
+              <span className="text-(--color-font-secondary)">{translateOfflineUi("Connect")}</span>
             </Button>
           </div>
         </div>
@@ -708,7 +710,7 @@ export const GitProjectSyncDropdown: FC<Props> = ({ gitRepository, activeProject
             <Button
               isDisabled={isGitSyncDropdownDisabled}
               data-testid="git-dropdown"
-              aria-label="Git Sync"
+              aria-label={translateOfflineUi("Git Sync")}
               className="flex h-(--line-height-sm) w-full items-center gap-2 px-(--padding-md) text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset disabled:opacity-100 aria-pressed:bg-(--hl-sm)"
             >
               <Icon icon={icon} className="size-4" />

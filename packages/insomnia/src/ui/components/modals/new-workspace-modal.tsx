@@ -1,3 +1,4 @@
+
 import type { StorageRules } from 'insomnia-api';
 import type { ApiSpec, Project, Workspace, WorkspaceScope } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -28,6 +29,7 @@ import { useWorkspaceNewActionFetcher } from '~/routes/organization.$organizatio
 import { Badge } from '~/ui/components/base/badge';
 import { UnsavedChangesGuard } from '~/ui/components/unsaved-changes-guard';
 import { useAIFeatureStatus } from '~/ui/hooks/use-organization-features';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { safeToUseInsomniaFileName, safeToUseInsomniaFileNameWithExt } from '../../../sync/git/insomnia-filename';
 import { AnalyticsEvent } from '../../analytics';
@@ -221,7 +223,7 @@ export const NewWorkspaceModal = ({
             className={`flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-solid border-(--hl-sm) bg-(--color-bg) text-(--color-font) ${models.project.isGitProject(project) ? 'min-h-[420px]' : 'min-h-[220px]'}`}
           >
             <Dialog
-              aria-label="Create or update dialog"
+              aria-label={translateOfflineUi("Create or update dialog")}
               className="grid flex-1 grid-rows-[min-content_1fr_min-content] gap-4 overflow-hidden outline-hidden"
             >
               <Form
@@ -275,7 +277,7 @@ export const NewWorkspaceModal = ({
                     }
                     className="group relative flex flex-col gap-2"
                   >
-                    <Label className="text-sm text-(--hl)">Name</Label>
+                    <Label className="text-sm text-(--hl)">{translateOfflineUi("Name")}</Label>
                     <Input
                       placeholder={`Enter a name for your ${titleByScope[workspaceData.scope]}...`}
                       className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
@@ -302,7 +304,7 @@ export const NewWorkspaceModal = ({
                         className="group relative flex max-w-full flex-col gap-2 overflow-hidden"
                       >
                         <Label className="group relative flex flex-col gap-2 overflow-hidden">
-                          <span className="text-sm text-(--hl)">File name</span>
+                          <span className="text-sm text-(--hl)">{translateOfflineUi("File name")}</span>
 
                           <div className="grid w-full grid-cols-[min-content_auto] overflow-hidden rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-2 pl-2 text-(--color-font) transition-colors [grid-template-areas:'input_extension'] focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden">
                             <Input
@@ -334,7 +336,7 @@ export const NewWorkspaceModal = ({
                             });
                           }
                         }}
-                        aria-label="Files"
+                        aria-label={translateOfflineUi("Files")}
                         selectionMode="single"
                         items={gitRepoTreeFetcher.data?.repositoryTree ? [gitRepoTreeFetcher.data?.repositoryTree] : []}
                         renderEmptyState={() => (
@@ -487,7 +489,7 @@ export const NewWorkspaceModal = ({
                                   >
                                     <div className="flex items-center gap-2">
                                       <Icon icon="file-text" />
-                                      <span className="font-medium">Text</span>
+                                      <span className="font-medium">{translateOfflineUi("Text")}</span>
                                     </div>
                                     <p className="mt-1 text-sm text-(--hl)">
                                       Provide a description of the API endpoints
@@ -593,13 +595,13 @@ export const NewWorkspaceModal = ({
                               value="no"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
-                              <span className="font-medium">No</span>
+                              <span className="font-medium">{translateOfflineUi("No")}</span>
                             </Radio>
                             <Radio
                               value="yes"
                               className="flex-1 rounded-sm border border-solid border-(--hl-md) p-3 transition-colors hover:bg-(--hl-xs) focus:bg-(--hl-sm) focus:outline-hidden data-selected:border-(--color-surprise) data-selected:ring-2 data-selected:ring-(--color-surprise)"
                             >
-                              <span className="font-medium">Yes</span>
+                              <span className="font-medium">{translateOfflineUi("Yes")}</span>
                             </Radio>
                           </RadioGroup>
                         </div>
@@ -752,9 +754,7 @@ export const NewWorkspaceModal = ({
                     onPress={requestClose}
                     isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
                     className="rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--color-font) transition-colors hover:no-underline"
-                  >
-                    Cancel
-                  </Button>
+                  >{translateOfflineUi("Cancel")}</Button>
                   <Button
                     type="submit"
                     isDisabled={createNewWorkspaceFetcher.state !== 'idle' || gitRepoTreeFetcher.state !== 'idle'}
@@ -765,7 +765,7 @@ export const NewWorkspaceModal = ({
                       {createNewWorkspaceFetcher.state !== 'idle' &&
                       scope === models.workspace.WorkspaceScopeKeys.mockServer
                         ? progressMessages[progressMessage]
-                        : 'Create'}
+                        : translateOfflineUi("Create")}
                     </span>
                   </Button>
                 </div>

@@ -1,3 +1,4 @@
+
 import type { ResponseTimelineEntry } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import { PREVIEW_MODE_SOURCE } from 'insomnia-data/common';
@@ -8,6 +9,7 @@ import { useFetcher } from 'react-router';
 import { bodyBufferToUtf8 } from '~/common/utils/utf8-bytes';
 import { useRootLoaderData } from '~/root';
 import { AnalyticsEvent } from '~/ui/analytics';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/cancellation.renderer';
@@ -184,15 +186,11 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="preview"
-          >
-            Preview
-          </Tab>
+          >{translateOfflineUi("Preview")}</Tab>
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="headers"
-          >
-            Headers
-            {activeResponse.headers.length > 0 && (
+          >{translateOfflineUi("Headers")}{activeResponse.headers.length > 0 && (
               <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                 {activeResponse.headers.length}
               </span>
@@ -201,9 +199,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="cookies"
-          >
-            Cookies
-            {cookieHeaders.length > 0 && (
+          >{translateOfflineUi("Cookies")}{cookieHeaders.length > 0 && (
               <span className="flex aspect-square items-center justify-between overflow-hidden rounded-lg border border-solid border-(--hl-md) p-2 text-xs">
                 {cookieHeaders.length}
               </span>
@@ -214,7 +210,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
             id="test-results"
           >
             <div>
-              <span>Tests</span>
+              <span>{translateOfflineUi("Tests")}</span>
               <span className={`ml-1 rounded-xs px-1 ${testResultCountTagColor}`} style={{ color: 'white' }}>
                 {`${passedTestCount} / ${totalTestCount}`}
               </span>
@@ -229,9 +225,7 @@ export const ResponsePane: FC<Props> = ({ activeRequestId }) => {
           <Tab
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="timeline"
-          >
-            Console
-          </Tab>
+          >{translateOfflineUi("Console")}</Tab>
         </TabList>
         <TabPanel className="flex w-full flex-1 flex-col overflow-hidden" id="preview">
           <Toolbar className="flex h-(--line-height-sm) w-full shrink-0 items-center border-b border-solid border-(--hl-md) px-2">

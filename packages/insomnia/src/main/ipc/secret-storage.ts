@@ -1,6 +1,7 @@
 import { safeStorage } from 'electron';
 
 import { getElectronStorage } from '../electron-storage';
+import { decryptWithNativeStorage, encryptWithNativeStorage } from '../secure-storage-policy';
 import { ipcMainHandle } from './electron';
 
 export interface secretStorageBridgeAPI {
@@ -51,22 +52,7 @@ export const deleteSecret = async (key: string) => {
   }
 };
 
-export const encryptString = (raw: string) => {
-  if (safeStorage.isEncryptionAvailable()) {
-    return safeStorage.encryptString(raw).toString('hex');
-  }
-  return raw;
-};
-
-export const decryptString = (cipherText: string) => {
-  const buffer = Buffer.from(cipherText, 'hex');
-  if (safeStorage.isEncryptionAvailable()) {
-    try {
-      return safeStorage.decryptString(buffer);
-    } catch (error) {
-      console.error(`Can not decrypt secret ${error.toString()}`);
-      return cipherText;
-    }
-  }
-  return cipherText;
-};
+// Failure is explicit: a missing/locked keyring must not silently persist raw
+// credentials, and a failed decrypt must never return input as a "secret".
+export const encryptString = (raw: string) => encryptWithNativeStorage(safeStorage, raw, process.platform);
+export const decryptString = (cipherText: string) => decryptWithNativeStorage(safeStorage, cipherText, process.platform);

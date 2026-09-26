@@ -13,7 +13,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { jarFromCookies } from '~/common/cookies';
 import { getOfflinePlugin } from '~/common/offline-plugins';
-import { openOfflineExternal } from './offline-network';
 import { shouldSandboxPlugin } from '~/common/plugins/sandbox-mode';
 import { type Plugin, type TemplateTag } from '~/common/plugins/types';
 import type {
@@ -34,6 +33,7 @@ import { getAppBundlePlugins, RESPONSE_CODE_REASONS } from '../common/constants'
 import { database as db } from '../common/database';
 import { fetchRequestData, sendCurlAndWriteTimeline, tryToInterpolateRequest } from '../network/network';
 import { curlRequest } from './network/libcurl-promise';
+import { openOfflineExternal } from './offline-network';
 import { requestPromptFromRenderer } from './prompt-bridge';
 import { secureReadFile } from './secure-read-file';
 import { isValidTemplatingDbAuthToken, TEMPLATING_DB_AUTH_HEADER } from './templating-worker-database-auth';

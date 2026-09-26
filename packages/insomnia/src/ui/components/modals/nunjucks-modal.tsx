@@ -1,5 +1,8 @@
+
 import type { Workspace } from 'insomnia-data';
 import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -93,7 +96,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         }));
       }}
     >
-      <ModalHeader>Edit {title}</ModalHeader>
+      <ModalHeader>{translateOfflineUi("Edit")} {title}</ModalHeader>
       <ModalBody className="pad">
         <form
           className="px-2"
@@ -106,9 +109,7 @@ export const NunjucksModal = forwardRef<NunjucksModalHandle, ModalProps & Props>
         </form>
       </ModalBody>
       <ModalFooter>
-        <button className="btn" disabled={isRendering} onClick={() => modalRef.current?.hide()}>
-          Done
-          {isRendering && <i className="fa fa-spinner fa-spin ml-1.5" />}
+        <button className="btn" disabled={isRendering} onClick={() => modalRef.current?.hide()}>{translateOfflineUi("Done")}{isRendering && <i className="fa fa-spinner fa-spin ml-1.5" />}
         </button>
       </ModalFooter>
     </Modal>

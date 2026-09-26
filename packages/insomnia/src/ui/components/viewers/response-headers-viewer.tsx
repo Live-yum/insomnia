@@ -1,5 +1,8 @@
+
 import type { ResponseHeader } from 'insomnia-data';
 import React, { type FC, Fragment, useMemo } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { CopyButton } from '../base/copy-button';
 import { Link } from '../base/link';
@@ -28,8 +31,8 @@ export const ResponseHeadersViewer: FC<Props> = ({ headers, onCopyAll }) => {
       <table className="table--fancy table--striped table--compact">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Value</th>
+            <th>{translateOfflineUi("Name")}</th>
+            <th>{translateOfflineUi("Value")}</th>
           </tr>
         </thead>
         <tbody>

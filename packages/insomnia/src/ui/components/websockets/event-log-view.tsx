@@ -1,3 +1,4 @@
+
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { format } from 'date-fns';
 import React, { type FC, useEffect, useRef, useState } from 'react';
@@ -5,6 +6,7 @@ import { Button, Cell, Column, Row, Table, TableBody, TableHeader } from 'react-
 
 import { HelpTooltip } from '~/ui/components/help-tooltip';
 import { Icon } from '~/ui/components/icon';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { METHOD_UNKNOWN, NOTIFICATIONS_LIST_CHANGED, unsupportedMethodPrefix } from '../../../common/mcp-utils';
 import type { McpEvent } from '../../../main/mcp/types';
@@ -110,7 +112,7 @@ const getMessage = (event: EventTypes, isLoading: boolean): string | JSX.Element
             {isLoading && <Icon className="animate-spin" icon="spinner" />}
             {isLoading && event.direction === 'OUTGOING' && event.data?.id && (
               <Button
-                aria-label="Cancel Request"
+                aria-label={translateOfflineUi("Cancel Request")}
                 className="flex aspect-square h-full items-center justify-center rounded-sm text-sm text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
                 onPress={() => {
                   window.main.mcp.client.cancelRequest({
@@ -231,8 +233,8 @@ export const EventLogView: FC<Props> = ({
             <Column isRowHeader className="p-3 text-left text-xs font-semibold focus:outline-hidden">
               <span />
             </Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">Data</Column>
-            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">Time</Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">{translateOfflineUi("Data")}</Column>
+            <Column className="p-3 text-left text-xs font-semibold focus:outline-hidden">{translateOfflineUi("Time")}</Column>
           </TableHeader>
           <TableBody
             style={{ height: virtualizer.getTotalSize() }}

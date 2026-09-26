@@ -1,4 +1,7 @@
+
 import React, { type FC } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
 import { AuthInputRow } from './components/auth-input-row';
@@ -8,7 +11,7 @@ import { AuthToggleRow } from './components/auth-toggle-row';
 
 export const HawkAuth: FC = () => (
   <AuthTableBody>
-    <AuthToggleRow label="Enabled" property="disabled" invert />
+    <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert />
     <AuthInputRow label="Auth Id" property="id" />
     <AuthInputRow label="Auth Key" property="key" mask />
     <AuthSelectRow

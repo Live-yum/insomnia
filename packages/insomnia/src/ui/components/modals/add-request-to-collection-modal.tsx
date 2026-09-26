@@ -1,3 +1,4 @@
+
 import type { BaseModel } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
@@ -6,6 +7,7 @@ import { OverlayContainer } from 'react-aria';
 import { useParams } from 'react-router';
 
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -130,7 +132,7 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
               <label>
                 {strings.collection.plural}:
                 <select
-                  aria-label="Select Workspace"
+                  aria-label={translateOfflineUi("Select Workspace")}
                   name="workspaceId"
                   value={selectedWorkspaceId}
                   onChange={e => setSelectedWorkspaceId(e.target.value)}
@@ -162,12 +164,9 @@ export const AddRequestToCollectionModal: FC<AddRequestModalProps> = ({ onHide }
               type="button"
               onClick={onHide as MouseEventHandler<HTMLButtonElement>}
               className="btn btn--no-background"
-            >
-              Cancel
-            </button>
+            >{translateOfflineUi("Cancel")}</button>
             <button disabled={isBtnDisabled} type="submit" form={formId} className="btn">
-              {requestFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Add
-            </button>
+              {requestFetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} {translateOfflineUi("Add")}</button>
           </div>
         </ModalFooter>
       </Modal>

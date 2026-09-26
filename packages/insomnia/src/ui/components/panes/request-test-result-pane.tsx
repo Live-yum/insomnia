@@ -1,7 +1,10 @@
+
 import type { RequestTestResult } from 'insomnia-data';
 import { fuzzyMatch } from 'insomnia-data/common';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 export type TargetTestType = 'all' | 'passed' | 'failed' | 'skipped';
 
@@ -179,15 +182,11 @@ export const RequestTestResultPane: FC<Props> = ({ requestTestResults }) => {
             <button
               className={targetTests === 'passed' ? activeFilterClassnames : filterClassnames}
               onClick={selectPassedTests}
-            >
-              Passed
-            </button>
+            >{translateOfflineUi("Passed")}</button>
             <button
               className={targetTests === 'failed' ? activeFilterClassnames : filterClassnames}
               onClick={selectFailedTests}
-            >
-              Failed
-            </button>
+            >{translateOfflineUi("Failed")}</button>
             <button
               className={targetTests === 'skipped' ? activeFilterClassnames : filterClassnames}
               onClick={selectSkippedTests}

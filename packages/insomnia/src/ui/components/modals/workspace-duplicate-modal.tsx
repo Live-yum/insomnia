@@ -1,3 +1,4 @@
+
 import type { BaseModel, Workspace } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { strings } from 'insomnia-data/common';
@@ -7,6 +8,7 @@ import { href, useNavigate, useParams } from 'react-router';
 
 import { useWorkspaceMoveActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.move';
 import { useOrganizations } from '~/ui/hooks/use-account-server-data';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { scopeToBgColorMap, scopeToIconMap, scopeToTextColorMap } from '../../../common/get-workspace-label';
@@ -96,8 +98,7 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
           >
             <input name="workspaceId" value={workspace._id} readOnly className="hidden" />
             <div className="form-control form-control--outlined">
-              <label>
-                New {getWorkspaceLabel(workspace).singular.toLowerCase()} name:
+              <label>{translateOfflineUi("New")} {getWorkspaceLabel(workspace).singular.toLowerCase()} name:
                 <input name="name" value={newWorkspaceName} onChange={e => setNewWorkspaceName(e.target.value)} />
               </label>
             </div>
@@ -156,12 +157,9 @@ export const WorkspaceDuplicateModal: FC<WorkspaceDuplicateModalProps> = ({ work
               type="button"
               onClick={onHide as MouseEventHandler<HTMLButtonElement>}
               className="btn btn--no-background"
-            >
-              Cancel
-            </button>
+            >{translateOfflineUi("Cancel")}</button>
             <button disabled={isBtnDisabled} form="workspace-duplicate-form" className="btn">
-              {fetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} Duplicate
-            </button>
+              {fetcher.state !== 'idle' && <Icon icon="spinner" className="animate-spin" />} {translateOfflineUi("Duplicate")}</button>
           </div>
         </ModalFooter>
       </Modal>

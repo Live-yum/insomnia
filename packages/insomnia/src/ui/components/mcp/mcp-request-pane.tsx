@@ -1,3 +1,4 @@
+
 import { type RJSFSchema } from '@rjsf/utils';
 import type { EditorChange } from 'codemirror';
 import type { Environment, EnvironmentKvPairData, McpPayload } from 'insomnia-data';
@@ -13,6 +14,7 @@ import { useWorkspaceLoaderData } from '~/routes/organization.$organizationId.pr
 import { Link } from '~/ui/components/base/link';
 import { EnvironmentKVEditor } from '~/ui/components/editors/environment-key-value-editor/key-value-editor';
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { type AuthTypes } from '../../../common/constants';
 import { getAuthObjectOrNull } from '../../../network/authentication';
@@ -60,7 +62,7 @@ const ModifyHostHeaderBanner = () => {
       }}
     >
       <p className="notice warning no-margin-top no-margin-bottom">
-        You are adding a new <strong>Host</strong> header which will override the default behavior. Remove or disable
+        You are adding a new <strong>{translateOfflineUi("Host")}</strong> header which will override the default behavior. Remove or disable
         the new header to return to default behavior.
       </p>
     </div>
@@ -272,14 +274,14 @@ export const McpRequestPane: FC<Props> = ({
             className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
             id="params"
           >
-            <span>Params</span>
+            <span>{translateOfflineUi("Params")}</span>
           </Tab>
           {!isStdio && (
             <Tab
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="auth"
             >
-              <span>Auth</span>
+              <span>{translateOfflineUi("Auth")}</span>
               {!isNoneOrInherited && (
                 <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                   <span className="h-2 w-2 rounded-full bg-green-500" />
@@ -292,7 +294,7 @@ export const McpRequestPane: FC<Props> = ({
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="headers"
             >
-              <span>Headers</span>
+              <span>{translateOfflineUi("Headers")}</span>
               {headersCount > 0 && (
                 <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                   {headersCount}
@@ -305,7 +307,7 @@ export const McpRequestPane: FC<Props> = ({
               className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
               id="env"
             >
-              <span>Environment</span>
+              <span>{translateOfflineUi("Environment")}</span>
             </Tab>
           )}
           <Tab
@@ -325,7 +327,7 @@ export const McpRequestPane: FC<Props> = ({
             <div className="flex h-full w-full flex-col items-center p-5 text-center">
               {/*  Hint when mcp server is not connected*/}
               <p className="notice info text-md no-margin-top w-full">
-                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>Learn More</Link>
+                Connect to an MCP server URL to reveal capabilities. &nbsp;<Link href={docsMcpClient}>{translateOfflineUi("Learn More")}</Link>
               </p>
             </div>
           ) : (

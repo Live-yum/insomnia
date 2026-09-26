@@ -23,7 +23,7 @@ test.describe('gRPC interactions', () => {
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Unary');
     await page.locator('[data-testid="request-pane"] >> text=Unary').click();
-    await page.click('text=Send');
+    await page.getByText("Send").click();
 
     // Check for the single Unary response
     await page.getByRole('tab', { name: 'Response 1', exact: true }).click();
@@ -32,7 +32,7 @@ test.describe('gRPC interactions', () => {
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Bidirectional Stream');
     await page.locator('text=Bi-directional Streaming').click();
-    await page.click('text=Start');
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Stream 3 client messages
     await streamMessage.click();
@@ -48,8 +48,8 @@ test.describe('gRPC interactions', () => {
     await expect.soft(statusTag).toContainText('0 OK');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Client Stream');
-    await page.click('text=Client Streaming');
-    await page.click('text=Start');
+    await page.getByText("Client Streaming").click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Stream 3 client messages
     await streamMessage.click();
@@ -64,8 +64,8 @@ test.describe('gRPC interactions', () => {
     await expect.soft(responseBody).toContainText('point_count": 3');
 
     await insomnia.navigationSidebar.clickRequestOrFolder('Server Stream');
-    await page.click('text=Server Streaming');
-    await page.click('text=Start');
+    await page.getByText("Server Streaming").click();
+    await page.getByRole('button', { name: 'Start', exact: true }).click();
 
     // Check response
     await expect.soft(statusTag).toContainText('0 OK');

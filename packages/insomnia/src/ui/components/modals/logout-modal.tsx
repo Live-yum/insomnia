@@ -1,4 +1,7 @@
+
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import type { ModalHandle, ModalProps } from '../base/modal';
 import { Modal } from '../base/modal';
@@ -64,9 +67,7 @@ export const LogoutModal = forwardRef<LogoutModalHandle, ModalProps>((_, ref) =>
       </ModalBody>
       <ModalFooter>
         <div className="flex items-center gap-4">
-          <button type="button" className="btn" onClick={handleCancel}>
-            Cancel
-          </button>
+          <button type="button" className="btn" onClick={handleCancel}>{translateOfflineUi("Cancel")}</button>
           <button
             type="button"
             className="btn"

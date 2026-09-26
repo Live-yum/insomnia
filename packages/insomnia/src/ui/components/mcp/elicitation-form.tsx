@@ -1,8 +1,10 @@
+
 import type { RJSFSchema, UiSchema } from '@rjsf/utils';
 import { useRef, useState } from 'react';
 import { Button, Toolbar } from 'react-aria-components';
 
 import { InsomniaRjsfForm, type InsomniaRjsfFormHandle } from '~/ui/components/rjsf';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 interface ElicitationFormProps {
   requestId: string;
@@ -74,9 +76,7 @@ export const ElicitationForm = ({ requestId, serverRequestId, schema }: Elicitat
             })
           }
           className="rounded-md border border-solid border-(--hl-lg) bg-(--color-bg) px-(--padding-md) text-center"
-        >
-          Cancel
-        </Button>
+        >{translateOfflineUi("Cancel")}</Button>
       </Toolbar>
     </div>
   );

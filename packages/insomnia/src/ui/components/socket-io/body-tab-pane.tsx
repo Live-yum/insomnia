@@ -1,3 +1,4 @@
+
 import type { SocketIOPayload, SocketIORequest } from 'insomnia-data';
 import React, { useMemo, useRef, useState } from 'react';
 import {
@@ -21,6 +22,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_PLAINTEXT } from '../../../common/constants';
@@ -200,9 +202,7 @@ export const SocketIOBodyTabPane = ({ request, requestPayload, environmentId }: 
           <Button
             onPress={handleSend}
             className="rounded-sm bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise)"
-          >
-            Send
-          </Button>
+          >{translateOfflineUi("Send")}</Button>
         </div>
       </Toolbar>
       <SocketIOBodyContent

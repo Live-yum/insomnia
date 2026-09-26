@@ -1,7 +1,9 @@
+
 import React, { forwardRef, type ReactElement, useCallback, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 
 import { CodeEditor, type CodeEditorHandle } from '~/ui/components/.client/codemirror/code-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { ErrorBoundary } from './error-boundary';
 import { MarkdownPreview } from './markdown-preview';
@@ -53,7 +55,7 @@ export const MarkdownEditor = forwardRef<CodeEditorHandle, Props>(
             id="preview"
           >
             <div className="flex flex-1 items-center gap-2">
-              <span>Preview</span>
+              <span>{translateOfflineUi("Preview")}</span>
             </div>
           </Tab>
         </TabList>

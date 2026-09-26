@@ -3,8 +3,8 @@ import { models, services } from 'insomnia-data';
 import { href, redirect } from 'react-router';
 
 import { database } from '~/common/database';
-import { projectLock } from '~/common/project';
 import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
+import { projectLock } from '~/common/project';
 import { invariant } from '~/common/utils/invariant';
 import { reportGitProjectCount } from '~/routes/organization.$organizationId.project.new';
 import { getKonnectOrganizationEscapeRoute } from '~/ui/organization-utils';

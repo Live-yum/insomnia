@@ -1,3 +1,4 @@
+
 import type { CommandSearchResult } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from 'insomnia-data/common';
@@ -38,6 +39,7 @@ import { getMethodShortHand } from '~/ui/components/tags/method-tag';
 import { useInsomniaEventStreamContext } from '~/ui/context/app/insomnia-event-stream-context';
 import { useCommandSearch } from '~/ui/hooks/use-command-search';
 import { useTabNavigate } from '~/ui/hooks/use-insomnia-tab';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { isPrimaryClickModifier } from '~/ui/utils';
 
 const { isRequest } = models.request;
@@ -586,7 +588,7 @@ const CommandPaletteCombobox = ({ close }: { close: () => void }) => {
       {({ isOpen }) => {
         return (
           <>
-            <Label aria-label="Filter" className="group relative flex flex-1 items-center pt-0">
+            <Label aria-label={translateOfflineUi("Filter")} className="group relative flex flex-1 items-center pt-0">
               {isPullingFile ? (
                 <>
                   <Icon icon="spinner" className="absolute left-4 animate-spin text-(--color-font)" />

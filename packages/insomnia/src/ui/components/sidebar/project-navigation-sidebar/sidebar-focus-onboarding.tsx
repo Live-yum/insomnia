@@ -1,4 +1,7 @@
+
 import { useEffect, useRef } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../../icon';
 
@@ -45,7 +48,7 @@ export const SidebarFocusOnboarding = ({ triggerElement, onDismiss }: SidebarFoc
       <p className="mt-2 text-sm text-(--hl)">
         Insomnia now automatically narrows the sidebar to the collection you're working on. Click the back arrow at the
         top to return, or turn this off anytime in Preferences with the{' '}
-        <span className="font-bold text-(--color-font)">Sidebar focus for collections</span> setting.
+        <span className="font-bold text-(--color-font)">{translateOfflineUi("Sidebar focus for collections")}</span> setting.
       </p>
       <button
         className="mt-3 rounded-md bg-(--color-surprise) px-4 py-1.5 text-sm font-medium text-(--color-font-surprise) transition-colors hover:opacity-90"

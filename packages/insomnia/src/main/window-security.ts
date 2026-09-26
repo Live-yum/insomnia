@@ -19,4 +19,8 @@ export const MAIN_WINDOW_SECURITY = {
   nodeIntegrationInWorker: false,
   // Isolate the preload's world from the renderer's main world.
   contextIsolation: true,
+  // Do not rely on changing Electron defaults for renderer sandboxing.
+  sandbox: true,
+  // A new webContents must not re-enable session dictionary downloads.
+  spellcheck: false,
 } as const;

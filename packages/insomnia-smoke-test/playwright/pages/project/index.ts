@@ -1,4 +1,5 @@
 import type { ElectronApplication, Locator, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 
 import { loadFixture } from '../../paths';
 import { mockOpenDialogForDirectory, mockSaveDialogForFile } from '../../utils';
@@ -136,7 +137,7 @@ export class ProjectPage extends BasePage {
    * @param storageType - The storage type: 'local' (Local Vault), 'remote' (Cloud Sync), or 'git' (Git Sync)
    */
   private async selectStorageType(storageType: ProjectStorageType): Promise<void> {
-    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType]).click();
+    await this.page.getByRole('dialog').getByText(storageTypeNames[storageType], { exact: true }).click();
   }
 
   /**
@@ -239,8 +240,9 @@ export class ProjectPage extends BasePage {
     // Use the reachable git test server URL so remote branches can be listed.
     // deriveRepoName() still yields "git-server" from this URL.
     await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
-    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
-    await this.page.getByRole('option', { name: 'master' }).click();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toBeEnabled();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toHaveValue('master');
+    await expect.poll(() => this.page.getByRole('form', { name: 'Git Setup Form' }).evaluate(form => new FormData(form as HTMLFormElement).get('branch'))).toBe('master');
     // Pick the custom clone destination before scanning.
     await this.page.getByRole('button', { name: 'Choose folder' }).click();
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
@@ -260,36 +262,19 @@ export class ProjectPage extends BasePage {
     await this.page.getByRole('option', { name: 'Custom Git Credential' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).click();
     await this.page.getByRole('textbox', { name: 'Repository URL' }).fill('http://localhost:4010/git/git-server.git');
-    await this.page.getByRole('button', { name: 'Show suggestions Branch' }).click();
-    await this.page.getByRole('option', { name: 'master' }).click();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toBeEnabled();
+    await expect(this.page.getByRole('combobox', { name: 'Search branches Branch' })).toHaveValue('master');
+    await expect.poll(() => this.page.getByRole('form', { name: 'Git Setup Form' }).evaluate(form => new FormData(form as HTMLFormElement).get('branch'))).toBe('master');
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
     await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
-    const projectModalCloseButton = this.page.locator('[data-test-id="project-modal-close-button"]');
-    await projectModalCloseButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    if (await projectModalCloseButton.isVisible()) {
-      await projectModalCloseButton.click();
-      // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
-      // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
-      // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
-      // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
-      const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
-      if (await discardConfirmDialog.isVisible().catch(() => false)) {
-        await discardConfirmDialog
-          .getByRole('button', { name: 'Yes' })
-          .click({ timeout: 5000 })
-          .catch(() => {});
-      }
-    }
-    // The modal's backdrop still intercepts clicks for a moment after closing
-    // (exit animation / unmount), which flakily blocks the click below. Named rather than a bare
-    // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
-    // a bare role locator matching both is a Playwright strict-mode violation.
+    // Creation closes this dialog asynchronously. Clicking its close button races
+    // the successful navigation and can also discard a still-pending submission.
+    // Require the real success transition instead of forcing or swallowing a click.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
-    await this.clickReliably(this.page.getByRole('button', { name: 'Personal workspace Organizations' }));
-    await this.page.getByRole('option', { name: /Magic/ }).click();
-    await this.page.getByRole('button', { name: /Magic/ }).click();
-    await this.page.getByRole('option', { name: 'Personal workspace' }).locator('span').click();
+    // A local project must appear without switching to a cloud organization.
+    await this.page.getByRole('grid', { name: 'Project Navigation Tree' }).getByRole('row', { name, exact: true }).waitFor();
     await this.sidebar.selectProject(name);
+    await this.waitForProjectDashboard();
   }
 
   /**

@@ -1,3 +1,4 @@
+
 import { useVirtualizer } from '@tanstack/react-virtual';
 import cn from 'classnames';
 import type { McpRequest, McpServerPrimitiveTypes } from 'insomnia-data';
@@ -54,6 +55,7 @@ import { RealtimeResponsePane } from '~/ui/components/websockets/realtime-respon
 import WorkspacePaneHeader from '~/ui/components/workspace/workspace-pane-header';
 import { useMcpReadyState } from '~/ui/hooks/use-mcp-ready-state';
 import { useRequestMetaPatcher, useRequestPatcher } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 const emptyServerData: McpServerData = {
   serverCapabilities: getDefaultServerCapabilities(),
@@ -363,7 +365,7 @@ export const McpPane = () => {
                   }}
                 >
                   <Input
-                    placeholder="Filter"
+                    placeholder={translateOfflineUi("Filter")}
                     className="w-full rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                   />
                   <div className="absolute top-0 right-0 flex h-full items-center px-2">

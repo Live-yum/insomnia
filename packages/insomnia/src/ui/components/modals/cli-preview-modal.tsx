@@ -1,5 +1,8 @@
+
 import { Button, Dialog, Heading, Modal, ModalOverlay } from 'react-aria-components';
 import { useParams } from 'react-router';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { CopyButton } from '../base/copy-button';
@@ -108,9 +111,7 @@ export const CLIPreviewModal = ({
                 <Button
                   className="flex items-center gap-2 rounded-xs border border-solid border-(--hl-md) px-3 py-2 text-(--hl) transition-colors hover:no-underline"
                   onPress={close}
-                >
-                  Close
-                </Button>
+                >{translateOfflineUi("Close")}</Button>
               </div>
             </div>
           )}

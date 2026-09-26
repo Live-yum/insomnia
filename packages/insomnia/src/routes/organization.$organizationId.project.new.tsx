@@ -36,7 +36,7 @@ export interface CreateProjectData {
 
 export const reportGitProjectCount = async (organizationId: string, sessionId: string, maxRetries = 3) => {
   // Local-only organizations are not known to the backend, so there is nothing to report.
-  if (models.organization.isLocalOrganizationId(organizationId)) {
+  if (OFFLINE_BUILD || models.organization.isLocalOrganizationId(organizationId)) {
     return;
   }
   const projects = await services.project.listByOrganizationIds(organizationId);
@@ -63,16 +63,15 @@ export const reportGitProjectCount = async (organizationId: string, sessionId: s
 const createProjectImpl = async (organizationId: string, newProjectData: CreateProjectData) => {
   if (OFFLINE_BUILD) {
     invariant(organizationId === OFFLINE_ORGANIZATION_ID, 'Select the offline organization to create a project');
-    invariant(newProjectData.storageType === 'local', 'Only local storage is available in this offline build');
+    invariant(newProjectData.storageType === 'local' || newProjectData.storageType === 'git', 'Cloud storage is disabled in this offline build');
     invariant(typeof newProjectData.name === 'string' && newProjectData.name.trim().length > 0, 'Project name is required');
-    const project = await services.project.create({ name: newProjectData.name, parentId: organizationId });
-    return project._id;
   }
-  const user = await services.userSession.get();
-  const sessionId = user.id;
-  invariant(sessionId, 'User must be logged in to create a project');
+  // Local and explicitly selected Git repositories do not need a vendor account.
+  const user = OFFLINE_BUILD ? null : await services.userSession.get();
+  const sessionId = user?.id || '';
+  invariant(OFFLINE_BUILD || sessionId, 'User must be logged in to create a project');
   invariant(
-    newProjectData.storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
+    OFFLINE_BUILD || newProjectData.storageType === 'local' || !models.organization.isLocalOrganizationId(organizationId),
     'Only local projects can be created in this organization',
   );
 

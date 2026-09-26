@@ -1,3 +1,4 @@
+
 import type { AuthTypeOAuth2, McpRequest, Project } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef } from 'react';
@@ -25,6 +26,7 @@ import { showModal } from '~/ui/components/modals';
 import { AskModal } from '~/ui/components/modals/ask-modal';
 import { Button } from '~/ui/components/themed-button';
 import { useGitVCSVersion } from '~/ui/hooks/use-vcs-version';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { tryToInterpolateRequestOrShowRenderErrorModal } from '~/ui/utils/try-interpolate';
 
 import { useInsomniaTabContext } from '../../context/app/insomnia-tab-context';
@@ -278,9 +280,7 @@ export const McpUrlActionBar = ({
               className="rounded-xs bg-(--color-surprise) px-(--padding-md) text-center text-(--color-font-surprise) hover:brightness-75"
               disabled={isConnecting}
               type="submit"
-            >
-              Connect
-            </button>
+            >{translateOfflineUi("Connect")}</button>
           ) : (
             <DisconnectButton requestId={request._id} />
           )}

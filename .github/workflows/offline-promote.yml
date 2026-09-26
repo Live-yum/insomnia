@@ -1,0 +1,210 @@
+name: Publish validated compact offline release
+
+on:
+  push:
+    branches: ['offline/publish-basic-*']
+    paths: ['.github/offline-basic-release.json']
+  workflow_dispatch:
+    inputs:
+      source_commit:
+        description: Exact fully validated offline/complete-portable head
+        required: true
+        type: string
+      portable_run:
+        description: Successful push-triggered Offline portable build run for that head
+        required: true
+        type: string
+      tag:
+        description: New immutable offline-basic-v13.3.0-rc.N tag
+        required: true
+        type: string
+      pr_number:
+        description: Ready integration pull request
+        required: true
+        default: '3'
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: offline-basic-release-promotion
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'Live-yum/insomnia'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      source: ${{ steps.verify.outputs.source }}
+      tag: ${{ steps.verify.outputs.tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, Node 24
+        with:
+          persist-credentials: false
+      - name: Test release proof rejection and artifact extraction protections
+        run: python3 -m unittest discover -s scripts/offline -p test_verify_basic_release.py -v
+      - name: Validate all current PR checks and exact basic artifacts without running them
+        id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_SOURCE: ${{ inputs.source_commit }}
+          INPUT_RUN: ${{ inputs.portable_run }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_PR: ${{ inputs.pr_number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            python3 - <<'PY'
+          import json, os, pathlib
+          request = {'sourceCommit': os.environ['INPUT_SOURCE'], 'portableRun': int(os.environ['INPUT_RUN']),
+                     'tag': os.environ['INPUT_TAG'], 'pullRequest': int(os.environ['INPUT_PR'])}
+          pathlib.Path('release-request.json').write_text(json.dumps(request), encoding='utf-8')
+          PY
+          else
+            test -f .github/offline-basic-release.json
+            cp .github/offline-basic-release.json release-request.json
+          fi
+          python3 scripts/offline/verify_basic_release.py release-request.json "$RUNNER_TEMP/verified-release"
+          python3 - <<'PY'
+          import json, os, pathlib
+          proof = json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'verified-release/release-provenance.json').read_text(encoding='utf-8'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as stream:
+              stream.write('source=' + proof['sourceCommit'] + '\ntag=' + proof['tag'] + '\n')
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, Node 24
+        with:
+          name: verified-basic-release
+          path: ${{ runner.temp }}/verified-release/*
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: Live-yum/insomnia
+      SOURCE: ${{ needs.verify.outputs.source }}
+      TAG: ${{ needs.verify.outputs.tag }}
+    steps:
+      # This write-enabled job has no checkout and executes no application,
+      # plugin, test, or downloaded artifact code. Only bounded JSON and hashes.
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1, Node 24
+        with:
+          name: verified-basic-release
+          path: verified-input
+      - name: Independently recheck files and live validation before creating any release
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, re, shutil, subprocess
+          root = pathlib.Path('verified-input')
+          source, tag = os.environ['SOURCE'], os.environ['TAG']
+          if not re.fullmatch(r'[0-9a-f]{40}', source) or not re.fullmatch(r'offline-basic-v13\.3\.0-rc\.[1-9][0-9]*', tag):
+              raise SystemExit('Invalid release source or tag')
+          def read(name):
+              file = root / name
+              assert file.is_file() and not file.is_symlink() and file.stat().st_size < 2 * 1024 * 1024
+              return json.loads(file.read_text(encoding='utf-8-sig'))
+          def api(path):
+              return json.loads(subprocess.check_output(['gh', 'api', 'repos/Live-yum/insomnia/' + path], text=True))
+          proof, expected = read('release-provenance.json'), read('expected-assets.json')
+          assert proof['sourceCommit'] == source and proof['tag'] == tag and proof['repository'] == 'Live-yum/insomnia'
+          names = {'offline-quality.json', 'release-provenance.json', 'windows-x64-basic-validation.json', 'linux-arm64-basic-validation.json'}
+          for target, ext in [('windows-x64', '.zip'), ('linux-arm64', '.tar.gz')]:
+              name = 'Insomnia-Offline-13.3.0-basic-' + target + '-portable' + ext
+              names.update({name, name + '.sha256'})
+          assert len(expected) == len(names) and {item['name'] for item in expected} == names
+          assert {file.name for file in root.iterdir()} == names | {'expected-assets.json'}
+          assets = pathlib.Path('release-assets')
+          assets.mkdir()
+          for item in expected:
+              file = root / item['name']
+              assert file.is_file() and not file.is_symlink() and file.stat().st_size == item['bytes'] <= 350 * 1024 * 1024
+              with file.open('rb') as stream:
+                  assert hashlib.file_digest(stream, 'sha256').hexdigest() == item['sha256']
+              shutil.move(file, assets / file.name)
+          pr = api('pulls/' + str(proof['pullRequest']))
+          assert not pr['draft'] and pr['head']['sha'] == source and pr['base']['sha'] == proof['pullRequestBase']
+          assert pr['state'] == 'open' or pr['merged']
+          assert len(proof['requiredChecks']) == 10
+          for check in proof['requiredChecks'] + [{'run': proof['portableRun'], 'attempt': proof['portableAttempt']}]:
+              run = api('actions/runs/' + str(check['run']))
+              assert run['head_sha'] == source and run['run_attempt'] == check['attempt']
+              assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert api('git/commits/' + source)['tree']['sha'] == proof['sourceTree']
+          shutil.copy2(root / 'expected-assets.json', 'expected-assets.json')
+          print(json.dumps({'source': source, 'tag': tag, 'files': expected}, indent=2))
+          PY
+      - name: Stage new candidate without overwriting tags or existing assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > notes.md <<'EOF'
+          ## 精简离线基础版 — 默认简体中文
+          本次 Windows x64 ZIP / Linux ARM64 tar.gz 是实际可运行便携程序，不是源码，也不是旧版全插件包。基础包不含社区插件全目录及其重复依赖。
+
+          默认大陆简体中文（zh-CN），包含已翻译的桌面菜单、主要操作和本地加解密工作台；可切换英语并跨重启保存。协议、代码、用户数据不翻译。部分高级界面及第三方诊断仍可能显示英文，不声称逐字符串全部翻译。
+
+          加解密工作台覆盖 AES-128/192/256 GCM/CBC/CTR、RSA-OAEP、RSA/PSS/ECDSA/Ed25519 签名验签与 JWS、HMAC、摘要与编码，以及 SM2/SM3/SM4。各平台通过 35 项实际打包应用认证桥验证、中文操作、篡改拒绝和重启检查。保留请求/响应 AES-CBC 兼容钩子；不会默认改写所有请求。具体参数与格式以应用界面及测试覆盖为准。
+
+          必需验证包括完整工作区质量/单元/CLI、六分片 UI 回归、Windows x64/Linux ARM64 原生构建、打包后关键功能、真实默认中文和语言切换持久化、出站控制、体积与文件数预算、最终归档重新解压及逐文件摘要核对。Windows 另验证全新解压后安全启动包装器。既有按条件跳过的单个测试在原始报告中明确计数，不将其冒充执行通过。
+
+          完整解压后运行 Start-Insomnia-Offline.cmd 或 start-insomnia-offline.sh。数据默认在程序旁 data/。Linux 需兼容图形系统库、可用 Chromium 沙箱与系统密钥环；不使用 --no-sandbox。系统密钥保护的凭据不保证跨机器直接解密。
+
+          MQTT/OPC UA 尚未集成，本次不包含工业协议模块。程序尚未代码签名；CI 出站检查不是现场安全认证，高安全部署仍需进程树出站白名单和现场验收。
+
+          本候选标签指向实际经过验证的源码提交。release-provenance.json 记录 PR 状态及验证来源；未合并分支候选不伪装成 develop 构建。每个平台附实际压缩大小、解压大小、文件数、解压耗时环境、SHA-256 与功能报告。既有发布标签和文件不覆盖。
+          EOF
+          python3 - <<'PY'
+          import json, os, subprocess
+          tag = os.environ['TAG']
+          result = subprocess.run(['gh', 'api', 'repos/Live-yum/insomnia/releases/tags/' + tag], capture_output=True, text=True)
+          if result.returncode == 0:
+              release = json.loads(result.stdout)
+              assert release['draft'] and release['prerelease'] and release['target_commitish'] == os.environ['SOURCE'], 'Existing published or mismatched release must not be overwritten'
+              expected = json.load(open('expected-assets.json'))
+              existing = {item['name']: item for item in release['assets']}
+              assert set(existing) <= {item['name'] for item in expected}
+              for item in expected:
+                  if item['name'] in existing:
+                      asset = existing[item['name']]
+                      assert asset['size'] == item['bytes'] and asset['digest'] == 'sha256:' + item['sha256']
+                  else:
+                      subprocess.run(['gh', 'release', 'upload', tag, 'release-assets/' + item['name']], check=True)
+          elif 'HTTP 404' in result.stderr:
+              ref = subprocess.run(['gh', 'api', 'repos/Live-yum/insomnia/git/ref/tags/' + tag], capture_output=True, text=True)
+              assert ref.returncode != 0 and 'HTTP 404' in ref.stderr, 'Tag already exists or could not be checked'
+              import pathlib
+              subprocess.run(['gh', 'release', 'create', tag, *[str(p) for p in sorted(pathlib.Path('release-assets').iterdir())], '--draft', '--prerelease', '--target', os.environ['SOURCE'], '--title', 'Insomnia Offline 13.3.0 — 精简中文基础版', '--notes-file', 'notes.md'], check=True)
+          else:
+              raise SystemExit(result.stderr)
+          PY
+      - name: Publish only after checking every server-side asset digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/releases/tags/$TAG" > draft.json
+          python3 - <<'PY'
+          import json, os
+          release, expected = json.load(open('draft.json')), json.load(open('expected-assets.json'))
+          assert release['draft'] and release['prerelease'] and release['target_commitish'] == os.environ['SOURCE']
+          actual = {item['name']: item for item in release['assets']}
+          assert len(actual) == len(release['assets']) == len(expected)
+          for item in expected:
+              asset = actual[item['name']]
+              assert asset['state'] == 'uploaded' and asset['size'] == item['bytes'] and asset['digest'] == 'sha256:' + item['sha256'], item['name']
+          PY
+          gh release edit "$TAG" --draft=false --prerelease --latest=false
+          gh release view "$TAG" --json url,tagName,isDraft,isPrerelease,targetCommitish,assets

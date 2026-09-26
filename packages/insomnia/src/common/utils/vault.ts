@@ -21,7 +21,7 @@ export function base64decode(base64Str: string, toObject: boolean): string | obj
     }
     return decodedStr;
   } catch {
-    console.error(`failed to base64 decode string ${base64Str}`);
+    console.error('Failed to decode vault data');
   }
   return base64Str;
 }

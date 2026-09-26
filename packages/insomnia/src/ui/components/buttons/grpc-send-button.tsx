@@ -1,5 +1,8 @@
+
 import React, { type FunctionComponent } from 'react';
 import { Button } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import type { GrpcMethodType } from '../../../main/ipc/grpc';
 
@@ -13,9 +16,7 @@ interface Props {
 export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (!methodType) {
     return (
-      <Button className="rounded-l-sm px-5" isDisabled>
-        Send
-      </Button>
+      <Button className="rounded-l-sm px-5" isDisabled>{translateOfflineUi("Send")}</Button>
     );
   }
 
@@ -24,7 +25,7 @@ export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, 
       className="ml-1 rounded-l-sm bg-(--color-surprise) px-5 text-(--color-font-surprise) hover:brightness-75 focus:brightness-75"
       onPress={running ? handleCancel : handleStart}
     >
-      {running ? 'Cancel' : methodType === 'unary' ? 'Send' : 'Start'}
+      {running ? translateOfflineUi("Cancel") : methodType === 'unary' ? translateOfflineUi("Send") : translateOfflineUi("Start")}
     </Button>
   );
 };

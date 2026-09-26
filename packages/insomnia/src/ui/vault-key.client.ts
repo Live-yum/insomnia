@@ -3,6 +3,8 @@ import { createVault, resetVault, verifyVaultA, verifyVaultM1 } from 'insomnia-a
 import type { UserSession } from 'insomnia-data';
 import { services } from 'insomnia-data';
 
+import { OFFLINE_BUILD } from '~/common/offline';
+import { createOfflineVaultProof, verifyOfflineVaultProof } from '~/common/utils/offline-vault-proof';
 import { base64encode, saveVaultKeyIfNecessary } from '~/common/utils/vault';
 
 const { Buffer, Client, generateAES256Key, getRandomHex, params, srpGenKey } = srp;
@@ -25,6 +27,17 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
   const base64encodedVaultKey = base64encode(JSON.stringify(newVaultKey));
 
   try {
+    if (OFFLINE_BUILD) {
+      if (type === 'create' && userSession.vaultSalt) {
+        return { error: 'A local vault already exists. Unlock it or explicitly reset it.' };
+      }
+      const offlineVaultProof = await createOfflineVaultProof(base64encodedVaultKey, vaultSalt, accountId);
+      const encryptedVaultKey = await window.main.secretStorage.encryptString(base64encodedVaultKey);
+      // Persist key, salt and proof together. Never register a vendor account or verifier.
+      await services.userSession.update({ vaultSalt, vaultKey: encryptedVaultKey, offlineVaultProof });
+      await saveVaultKeyIfNecessary(accountId, base64encodedVaultKey);
+      return { key: base64encodedVaultKey };
+    }
     // Compute the verifier
     const verifier = srp
       .computeVerifier(
@@ -52,6 +65,12 @@ export const createVaultKey = async (type: 'create' | 'reset' = 'create') => {
 
 export const validateVaultKey = async (session: UserSession, vaultKey: string, vaultSalt: string) => {
   const { id: sessionId, accountId } = session;
+  if (OFFLINE_BUILD) {
+    const valid = await verifyOfflineVaultProof(vaultKey, session.offlineVaultProof, vaultSalt, accountId);
+    // The legacy return shape is retained, but this marker is not an SRP session
+    // key and is never sent to a server. Callers use it only as a validation result.
+    return valid ? 'offline-local-vault-validated' : false;
+  }
   const secret1 = await srpGenKey();
   const srpClient = new Client(
     vaultKeyParams,

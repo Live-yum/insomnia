@@ -1,3 +1,4 @@
+
 import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
 import { models } from 'insomnia-data';
 import React, { useEffect, useState } from 'react';
@@ -6,6 +7,7 @@ import { Button, Menu, MenuItem, MenuTrigger, Popover } from 'react-aria-compone
 import { useRootLoaderData } from '~/root';
 import { useDeleteCloudCredentialActionFetcher } from '~/routes/cloud-credentials.$cloudCredentialId.delete';
 import { plugins as pluginsBridge } from '~/ui/plugins/renderer-bridge';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { EXTERNAL_VAULT_PLUGIN_NAME } from '../../../common/constants';
 import { usePlanData } from '../../hooks/use-plan';
@@ -168,7 +170,7 @@ export const CloudServiceCredentialList = () => {
         <table className="table--fancy table--striped table--valign-middle margin-top margin-bottom">
           <thead>
             <tr>
-              <th className="normal-case">Name</th>
+              <th className="normal-case">{translateOfflineUi("Name")}</th>
               <th className="normal-case">Service Provider</th>
               <th className="normal-case">Action</th>
             </tr>

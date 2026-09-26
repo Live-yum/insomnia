@@ -1,3 +1,4 @@
+
 import React, { type FC, Fragment, useCallback, useMemo, useRef, useState } from 'react';
 import {
   Button,
@@ -16,6 +17,7 @@ import {
 import { utf8ByteLength } from '~/common/utils/utf8-bytes';
 import { purgeCachedEditorStates } from '~/ui/components/.client/codemirror/editor-state-cache';
 import { OneLineEditor, type OneLineEditorHandle } from '~/ui/components/.client/codemirror/one-line-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { describeByteSize, generateId } from '../../../common/misc';
 import { FileInputButton } from '../base/file-input-button';
@@ -295,8 +297,7 @@ export const KeyValueEditor: FC<Props> = ({
             upsertPair({ id, name: '', value: '', description: '', disabled: false });
           }}
         >
-          <Icon icon="plus" /> Add
-        </Button>
+          <Icon icon="plus" /> {translateOfflineUi("Add")}</Button>
         <PromptButton
           disabled={persistedItems.length === 0}
           onClick={() => {
@@ -321,7 +322,7 @@ export const KeyValueEditor: FC<Props> = ({
                 className={isSelected ? 'text-(--color-success)' : ''}
                 icon={isSelected ? 'toggle-on' : 'toggle-off'}
               />
-              <span>Description</span>
+              <span>{translateOfflineUi("Description")}</span>
             </>
           )}
         </ToggleButton>

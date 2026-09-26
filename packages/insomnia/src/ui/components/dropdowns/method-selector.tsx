@@ -1,6 +1,9 @@
+
 import type { Placement } from '@react-types/overlays';
 import { forwardRef, useCallback, useState } from 'react';
 import { Button } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HTTP_METHODS } from '../../../common/constants';
 import { getMethodPillClasses, getMethodTextClasses } from '../../utils/method-colors';
@@ -100,7 +103,7 @@ export const MethodSelector = forwardRef<DropdownHandle, Props>(({ method, onCha
   return (
     <Dropdown
       ref={ref}
-      aria-label="Request Method"
+      aria-label={translateOfflineUi("Request Method")}
       placement={placement}
       className="self-stretch"
       triggerButton={

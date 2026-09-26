@@ -1,37 +1,68 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockTrack = vi.fn();
+const spies = vi.hoisted(() => ({
+  client: vi.fn(),
+  track: vi.fn(),
+  flush: vi.fn(),
+  settings: vi.fn(),
+  fetch: vi.fn(),
+}));
 
 vi.mock('@segment/analytics-node', () => ({
-  Analytics: vi.fn(() => ({
-    track: mockTrack,
-    closeAndFlush: vi.fn(),
-  })),
+  Analytics: spies.client.mockImplementation(function () {
+    return { track: spies.track, closeAndFlush: spies.flush };
+  }),
 }));
 
-vi.mock('./db/adapters/ne-db-adapter', () => ({
-  default: vi.fn().mockResolvedValue(null),
-}));
+vi.mock('./db/adapters/ne-db-adapter', () => ({ default: spies.settings }));
 
-describe('analytics', () => {
+describe('offline CLI analytics', () => {
   beforeEach(() => {
-    vi.stubEnv('NODE_ENV', 'production');
     vi.resetModules();
-    mockTrack.mockClear();
+    vi.clearAllMocks();
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('INSO_TELEMETRY_DISABLED', '');
+    vi.stubGlobal('fetch', spies.fetch);
   });
 
-  it('should use the same anonymousId for multiple trackInsoEvent calls', async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it('imports without creating a telemetry client or reading desktop settings', async () => {
+    await import('./analytics');
+    expect(spies.client).not.toHaveBeenCalled();
+    expect(spies.settings).not.toHaveBeenCalled();
+    expect(spies.fetch).not.toHaveBeenCalled();
+  });
+
+  it('never sends events even with production defaults and repeated calls', async () => {
     const { trackInsoEvent, InsoEvent } = await import('./analytics');
-
-    await trackInsoEvent(InsoEvent.lintSpec);
+    await trackInsoEvent(InsoEvent.lintSpec, { sensitive: 'must stay local' });
     await trackInsoEvent(InsoEvent.exportSpec);
+    expect(spies.client).not.toHaveBeenCalled();
+    expect(spies.track).not.toHaveBeenCalled();
+    expect(spies.settings).not.toHaveBeenCalled();
+    expect(spies.fetch).not.toHaveBeenCalled();
+  });
 
-    expect(mockTrack).toHaveBeenCalledTimes(2);
+  it('flush resolves without starting a network request or shutdown timer', async () => {
+    const { flushAnalytics } = await import('./analytics');
+    await expect(flushAnalytics()).resolves.toBeUndefined();
+    expect(spies.client).not.toHaveBeenCalled();
+    expect(spies.flush).not.toHaveBeenCalled();
+    expect(spies.fetch).not.toHaveBeenCalled();
+  });
 
-    const firstCallAnonymousId = mockTrack.mock.calls[0][0].anonymousId;
-    const secondCallAnonymousId = mockTrack.mock.calls[1][0].anonymousId;
-
-    expect(firstCallAnonymousId).toBe(secondCallAnonymousId);
-    expect(firstCallAnonymousId).toMatch(/^anon_/);
+  it('does not reinterpret an environment value as permission to enable telemetry', async () => {
+    vi.stubEnv('INSO_TELEMETRY_DISABLED', 'false');
+    const { trackInsoEvent, flushAnalytics, InsoEvent } = await import('./analytics');
+    await trackInsoEvent(InsoEvent.lintSpec);
+    await flushAnalytics();
+    expect(spies.client).not.toHaveBeenCalled();
+    expect(spies.track).not.toHaveBeenCalled();
+    expect(spies.flush).not.toHaveBeenCalled();
+    expect(spies.settings).not.toHaveBeenCalled();
   });
 });

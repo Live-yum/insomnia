@@ -20,17 +20,17 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
 
   await insomnia.navigationSidebar.clickRequestOrFolder('localhost:4010');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010');
-  await page.click('text=Connect');
+  await page.getByText("Connect").click();
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');
-  await page.click('text=Disconnect');
+  await page.getByRole('button', { name: 'Disconnect', exact: true }).click();
   await expect.soft(responseBody).toContainText('Closing connection with code 1005');
 
   // Can connect with Basic Auth
   await insomnia.navigationSidebar.clickRequestOrFolder('basic-auth');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/basic-auth');
-  await page.click('text=Connect');
+  await page.getByText("Connect").click();
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('> authorization: Basic dXNlcjpwYXNzd29yZA==');
@@ -38,7 +38,7 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   // Can connect with Bearer Auth
   await insomnia.navigationSidebar.clickRequestOrFolder('bearer');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/bearer');
-  await page.click('text=Connect');
+  await page.getByText("Connect").click();
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('> authorization: Bearer insomnia-cool-token-!!!1112113243111');
@@ -46,7 +46,7 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   // Can handle redirects
   await insomnia.navigationSidebar.clickRequestOrFolder('redirect');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/redirect');
-  await page.click('text=Connect');
+  await page.getByText("Connect").click();
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');
@@ -54,7 +54,7 @@ test('can make websocket connection', async ({ app, page, insomnia }) => {
   // Can connect with path parameters substituted in the URL
   await insomnia.navigationSidebar.clickRequestOrFolder('path-param');
   await expect.soft(page.locator('.app')).toContainText('ws://localhost:4010/chat/:id');
-  await page.click('text=Connect');
+  await page.getByText("Connect").click();
   await expect.soft(statusTag).toContainText('101 Switching Protocols');
   await page.getByRole('tab', { name: 'Console' }).click();
   await expect.soft(responseBody).toContainText('WebSocket connection established');

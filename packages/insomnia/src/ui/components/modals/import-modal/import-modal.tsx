@@ -1,3 +1,4 @@
+
 import classNames from 'classnames';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { models } from 'insomnia-data';
@@ -13,6 +14,7 @@ import { useScanResourcesFetcher } from '~/routes/import.scan';
 import { useProjectListWorkspacesLoaderFetcher } from '~/routes/organization.$organizationId.project.$projectId.list-workspaces';
 import { createProject } from '~/routes/organization.$organizationId.project.new';
 import { Checkbox } from '~/ui/components/base/checkbox';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   clearResourceCache,
@@ -509,9 +511,7 @@ const ScanResourcesForm = ({
                 value="file"
                 checked={selectedTab === 'file'}
               >
-                <i className="fa fa-plus" />
-                File
-              </Radio>
+                <i className="fa fa-plus" />{translateOfflineUi("File")}</Radio>
               <Radio onChange={() => setSelectedTab('uri')} name="source" value="uri" checked={selectedTab === 'uri'}>
                 <i className="fa fa-link" />
                 Url
@@ -531,9 +531,7 @@ const ScanResourcesForm = ({
                 value="clipboard"
                 checked={selectedTab === 'clipboard'}
               >
-                <i className="fa fa-clipboard" />
-                Clipboard
-              </Radio>
+                <i className="fa fa-clipboard" />{translateOfflineUi("Clipboard")}</Radio>
               <Radio onChange={() => setSelectedTab('mcp')} name="source" value="mcp" checked={selectedTab === 'mcp'}>
                 <i className="fa fa-plug" />
                 MCP
@@ -624,8 +622,7 @@ const ScanResourcesForm = ({
           form={id}
           className="btn h-10 gap-(--padding-sm)"
         >
-          <i className="fa fa-file-import" /> Scan
-          {loading && <Icon icon="spinner" className="ml-1 animate-spin" />}
+          <i className="fa fa-file-import" /> {translateOfflineUi("Scan")}{loading && <Icon icon="spinner" className="ml-1 animate-spin" />}
         </Button>
       </div>
     </Fragment>
@@ -825,8 +822,7 @@ const ImportResourcesForm = ({
             </div>
           ) : (
             <div>
-              <i className="fa fa-file-import" /> Import
-            </div>
+              <i className="fa fa-file-import" /> {translateOfflineUi("Import")}</div>
           )}
         </Button>
       </div>

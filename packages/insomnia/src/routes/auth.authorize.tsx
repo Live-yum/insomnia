@@ -1,3 +1,4 @@
+
 import { getVault } from 'insomnia-api';
 import { services } from 'insomnia-data';
 import { Fragment } from 'react';
@@ -9,6 +10,7 @@ import { getVaultKeyFromStorage } from '~/common/utils/vault';
 import { AnalyticsEvent } from '~/ui/analytics';
 import { getLoginUrl, submitAuthCode } from '~/ui/auth-session-provider.client';
 import { Icon } from '~/ui/components/icon';
+import { translateOfflineUi } from '~/ui/translate-offline';
 import { createFetcherSubmitHook } from '~/ui/utils/router';
 import { validateVaultKey } from '~/ui/vault-key.client';
 
@@ -115,9 +117,7 @@ const Component = () => {
                   gap: 'var(--padding-xs)',
                 }}
               >
-                <i className="fa fa-clipboard" aria-hidden="true" />
-                Copy
-              </button>
+                <i className="fa fa-clipboard" aria-hidden="true" />{translateOfflineUi("Copy")}</button>
             </div>
             <p className="text-start text-[rgba(var(--color-font-rgb),0.8)]">
               If your browser does not open the Insomnia app automatically you can manually add the generated token

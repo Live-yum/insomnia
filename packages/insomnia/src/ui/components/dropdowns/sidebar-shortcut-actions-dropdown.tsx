@@ -1,3 +1,4 @@
+
 import type { StorageRules } from 'insomnia-api';
 import type { Workspace } from 'insomnia-data';
 import { models } from 'insomnia-data';
@@ -9,6 +10,7 @@ import { scopeToBgColorMap, scopeToTextColorMap } from '~/common/get-workspace-l
 import { useRequestNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request.new';
 import { useRequestGroupNewActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.request-group.new';
 import type { CreateRequestType } from '~/ui/hooks/use-request';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Icon } from '../icon';
 import { showModal } from '../modals';
@@ -139,7 +141,7 @@ export const SidebarShortcutActionsDropdown = ({
           >
             <MenuSection className="flex flex-1 flex-col">
               <Header className="flex items-center gap-2 py-1 pl-2 text-xs text-(--hl) uppercase">
-                <Icon icon="plus" /> <span>Create</span>
+                <Icon icon="plus" /> <span>{translateOfflineUi("Create")}</span>
               </Header>
               <Collection items={actions}>
                 {item => (

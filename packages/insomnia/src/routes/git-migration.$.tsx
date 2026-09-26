@@ -1,12 +1,15 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Button } from '~/basic-components/button';
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION_ID } from '~/common/offline';
 import { CopyButton } from '~/ui/components/base/copy-button';
 import { Link as ExternalLink } from '~/ui/components/base/link';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
 import git_migration from '~/ui/images/git-migration/git.png';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 type MigrationStatus = 'default' | 'running' | 'completed' | 'partiallyCompleted' | 'error';
 
@@ -53,8 +56,9 @@ const MigrationView = () => {
   // if they haven't seen it yet; otherwise go to the organization view.
   // Guard `window` so this stays safe during SSR (entry.server.tsx) — the value is
   // only read once the completion links render, which only happens client-side.
-  const postMigrationPath =
-    typeof window !== 'undefined' && window.localStorage.getItem('hasSeenOnboardingV13')
+  const postMigrationPath = OFFLINE_BUILD
+    ? `/organization/${OFFLINE_ORGANIZATION_ID}/project`
+    : typeof window !== 'undefined' && window.localStorage.getItem('hasSeenOnboardingV13')
       ? '/organization'
       : '/onboarding';
 
@@ -65,12 +69,12 @@ const MigrationView = () => {
           <h1 className="flex items-center gap-2 text-xl">
             {isUpdateCompletedSuccessfully && <i className="fa fa-check-circle text-emerald-500" />}
             {isUpdateCompletedSuccessfully
-              ? 'Update Successful'
+              ? translateOfflineUi("Update Successful")
               : isUpdateErrored
-                ? 'Something went wrong'
+                ? translateOfflineUi("Something went wrong")
                 : isUpdateCompletedWithErrors
                   ? 'Update successful with some warnings'
-                  : 'Required file system update'}
+                  : translateOfflineUi("Required file system update")}
           </h1>
 
           {isUpdateCompletedSuccessfully ? (
@@ -130,9 +134,7 @@ const MigrationView = () => {
               <Link
                 className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                 to={postMigrationPath}
-              >
-                Open Insomnia
-              </Link>
+              >{translateOfflineUi("Open Insomnia")}</Link>
             ) : isUpdateCompletedWithErrors ? (
               <div className="flex h-[32px] w-full items-center justify-between gap-3">
                 <CopyButton
@@ -146,9 +148,7 @@ const MigrationView = () => {
                 <Link
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   to={postMigrationPath}
-                >
-                  Open Insomnia
-                </Link>
+                >{translateOfflineUi("Open Insomnia")}</Link>
               </div>
             ) : isUpdateErrored ? (
               <div className="flex h-[32px] w-full items-center justify-between gap-3">
@@ -174,7 +174,7 @@ const MigrationView = () => {
                 onClick={handleMigration}
                 isDisabled={isUpdateRunning}
               >
-                {isUpdateRunning ? 'Updating...' : 'Update Now'}
+                {isUpdateRunning ? 'Updating...' : translateOfflineUi("Update Now")}
               </Button>
             )}
           </div>
@@ -217,9 +217,7 @@ const Component = () => {
                     onClick={() => {
                       setShowMigrationView(true);
                     }}
-                  >
-                    Continue
-                  </Button>
+                  >{translateOfflineUi("Continue")}</Button>
                 </div>
               </div>
             </div>

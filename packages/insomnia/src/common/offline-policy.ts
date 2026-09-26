@@ -26,7 +26,10 @@ export function parseOfflineOrigins(value: string | undefined): ReadonlySet<stri
       throw new Error('Invalid origin in INSOMNIA_OFFLINE_BROWSER_ORIGINS.');
     }
     if (
-      !networkProtocols.has(url.protocol) || /[\u0000-\u0020\u007f\\]/.test(item) ||
+      !networkProtocols.has(url.protocol) || Array.from(item).some(character => {
+        const code = character.codePointAt(0);
+        return (code !== undefined && code <= 32) || code === 127 || character === '\\';
+      }) ||
       !/^(?:https?|wss?):\/\//i.test(item) || url.username || url.password ||
       url.search || url.hash || (url.pathname !== '/' && url.pathname !== '') ||
       url.hostname.includes('*') || url.hostname.endsWith('.') ||
@@ -58,6 +61,11 @@ export function isOfflineBrowserUrlAllowed(
       // A remote file://host/share is network access (SMB/UNC), not a local asset.
       const pathname = decodeURIComponent(url.pathname);
       return url.host === '' && !pathname.startsWith('//') && !pathname.includes('\\');
+    }
+    // The PDF viewer is packaged with Chromium; this exact extension is a local resource.
+    // Other extensions, chrome:// pages and network origins remain denied.
+    if (url.protocol === 'chrome-extension:') {
+      return url.hostname === 'mhjfbmdgcfjbbpaeojofohoefgiehjai' && url.port === '';
     }
     if (url.protocol === 'data:' || url.protocol === 'blob:') return true;
     return url.protocol === 'insomnia-templating-worker-database:';

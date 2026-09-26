@@ -1,8 +1,10 @@
+
 import classNames from 'classnames';
 import React, { type FC, Fragment, type PropsWithChildren, useMemo } from 'react';
 
 import { type ProjectScopeKeys, scopeToLabelMap } from '~/common/get-workspace-label';
 import { isApiSpecScanResult, type ScanResult } from '~/common/import';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 export const validImportExtensions = [
   'sh',
@@ -266,7 +268,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                   {scanResult.requests && scanResult.requests?.length > 0 && (
                     <tr key={scanResult.requests[0]._id} className="table--no-outline-row">
                       <td>
-                        {scanResult.requests.length} {scanResult.requests.length === 1 ? 'Request' : 'Requests'}
+                        {scanResult.requests.length} {scanResult.requests.length === 1 ? translateOfflineUi("Request") : translateOfflineUi("Requests")}
                       </td>
                     </tr>
                   )}
@@ -284,7 +286,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                     <tr className="table--no-outline-row">
                       <td>
                         {scanResult.environments.length}{' '}
-                        {scanResult.environments.length === 1 ? 'Environment' : 'Environments'}
+                        {scanResult.environments.length === 1 ? translateOfflineUi("Environment") : translateOfflineUi("Environments")}
                         {' with '}
                         {scanResult.cookieJars?.length}{' '}
                         {scanResult.cookieJars?.length === 1 ? 'Cookie Jar' : 'Cookie Jars'}
@@ -298,7 +300,7 @@ export const ScanResultsTable = ({ scanResults }: { scanResults: ScanResult[] })
                         {scanResult.unitTestSuites.length === 1 ? 'Test Suite' : 'Test Suites'}
                         {' with '}
                         {scanResult.unitTests?.length}
-                        {scanResult.unitTests?.length === 1 ? ' Test' : ' Tests'}
+                        {scanResult.unitTests?.length === 1 ? translateOfflineUi(" Test") : translateOfflineUi(" Tests")}
                       </td>
                     </tr>
                   )}

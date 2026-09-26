@@ -1,3 +1,4 @@
+
 import { Button, Heading, Radio, RadioGroup } from 'react-aria-components';
 import { href, redirect, useFetcher } from 'react-router';
 
@@ -6,6 +7,7 @@ import { shouldMigrateProjectUnderOrganization } from '~/sync/vcs/migrate-projec
 import { Icon } from '~/ui/components/icon';
 import { InsomniaLogo } from '~/ui/components/insomnia-icon';
 import { TrailLinesContainer } from '~/ui/components/trail-lines-container';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import type { Route } from './+types/onboarding.migrate';
 
@@ -87,9 +89,7 @@ const Component = () => {
                         'hover:bbg-(--color-surprise)/90 rounded-xs bg-(--color-surprise) px-3 py-2 text-sm font-bold text-(--color-font-surprise) transition-colors hover:no-underline' +
                         (state !== 'idle' ? 'animate-pulse cursor-not-allowed' : '')
                       }
-                    >
-                      Continue
-                    </Button>
+                    >{translateOfflineUi("Continue")}</Button>
                   </div>
                 </Form>
               </div>

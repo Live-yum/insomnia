@@ -1,3 +1,4 @@
+
 import type {
   CloudProviderCredential,
   CloudProviderName,
@@ -10,6 +11,8 @@ import type {
 import { HashiCorpCredentialType, HashiCorpVaultAuthMethod } from 'insomnia-data';
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
@@ -193,9 +196,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 checked={credentialAuthMethod === HashiCorpVaultAuthMethod.token}
                 onChange={() => setAuthMethod(HashiCorpVaultAuthMethod.token)}
               />
-              <label className="pt-0" htmlFor="authMethodChoice-token">
-                Token
-              </label>
+              <label className="pt-0" htmlFor="authMethodChoice-token">{translateOfflineUi("Token")}</label>
             </div>
           </div>
           <TextField
@@ -332,7 +333,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
                 className="col-span-3 h-8 w-full flex-1 rounded-xs border border-solid border-(--hl-sm) bg-(--color-bg) py-1 pr-7 pl-2 text-(--color-font) transition-colors placeholder:italic placeholder:opacity-60 focus:ring-1 focus:ring-(--hl-md) focus:outline-hidden"
                 type={hideValueItemNames.includes('client_secret') ? 'password' : 'text'}
                 name="client_secret"
-                placeholder="Client Secret"
+                placeholder={translateOfflineUi("Client Secret")}
               />
               <Button
                 className="flex h-8 min-w-[12ch] items-center justify-center gap-2 rounded-xs border border-solid border-(--hl-md) px-4 py-1 text-sm font-semibold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)"
@@ -356,7 +357,7 @@ export const HashiCorpCredentialForm = (props: HashiCorpCredentialFormProps) => 
           isDisabled={isLoading || !isValidUrl}
         >
           {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
-          {isEdit ? 'Update' : 'Create'}
+          {isEdit ? translateOfflineUi("Update") : translateOfflineUi("Create")}
         </Button>
       </div>
     </form>

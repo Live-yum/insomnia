@@ -37,7 +37,7 @@ test.describe('test hidden window handling', () => {
     await page.getByRole('button', { name: 'Cancel Request' }).click();
 
     // check the response pane message
-    await page.click('text=Request was cancelled');
+    await page.getByText("Request was cancelled").click();
 
     await page.getByText('Special template tag format').click();
     await expect.soft(page.getByText(`_['examplehost']`)).toBeVisible();

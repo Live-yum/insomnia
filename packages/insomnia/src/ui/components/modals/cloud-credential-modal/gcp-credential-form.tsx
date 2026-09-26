@@ -1,6 +1,9 @@
+
 import type { CloudProviderCredential, CloudProviderName } from 'insomnia-data';
 import React, { useState } from 'react';
 import { Button, Input, Label, TextField } from 'react-aria-components';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { HelpTooltip } from '../../help-tooltip';
 import { Icon } from '../../icon';
@@ -90,7 +93,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
             onPress={handleSelectFile}
           >
             <Icon icon="file" className="mr-2" />
-            <span>Select File</span>
+            <span>{translateOfflineUi("Select File")}</span>
           </Button>
         </div>
         {errorMessage && <p className="notice error margin-top-sm no-margin-bottom">{errorMessage}</p>}
@@ -101,7 +104,7 @@ export const GCPCredentialForm = (props: GCPCredentialFormProps) => {
             isDisabled={isLoading || !inputKeyPath}
           >
             {isLoading && <Icon icon="spinner" className="m-auto mr-2 inline-block animate-spin text-(--color-font)" />}
-            {isEdit ? 'Update' : 'Create'}
+            {isEdit ? translateOfflineUi("Update") : translateOfflineUi("Create")}
           </Button>
         </div>
       </div>

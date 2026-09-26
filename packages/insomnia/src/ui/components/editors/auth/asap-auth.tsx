@@ -1,4 +1,7 @@
+
 import React, { type FC } from 'react';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { AuthInputRow } from './components/auth-input-row';
 import { AuthPrivateKeyRow } from './components/auth-private-key-row';
@@ -7,7 +10,7 @@ import { AuthToggleRow } from './components/auth-toggle-row';
 
 export const AsapAuth: FC = () => (
   <AuthTableBody>
-    <AuthToggleRow label="Enabled" property="disabled" invert />
+    <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert />
     <AuthInputRow label="Issuer (iss)" property="issuer" />
     <AuthInputRow label="Subject (sub)" property="subject" />
     <AuthInputRow label="Audience (aud)" property="audience" />

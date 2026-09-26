@@ -51,7 +51,7 @@ const clearPluginToast = async (page: Page) => {
     .catch(() => {});
   const deadline = Date.now() + 5000;
   while (Date.now() < deadline && (await dismissButtons.count()) > 0) {
-    await dismissButtons.first().click({ force: true, timeout: 500 }).catch(() => {});
+    await dismissButtons.first().click({ timeout: 500 }).catch(() => {});
   }
 };
 

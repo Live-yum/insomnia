@@ -1,3 +1,4 @@
+
 import type { IconName } from '@fortawesome/fontawesome-svg-core';
 import type { Request, RequestBody, RequestHeader, RequestParameter } from 'insomnia-data';
 import { deconstructQueryStringToParams } from 'insomnia-data/common';
@@ -14,6 +15,8 @@ import {
   SelectValue,
 } from 'react-aria-components';
 import { useParams } from 'react-router';
+
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   CONTENT_TYPE_EDN,
@@ -184,7 +187,7 @@ export const ContentTypeDropdown: FC = () => {
       <Button className="flex min-w-[12ch] flex-1 items-center justify-between gap-2 rounded-xs px-4 py-1 text-sm font-bold text-(--color-font) ring-1 ring-transparent transition-all hover:bg-(--hl-xs) focus:ring-(--hl-md) focus:ring-inset aria-pressed:bg-(--hl-sm)">
         <SelectValue className="flex items-center justify-center gap-2 truncate">
           <div className="flex items-center gap-2 text-(--hl)">
-            {hasMimeType ? getContentTypeName(body.mimeType) : 'No Body'}
+            {hasMimeType ? getContentTypeName(body.mimeType) : translateOfflineUi("No Body")}
             {numBodyParams ? (
               <span className="flex h-6 min-w-6 items-center justify-center rounded-lg border border-solid border-(--hl) p-1 text-xs">
                 {numBodyParams}

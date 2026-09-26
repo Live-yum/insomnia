@@ -99,6 +99,7 @@ export default defineConfig([
       'playwright/expect-expect': 'off',
       'playwright/missing-playwright-await': 'warn',
       'playwright/require-soft-assertions': 'error',
+      'playwright/prefer-locator': 'error',
       'playwright/prefer-native-locators': 'error',
       'playwright/prefer-to-be': 'error',
       'playwright/prefer-to-contain': 'error',
@@ -284,6 +285,8 @@ export default defineConfig([
       '**/*.config.js',
       '**/*.d.ts',
       '**/*.min.js',
+      // Compiler output: byte-for-byte regeneration and native crypto tests are required.
+      'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/primitives.generated.cjs',
       '**/*.js.map',
       '**/bin/*',
       '**/build/*',
@@ -307,6 +310,29 @@ export default defineConfig([
     files: ['packages/insomnia/src/main/**/*.{ts,tsx,js,mjs}', 'packages/insomnia/src/**/*.node.ts'],
     rules: {
       'no-restricted-globals': ['error', ...domRestrictedGlobals],
+    },
+  },
+  // These reviewed entrypoints must remain CommonJS for the plugin host and builder.
+  {
+    files: [
+      'packages/insomnia/electron-builder.offline.cjs',
+      'packages/insomnia/src/vendor/insomnia-plugin-crypto/**/*.js',
+      'packages/insomnia/src/vendor/insomnia-plugin-offline-crypto-tools/*.cjs',
+    ],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'readonly', console: 'readonly' },
+    },
+    rules: { 'unicorn/prefer-module': 'off' },
+  },
+  {
+    // Preserve the upstream snapshot SHA256; these are spelling/format preferences only.
+    files: ['packages/insomnia/src/vendor/insomnia-plugin-crypto/**/*.js'],
+    rules: {
+      'unicorn/prefer-node-protocol': 'off',
+      'unicorn/prefer-number-properties': 'off',
+      'unicorn/numeric-separators-style': 'off',
+      'unicorn/text-encoding-identifier-case': 'off',
     },
   },
   // Test files ESLint rules

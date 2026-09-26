@@ -1,0 +1,2846 @@
+{
+  "schema": 1,
+  "migration": "explicit-authored-ui-literals-only",
+  "files": [
+    {
+      "path": "packages/insomnia/src/main/window-utils.ts",
+      "literals": 45,
+      "sourceKeys": [
+        "About",
+        "Actual Size",
+        "Application",
+        "Check for updates",
+        "Close",
+        "Copy",
+        "Cut",
+        "Developer",
+        "Edit",
+        "File",
+        "Help",
+        "Help and Support",
+        "Keyboard Shortcuts",
+        "Minimize",
+        "New",
+        "New Window",
+        "Open",
+        "Open folder in Insomnia…",
+        "Paste",
+        "Preferences",
+        "Quit",
+        "Redo",
+        "Reload",
+        "Reload Plugins",
+        "Resize to Default (HD 720)",
+        "Resize to Large (FHD 1080)",
+        "Resize to Small (qHD 540)",
+        "Restart",
+        "Select All",
+        "Show App Data Folder",
+        "Show App Logs Folder",
+        "Show Software Bill of Materials",
+        "Show Software License",
+        "Specific Zoom Level",
+        "Take Screenshot",
+        "Toggle DevTools",
+        "Toggle Full Screen",
+        "Toggle Sidebar",
+        "Tools",
+        "Undo",
+        "View",
+        "Window",
+        "Zoom In",
+        "Zoom Out"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/root.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Application Error",
+        "Learn more",
+        "Try to reload the app"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/auth.authorize.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Copy"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/auth.login.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Debug",
+        "Design",
+        "Test"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/auth.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Preferences"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/git-migration.$.tsx",
+      "literals": 7,
+      "sourceKeys": [
+        "Continue",
+        "Open Insomnia",
+        "Required file system update",
+        "Something went wrong",
+        "Update Now",
+        "Update Successful"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/onboarding.$.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Continue"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/onboarding.migrate.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Continue"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId._index.tsx",
+      "literals": 7,
+      "sourceKeys": [
+        "Create",
+        "Create in project",
+        "Files",
+        "Filter",
+        "Import",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.debug.runner.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Advanced",
+        "Console",
+        "History",
+        "Results",
+        "Run",
+        "Select All"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.environment.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Environments",
+        "Project Actions"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/routes/organization.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Local storage · Cloud disabled",
+        "Preferences"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/buttons/grpc-send-button.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Cancel",
+        "Send",
+        "Start"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/command-palette.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Filter"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/design-empty-state.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Create",
+        "Import"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/content-type-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "No Body"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/git-project-sync-dropdown.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Connect",
+        "Git Sync"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/git-sync-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Git Sync"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/local-project-bar.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Local Vault project"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/method-selector.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Request Method"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/request-actions-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Request Actions"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/request-group-actions-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Request Group Actions"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/sidebar-project-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Project Actions"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/sidebar-shortcut-actions-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Create"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/sidebar-workspace-dropdown.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Delete",
+        "Remove"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/sync-dropdown.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Git Sync"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/dropdowns/workspace-card-dropdown.tsx",
+      "literals": 14,
+      "sourceKeys": [
+        "Delete",
+        "Export",
+        "Import",
+        "Remove",
+        "Rename",
+        "Settings"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/api-key-auth.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Enabled",
+        "Key",
+        "Value"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/asap-auth.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/aws-auth.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/basic-auth.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Enabled",
+        "Password",
+        "Username"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/bearer-auth.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Enabled",
+        "Token"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/components/auth-enabled-row.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/digest-auth.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Enabled",
+        "Password",
+        "Username"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/hawk-auth.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/ntlm-auth.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Enabled",
+        "Password",
+        "Username"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/o-auth-1-auth.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/o-auth-2-auth.tsx",
+      "literals": 17,
+      "sourceKeys": [
+        "Access Token",
+        "Access Token URL",
+        "Authorization URL",
+        "Clear",
+        "Client ID",
+        "Client Secret",
+        "Credentials",
+        "Enabled",
+        "Fetch Tokens",
+        "Grant Type",
+        "Password",
+        "Refresh Token",
+        "Scope",
+        "Username"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/auth/single-token-auth.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Enabled",
+        "Token"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/environment-key-value-editor/key-value-editor.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Add"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/editors/mock-response-extractor.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Create"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/environment-picker.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Collection Environment",
+        "Select an API Collection Environment"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/first-request-creation.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Create request",
+        "Enter a URL or paste cURL",
+        "New request",
+        "Request endpoint or cURL input"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/git-credentials/git-custom-credential-form.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Cancel",
+        "Username"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/git-credentials/git-remote-branch-select.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Branch",
+        "Branch to clone",
+        "Default branch",
+        "Fetching remote branches...",
+        "Refresh repositories",
+        "Search branches"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/git-credentials/git-repository-select.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Refresh repositories"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/graph-ql-explorer/graph-ql-explorer-field.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Type"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/header-invite-button.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Close"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/header-user-button.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Preferences"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/key-value-editor/key-value-editor.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Add",
+        "Description"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/key-value-editor/row.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "File",
+        "Text"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/markdown-editor.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Preview"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mcp/elicitation-form.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mcp/mcp-notification-tab.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Search"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mcp/mcp-pane.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Filter"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mcp/mcp-request-pane.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Auth",
+        "Environment",
+        "Headers",
+        "Host",
+        "Learn More",
+        "Params"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mcp/mcp-url-bar.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Connect"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mocks/mock-response-pane.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Console",
+        "Headers",
+        "History",
+        "Method",
+        "Preview",
+        "Size"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/mocks/mock-url-bar.tsx",
+      "literals": 5,
+      "sourceKeys": [
+        "Advanced",
+        "Copy",
+        "Send Now",
+        "Stop",
+        "Test"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/add-request-to-collection-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Add",
+        "Cancel",
+        "Select Workspace"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/alert-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cli-preview-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Close"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cloud-credential-modal/aws-credential-form.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Create",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cloud-credential-modal/cloud-credential-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Auth",
+        "Copy"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cloud-credential-modal/file-picker.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Select File"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cloud-credential-modal/gcp-credential-form.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Create",
+        "Select File",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cloud-credential-modal/hashicorp-credential-form.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Client Secret",
+        "Create",
+        "Token",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/cookies-modal.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Done",
+        "Edit",
+        "Key",
+        "Raw",
+        "Value"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/error-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Cancel",
+        "Ok"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/export-requests-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Cancel",
+        "Export"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/generate-code-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Done"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-branches-modal.tsx",
+      "literals": 5,
+      "sourceKeys": [
+        "Branches",
+        "Create",
+        "Delete",
+        "Merge",
+        "New branch name:"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-log-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "History",
+        "Message"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-project-branches-modal.tsx",
+      "literals": 5,
+      "sourceKeys": [
+        "Branches",
+        "Create",
+        "Delete",
+        "Merge",
+        "New branch name:"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-project-log-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "History",
+        "Message"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-project-migration-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "File path",
+        "Name",
+        "Type"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-project-staging-modal.tsx",
+      "literals": 21,
+      "sourceKeys": [
+        "Cancel",
+        "Commit",
+        "Commit Changes",
+        "Commit and push",
+        "Discard",
+        "Message",
+        "Stage all changes",
+        "Staged changes",
+        "Unstage all changes",
+        "Unstaged changes",
+        "Yes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-pull-required-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-repository-settings-modal/git-repository-settings-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Close",
+        "Documentation"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/git-staging-modal.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Commit",
+        "Commit and push",
+        "Message",
+        "Stage all changes",
+        "Staged changes",
+        "Unstage all changes",
+        "Unstaged changes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/import-modal/import-modal.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Clipboard",
+        "File",
+        "Import",
+        "Scan"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/import-modal/import-projects-modal.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Cancel",
+        "Confirm",
+        "Failed",
+        "Import",
+        "Success"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/import-modal/shared.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Environment",
+        "Environments",
+        "Request",
+        "Requests",
+        "Test",
+        "Tests"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/input-vault-key-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "OK",
+        "Unlock"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/invite-modal/invite-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Remove"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/konnect-settings-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Cancel",
+        "Close",
+        "Disconnect"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/logout-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/mcp-certificates-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Disabled",
+        "Done",
+        "Enabled"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/mock-route-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/new-workspace-modal.tsx",
+      "literals": 9,
+      "sourceKeys": [
+        "Cancel",
+        "Create",
+        "Create or update dialog",
+        "File name",
+        "Files",
+        "Name",
+        "No",
+        "Text",
+        "Yes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/nunjucks-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Done",
+        "Edit"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/oauth-authorization-status-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Copy"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/paste-curl-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Cancel",
+        "Import"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/project-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Create or update dialog"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/proto-files-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Files",
+        "Save"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/request-group-settings-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Copy",
+        "Move",
+        "Name"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/request-settings-modal.tsx",
+      "literals": 10,
+      "sourceKeys": [
+        "Copy",
+        "Follow redirects",
+        "Move",
+        "Name",
+        "Request Settings"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/select-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Done"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/settings-modal.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Credentials",
+        "Data",
+        "General",
+        "Plugins",
+        "Preferences",
+        "Proxy",
+        "Settings",
+        "Themes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/sync-branches-modal.tsx",
+      "literals": 7,
+      "sourceKeys": [
+        "Branches",
+        "Create",
+        "Delete",
+        "Fetch",
+        "Merge",
+        "New branch name:"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/sync-history-modal.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "History",
+        "Message"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/sync-merge-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Resolve conflicts"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/sync-staging-modal.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Commit",
+        "Commit and push",
+        "Message",
+        "Staged changes",
+        "Unstaged changes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/workspace-certificates-modal.tsx",
+      "literals": 14,
+      "sourceKeys": [
+        "CA Certificate",
+        "Cancel",
+        "Disabled",
+        "Done",
+        "Enabled",
+        "Host",
+        "Key",
+        "Passphrase"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/workspace-duplicate-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Cancel",
+        "Duplicate",
+        "New"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/workspace-environments-edit-modal.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Close",
+        "Environments",
+        "Manage Environments"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/modals/workspace-settings-modal.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Description",
+        "File name",
+        "Name",
+        "Settings",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/grpc-request-pane.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Commit",
+        "Headers"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/placeholder-request-pane.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "New Request"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/request-group-pane.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "After-response",
+        "Auth",
+        "Environment",
+        "Headers",
+        "Pre-request",
+        "Scripts"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/request-pane.tsx",
+      "literals": 10,
+      "sourceKeys": [
+        "After-response",
+        "Auth",
+        "Body",
+        "Bulk Edit",
+        "Headers",
+        "Import from URL",
+        "Params",
+        "Pre-request",
+        "Scripts"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/request-test-result-pane.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Failed",
+        "Passed"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/response-pane.tsx",
+      "literals": 5,
+      "sourceKeys": [
+        "Console",
+        "Cookies",
+        "Headers",
+        "Preview",
+        "Tests"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/runner-result-history-pane.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Delete",
+        "Duration",
+        "Failed",
+        "Passed",
+        "Results",
+        "Source"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/panes/runner-test-result-pane.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Failed",
+        "Passed"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/project/git-repo-form.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Choose folder…",
+        "Clone location",
+        "Connect repository later",
+        "Git Setup Form",
+        "Managed by Insomnia (default location)",
+        "Repository URL"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/project/project-create-form.tsx",
+      "literals": 10,
+      "sourceKeys": [
+        "Cancel",
+        "Choose folder…",
+        "Clone from Remote",
+        "Create",
+        "Folder",
+        "Open",
+        "Open local folder",
+        "Project name",
+        "Scan for files"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/project/project-empty-view.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Create document",
+        "Create request collection",
+        "Enter API Spec",
+        "Import",
+        "Send a request",
+        "Start fresh or bring in existing work",
+        "Welcome to your project!"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/project/project-settings-form.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Cancel",
+        "Create",
+        "Project Type",
+        "Project name",
+        "Scan for files",
+        "Type",
+        "Update"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/project/project-type-select.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Project Type",
+        "Type"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/rendered-query-string.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Copy URL"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/request-url-bar.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Advanced",
+        "Cancel",
+        "Disconnect",
+        "Send Now"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/response-timer.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel Request"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/cloud-service-credentials.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Name"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/create-plugin-modal.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Generate"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/credentials.tsx",
+      "literals": 4,
+      "sourceKeys": [
+        "Cancel",
+        "Delete",
+        "Edit"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/general.tsx",
+      "literals": 30,
+      "sourceKeys": [
+        "-- System Default --",
+        "Application",
+        "Autocomplete popup delay (ms)",
+        "Delay the autocomplete popup by milliseconds. Enter 0 to disable the autocomplete delay.",
+        "Enter a comma-separated list of fonts. If left empty, uses system defaults.",
+        "Follow redirects",
+        "Font",
+        "Font ligatures",
+        "Hide menu bar",
+        "If checked, clicking a collection or anything inside it narrows the sidebar to that collection's contents. Otherwise the full project tree stays visible.",
+        "If checked, reveals the environment variable source and value in the template tag. Otherwise, hover over the template tag to see the source and value.",
+        "If checked, stack request and response panels vertically. Otherwise they will be side-by-side above 880px.",
+        "If checked, the Tests tab will always be shown in the collection view. Otherwise, it will only be shown if the collection already has legacy tests.",
+        "Indent with tabs",
+        "Interface font",
+        "Interface font size (px)",
+        "Plugins",
+        "Raw template syntax",
+        "Request timeout (ms)",
+        "Reveal passwords",
+        "Security",
+        "Show legacy unit tests",
+        "Show variable source and value",
+        "Sidebar focus for collections",
+        "Update channel",
+        "Use bulk header editor",
+        "Use vertical layout",
+        "Validate certificates",
+        "Wrap text editor lines"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/import-export.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Export",
+        "Export all data",
+        "Import",
+        "Move"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/llms/claude.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Loading..."
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/llms/gemini.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Loading..."
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/llms/openai.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Loading..."
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/llms/url.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Loading..."
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/plugins.tsx",
+      "literals": 9,
+      "sourceKeys": [
+        "Clear",
+        "Documentation",
+        "Folder",
+        "Install Plugin",
+        "Installed Plugins",
+        "Name",
+        "Reload"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/text-array-setting.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Add"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/settings/vault-key-panel.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Generate Vault Key",
+        "Vault Key"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/components/new-project-button.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Create new Project"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/components/sidebar-search-field.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Clear search",
+        "Filter",
+        "Projects filter"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/empty-node.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Create"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/konnect-sync-bar.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Cancel"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/project-navigation-sidebar.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Back to all projects",
+        "Project Navigation Tree"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/request-node.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Unpin Request",
+        "Unpin request"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/sidebar/project-navigation-sidebar/sidebar-focus-onboarding.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Sidebar focus for collections"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/socket-io/body-tab-pane.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Send"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/socket-io/event-tab-pane.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Description"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/socket-io/request-pane.tsx",
+      "literals": 6,
+      "sourceKeys": [
+        "Auth",
+        "Body",
+        "Bulk Edit",
+        "Headers",
+        "Import from URL",
+        "Params"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/spec-view.tsx",
+      "literals": 12,
+      "sourceKeys": [
+        "Close ruleset content viewer",
+        "Default OAS Ruleset",
+        "Existing Ruleset Contents",
+        "Generate",
+        "Headers",
+        "Info",
+        "No lint problems",
+        "Remove custom ruleset",
+        "Security",
+        "Upload custom ruleset",
+        "View selected ruleset content"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/templating/tag-editor.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Loading..."
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/unsaved-changes-confirm-dialog.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "No",
+        "Unsaved changes",
+        "Yes"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/unsynced-file-delete-button.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Delete"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/viewers/response-cookies-viewer.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Automatic",
+        "Name",
+        "Value"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/viewers/response-error-viewer.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Documentation"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/viewers/response-headers-viewer.tsx",
+      "literals": 2,
+      "sourceKeys": [
+        "Name",
+        "Value"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/websockets/action-bar.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Connect"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/websockets/disconnect-button.tsx",
+      "literals": 1,
+      "sourceKeys": [
+        "Disconnect"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/websockets/event-log-view.tsx",
+      "literals": 3,
+      "sourceKeys": [
+        "Cancel Request",
+        "Data",
+        "Time"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/websockets/realtime-response-pane.tsx",
+      "literals": 8,
+      "sourceKeys": [
+        "Close",
+        "Console",
+        "Cookies",
+        "Error",
+        "Headers",
+        "Message",
+        "Open",
+        "Search"
+      ]
+    },
+    {
+      "path": "packages/insomnia/src/ui/components/websockets/websocket-request-pane.tsx",
+      "literals": 7,
+      "sourceKeys": [
+        "Auth",
+        "Body",
+        "Bulk Edit",
+        "Headers",
+        "Import from URL",
+        "Params",
+        "Send"
+      ]
+    }
+  ],
+  "remainingLiteralCandidates": [
+    "A GraphQL schema provides a root type for each kind of operation.",
+    "A dedicated CSM that understands you, support access, and optional pro services to start quickly",
+    "A new page should have opened in your default web browser to authenticate with Azure.",
+    "AI",
+    "AI Provider API keys",
+    "AI Settings",
+    "API Collection Tabs",
+    "API Collection is required",
+    "API Collections now combine Documents and Collections, with OpenAPI Specs accessible directly, while legacy Unit Tests are hidden by default.",
+    "API Token",
+    "API description text",
+    "API documentation URL",
+    "APIs locally, on Git or in the Cloud.",
+    "AWS Secret Token",
+    "Access Key ID",
+    "Access Key Id",
+    "Access Key Id:",
+    "Ack",
+    "Action",
+    "Action Section",
+    "Actions",
+    "Actions Section",
+    "Activate",
+    "Activate an LLM",
+    "Active",
+    "Add Access Token",
+    "Add CA Certificate",
+    "Add Client Certificate",
+    "Add Cookie",
+    "Add Credential",
+    "Add Directory",
+    "Add Files",
+    "Add Git credential",
+    "Add Keyboard Shortcut",
+    "Add Project Environment",
+    "Add Proto File",
+    "Add Request",
+    "Add Root",
+    "Add Row",
+    "Add a custom path to direct Insomnia to a different plugin directory.",
+    "Add a new",
+    "Add certificate",
+    "Add certificate file",
+    "Add client certificate",
+    "Add event",
+    "Add files to include as additional context for the LLM when generating your mock server. These files can contain example data, schemas, or other relevant information.",
+    "Add key file",
+    "Add keyboard shortcut",
+    "Add request to current collection",
+    "Add request to other collection",
+    "Add seats",
+    "Add test cases in scripts and run them to see results.",
+    "Add to",
+    "Additional Claims",
+    "Additional Information",
+    "Additional Plugin Path",
+    "Advanced Options",
+    "Advanced Section",
+    "Algorithm",
+    "All",
+    "All MCP clients in this project",
+    "All disabled items will be lost.",
+    "Allow pre-request and after-response script to access vault secrets.",
+    "Almost ready! Just set your proxy host for each control plane",
+    "Already connected to:",
+    "Already up-to-date with Konnect.",
+    "Always Show",
+    "And",
+    "Answer by AI",
+    "App Name:",
+    "AppRole",
+    "Approve",
+    "Are there any gRPC settings you expect to see? Create a",
+    "Are you sure to continue?",
+    "Arg",
+    "Args",
+    "Arguments",
+    "Audience",
+    "Audience (aud)",
+    "Auth Id",
+    "Auth Key",
+    "Auth Method:",
+    "Authenticate",
+    "Authentication Token",
+    "Authentication Token:",
+    "Author",
+    "Author Email",
+    "Author Name",
+    "Authorized as",
+    "Authorizing Insomnia",
+    "Auto Generate",
+    "Auto-format request body whitespace",
+    "Auto-generated Mock Servers",
+    "Auto-sync your gateway service routes",
+    "Automatic Fetch",
+    "Automatically download and install updates",
+    "Automatically encode special characters at send time (does not apply to query parameters editor)",
+    "Automatically encode special characters in URL",
+    "Automatically generate a mock server from an OpenAPI spec.",
+    "Automatically launch the browser for OAuth authorization.",
+    "Awesome API",
+    "Back",
+    "Back to Project",
+    "Back to manual commits",
+    "Base Branch",
+    "Basic",
+    "Basic Section",
+    "Beautify",
+    "Best practice for both new and existing users continues to be testing via",
+    "Blocked Properties",
+    "Blocked Roots",
+    "Branch name",
+    "Branches list",
+    "Browse Plugin Hub",
+    "Buy Now",
+    "By migrating these",
+    "By signing up or using Insomnia, you agree to the",
+    "CONNECTED",
+    "Callback URL",
+    "Can also use single line data-uri format (e.g. obtained from asap-cli export-as-data-uri command), useful for saving as environment data",
+    "Can be used to manage file changes with git.",
+    "Cancel all",
+    "Cancel merge",
+    "Cancel sync",
+    "Capabilities:",
+    "Caused by the following field",
+    "Certificate",
+    "Certification",
+    "Change",
+    "Change Authentication type",
+    "Change Body Type",
+    "Change Data File",
+    "Changelog",
+    "Changes",
+    "Changes may include modifications you made and automatic updates like timestamps",
+    "Check your browser to login",
+    "Checkout",
+    "Choose File",
+    "Choose Files",
+    "Choose Folder",
+    "Choose Mock Route",
+    "Choose Mock Server",
+    "Choose a mock body to return as a response",
+    "Choose version",
+    "Choose which Konnect data to keep",
+    "Claude",
+    "Clear All Responses",
+    "Clear History",
+    "Clear custom ruleset and use default OAS ruleset",
+    "Clear filter",
+    "Click again to confirm",
+    "Click to Add",
+    "Click to Edit",
+    "Click to edit",
+    "Click to fetch this file",
+    "Click to input vault key",
+    "Click to upload",
+    "Client Certificates",
+    "Client Id",
+    "Client Id:",
+    "Client Secret:",
+    "Close Tab",
+    "Cloud Mock",
+    "Cloud Secret Config",
+    "Cloud Sync project",
+    "Code Challenge Method",
+    "Collaboration with Cloud Sync now available",
+    "Collapse all",
+    "Color:",
+    "Command palette dialog",
+    "Commands",
+    "Commit and pull",
+    "Commit changes",
+    "Completed",
+    "Config File Path:",
+    "Configure",
+    "Configure Roots",
+    "Configure and activate an LLM to enable this feature",
+    "Configure on GitHub",
+    "Configure the App",
+    "Conflicted changes",
+    "Connect a Konnect personal access token from the sidebar to get started.",
+    "Connected to",
+    "Connecting...",
+    "Connection Info",
+    "Connection has expired.",
+    "Consumer Key",
+    "Consumer Secret",
+    "Contact Support",
+    "Contact sales",
+    "Content",
+    "Content-Type",
+    "Continue with Email",
+    "Continue with GitHub",
+    "Continue with Google",
+    "Continue with SSO",
+    "Control Planes",
+    "Convert to New Format",
+    "Converting to Cloud Sync project",
+    "Converting to Local Vault project",
+    "Cookie Jar",
+    "Cookie Jars",
+    "Cookie modify tabs",
+    "Cookie search query",
+    "Cookies Modal",
+    "Cookies list",
+    "Copied",
+    "Copy Command",
+    "Copy Description",
+    "Copy Error Logs",
+    "Copy Vault Key",
+    "Copy cd command for repository path",
+    "Copy command",
+    "Copy error logs to clipboard",
+    "Copy full list",
+    "Copy raw response",
+    "Copy shell command",
+    "Copy this command to run your collection in the terminal",
+    "Count",
+    "Create Cloud Credential",
+    "Create Git Credential",
+    "Create Run Button",
+    "Create a new",
+    "Create a new project to get started",
+    "Create a new request",
+    "Create an empty mock server.",
+    "Create an organization",
+    "Create cloud service credential actions",
+    "Create git credential actions",
+    "Create in collection",
+    "Create in project actions",
+    "Create mock servers from your API definition or with natural language",
+    "Create multiple API collections, MCP clients, manage projects, and collaborate with your team.",
+    "Creating",
+    "Credential",
+    "Credential File",
+    "Credential File Path:",
+    "Credential Name:",
+    "Credential Type:",
+    "Credential name",
+    "Current",
+    "Current Changes",
+    "Custom",
+    "Custom Method",
+    "Custom Ruleset",
+    "Custom npm registry URL for plugin installation",
+    "DESCRIPTION",
+    "Dashboard Sort Dropdown",
+    "Data Preview",
+    "Data Preview Table",
+    "Date",
+    "Deactivate",
+    "Decline",
+    "Delay (ms)",
+    "Delete All",
+    "Delete Current Response",
+    "Delete Directory",
+    "Delete Permanently",
+    "Delete Proto File",
+    "Delete Workspace",
+    "Delete all",
+    "Delete cookie",
+    "Delete file",
+    "Delete folder",
+    "Delete item",
+    "Delete member button",
+    "Delete permanently",
+    "Delete section",
+    "Delete stored credentials",
+    "Delete unsynced file",
+    "Delete unsynced file permanently",
+    "Deleted",
+    "Deny Access",
+    "Describe your API...",
+    "Description:",
+    "Determines whether the system should cache the credentials or read them from the local file every time.",
+    "Diff view",
+    "Disable JS in HTML preview",
+    "Disable Row",
+    "Disable SSL Validation",
+    "Disable item",
+    "Disable links in response viewer",
+    "Disable rendering of environment variables and tags for the request body",
+    "Disabling this will improve the performance while logs are not saved.",
+    "Discard Changes",
+    "Discard all changes",
+    "Discard and pull",
+    "Discard change",
+    "Disconnect Dropdown",
+    "Disconnect Kong Konnect?",
+    "Disconnect all requests",
+    "Disconnect git repository",
+    "Disconnect this request",
+    "Disconnecting will remove your Personal Access Token and delete related project data. This action cannot be undone. Are you sure?",
+    "Dismiss",
+    "Dismiss tutorial",
+    "Do not commit",
+    "Do not notify of new releases",
+    "Do you want set the",
+    "Do you want to install",
+    "Do you want to provide any additional files?",
+    "Do you wish to remove your local copy of the",
+    "Docs",
+    "Domain",
+    "Download After Send",
+    "Drag and Drop or",
+    "Duplicate / Move",
+    "Duplicate file",
+    "Duplicate key combination",
+    "Dynamic tabs",
+    "EVENTS",
+    "Edit Credential",
+    "Edit Environments",
+    "Edit Git credential",
+    "Edit JSON",
+    "Editor Font Size (px)",
+    "Editor Indent Size",
+    "Editor Syntax",
+    "Elicitation Form",
+    "Enable AI to Try",
+    "Enable Cloud Sync",
+    "Enable Credential Cache",
+    "Enable Key Map settings for one-line editors (e.g. headers, query parameters, urls, etc.)",
+    "Enable Row",
+    "Enable item",
+    "Enable proxy",
+    "Enable script sandbox",
+    "Enable vault in scripts",
+    "Enabling this will impact performance while responses are saved for other purposes.",
+    "Encoding List",
+    "Encoding Selector",
+    "Encrypted and synced securely to the cloud, ideal for out of the box collaboration.",
+    "Encrypted and synced securely to the cloud. Ideal for out of the box collaboration.",
+    "Enter Vault Key",
+    "Enter a Personal Access Token (PAT) to sync your Konnect control planes into Insomnia projects.",
+    "Enter a URL and connect to start receiving event stream data",
+    "Enter a URL and send to get a response",
+    "Enter a comma-separated list of hostnames that do not require a proxy. To include all subdomains of a domain, prefix it with a dot (e.g., .example.com).",
+    "Enter a comma-separated list of monospace fonts. If left empty, uses system defaults.",
+    "Enter emails, separated by comma...",
+    "Enter more emails...",
+    "Enter new PAT to replace existing",
+    "Enter project name",
+    "Enter the maximum size in kibibytes to show on the response timeline. Decrease the number for less detailed responses.",
+    "Enter the path of your service account key file which is generated in GCP console",
+    "Enter your OpenAPI specification here, or start creating requests",
+    "Enter your vault key to unlock all local secrets.",
+    "Environment Actions",
+    "Environment Actions menu",
+    "Environment Key Value Pair",
+    "Environment Variable",
+    "Error fetching Schema",
+    "Error syncing with Insomnia Cloud",
+    "Error while importing to Insomnia:",
+    "Error:",
+    "Event Name",
+    "Events",
+    "Events filter",
+    "Expand All/Collapse all",
+    "Expand all",
+    "Expired",
+    "Expires",
+    "Export HTTP debug",
+    "Export as HAR",
+    "Export prettified response",
+    "Export raw response",
+    "Export requests",
+    "Ext",
+    "External vault feature could not be enabled because the required module is missing.",
+    "Extra Options",
+    "Failed to Render Request",
+    "Failed to fetch control planes for the following regions:",
+    "Failed to load plugin",
+    "Failed to parse multipart response:",
+    "Failed to read response body from filesystem",
+    "Failed to render",
+    "Failed to render. Please report to",
+    "Failed to render:",
+    "Features",
+    "Fetch and checkout",
+    "Fetch deprecation values",
+    "Fetch unsynced workspace",
+    "Fetching...",
+    "Fields",
+    "File Encoding",
+    "File type",
+    "Files (",
+    "Files filter",
+    "Files to commit",
+    "Filter Help",
+    "Filter History",
+    "Filter history menu",
+    "Filter organizations",
+    "Filter organizations...",
+    "Filter response body",
+    "Filter responses by environment",
+    "Filter test results",
+    "Filter test results with name",
+    "Find a repository...",
+    "Fix the syntax in your connected git repository. The default OAS ruleset is used until then.",
+    "Folder Settings",
+    "Folder name",
+    "Folder where the file will be saved in the repository:",
+    "Forget Vault Key?",
+    "Found Fields",
+    "Found Types",
+    "Free Enterprise Trial",
+    "Friendly",
+    "Full host access",
+    "Function to Perform",
+    "GET",
+    "Gemini",
+    "Generate Client Code",
+    "Generate Commits",
+    "Generate an encryption key to save secrets in private environment. This ensures all secrets are securely stored and encrypted locally.",
+    "Generate menu",
+    "Generating code snippet...",
+    "Generating commits...",
+    "Get right into testing your gateway configuration in Insomnia with the new Konnect platform integration.",
+    "Get started for free",
+    "Git Access Token",
+    "Git Credentials",
+    "Git Sync Feature Disabled Banner",
+    "Git Sync Menu",
+    "Git credentials",
+    "Git credentials list",
+    "Git is not connected",
+    "Git repository information",
+    "GitHub and GitLab provider tokens",
+    "Go Back",
+    "Go to mock",
+    "Got It",
+    "Grant Access",
+    "Grant STDIO access for this MCP Client?",
+    "Grant access level",
+    "GraphQL toolbar",
+    "Grpc request pane tabs",
+    "Grpc tabbed messages tabs",
+    "HAR",
+    "HTTP Method",
+    "Hash Body",
+    "HashiCorp Vault server address or Vault Dedicated cluster URL",
+    "Having trouble and need to contact us, or back up to an old version? See our",
+    "Having trouble logging in?",
+    "Header Prefix",
+    "Headers for",
+    "Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests,",
+    "Here are some additional things that may help.",
+    "Hide",
+    "Hide PAT",
+    "Hide Value",
+    "Hide details",
+    "Hide docs preview",
+    "HostOnly",
+    "Hours Section",
+    "How do you want to create your mock server?",
+    "How do you want to delete it?",
+    "How do you want to host your mock server?",
+    "How to fix",
+    "HttpOnly",
+    "IO",
+    "IP",
+    "Id:",
+    "Identity Token",
+    "If checked, clears the OAuth session every time Insomnia is relaunched.",
+    "If checked, enables a global network proxy on all requests sent through Insomnia. This proxy supports Basic Auth, digest, and NTLM authentication.",
+    "If checked, only show responses sent under the active environment.",
+    "If checked, validate SSL certificates for API requests. This does not affect SSL certificate validation during authentication.",
+    "If checked, validates SSL certificates during authentication flows.",
+    "If disabled, receive a notification in-app when a new update is available.",
+    "If you were not redirected back here after creating an account, please copy and paste the following URL into your browser to complete login.",
+    "If you were not redirected, please copy and paste the following URL into your browser.",
+    "If your browser does not open the Insomnia app automatically you can manually add the generated token here.",
+    "If your browser does not open the Insomnia app automatically you can manually paste the redirect URL in Azure to here.",
+    "Import failed:",
+    "Import from",
+    "Import projects from:",
+    "Importing",
+    "In order to continue with this update, we need to adjust your local projects. This is required to enable managing Insomnia changes using git on the CLI.",
+    "Incoming",
+    "Incoming Changes",
+    "Indicate what resource server to access",
+    "Indicate what resource to access",
+    "Indicates the type of credentials returned in the response",
+    "Input AWS config file path, leave blank for default location",
+    "Input AWS credential file path, leave blank for default location",
+    "Input Name",
+    "Input Secret",
+    "Input Service Account Key Path",
+    "Input Type",
+    "Input Type Section",
+    "Input Value",
+    "Insomnia",
+    "Insomnia Date Picker",
+    "Insomnia Sync Menu",
+    "Insomnia Tabs",
+    "Insomnia files",
+    "Insomnia files in repo",
+    "Insomnia git project",
+    "Insomnia metadata",
+    "Insomnia tabs",
+    "Installing...",
+    "Invalid Secret Identifier, please check and input again.",
+    "Invalid input",
+    "Invalid ruleset details",
+    "Invalid schema",
+    "Invalid server address, please check and input again",
+    "Invalid test result format",
+    "Invitation list",
+    "Invite",
+    "Invite collaborators",
+    "Invite sent",
+    "Issuer (iss)",
+    "Items with same name will be lost except the last one.",
+    "Iteration",
+    "Iterations",
+    "JSON",
+    "JSONPath",
+    "JSONPath matched no messages",
+    "Join an organization",
+    "Just Now",
+    "Just curious - why do you want to invite someone?",
+    "Just to show them something",
+    "KV Secret Engine Version:",
+    "Keep logs after run",
+    "Keep this organization",
+    "Keep your local custom changes (never pushed to Konnect)",
+    "Key ID (kid)",
+    "Key-value pairs",
+    "Key-value pairs readonly",
+    "Keyboard",
+    "Kong Konnect settings",
+    "Konnect",
+    "Konnect control planes have moved",
+    "Konnect control planes moved onboarding",
+    "Konnect data is now stored once per account in the",
+    "Konnect environment onboarding",
+    "Konnect settings",
+    "LISTEN",
+    "LLM URL",
+    "Launch browser automatically",
+    "Learn more about",
+    "Leave empty to use the default npm registry (https://registry.npmjs.org/)",
+    "Less Than Two Hours Ago",
+    "Let AI create commits and comments from your staged changes.",
+    "License:",
+    "Live Preview",
+    "Ln",
+    "Load Models",
+    "Load schema from JSON",
+    "Loading emails...",
+    "Loading projects...",
+    "Local Branches",
+    "Local GraphQL Schema",
+    "Local GraphQL Schema Section",
+    "Local LLM",
+    "Local folder",
+    "Lock Vault",
+    "Log Out",
+    "Log in",
+    "Log out",
+    "Login",
+    "Login with Github",
+    "Login with Github or GitLab, or manually add access tokens in",
+    "Login with Gitlab",
+    "Logout",
+    "MB cannot be shown",
+    "MB hidden for performance reasons",
+    "MCP",
+    "MCP Server URL",
+    "Made with",
+    "Manage",
+    "Manage API collection environments",
+    "Manage Certificates",
+    "Manage Cookies",
+    "Manage Insomnia changes using git CLI actions",
+    "Manage changes on the Git CLI",
+    "Manage collaborators",
+    "Manage credentials",
+    "Manually paste the authentication url if you are not redirected",
+    "Markdown",
+    "Markdown editor tabs",
+    "Mask Rules",
+    "Max timeline chunk size (KiB)",
+    "Maximum Redirects",
+    "Mcp Actions",
+    "Mcp Actions Menu",
+    "Mcp Server Capabilities",
+    "Member",
+    "Member search query",
+    "Menu",
+    "Merge Result",
+    "Merge changes",
+    "Merge in progress",
+    "Meta section",
+    "Migrate",
+    "Migrate legacy files?",
+    "Migration Guide",
+    "Minutes Section",
+    "Missing someone?",
+    "Mock",
+    "Mock Body",
+    "Mock Headers",
+    "Mock Requests",
+    "Mock Route",
+    "Mock Route Action Menu",
+    "Mock Route Actions",
+    "Mock Routes",
+    "Mock Status",
+    "Mock response",
+    "Mock response config",
+    "Mock server type",
+    "Modal",
+    "Modal Close Button",
+    "Modal Submit",
+    "Model",
+    "Modified",
+    "Modified objects",
+    "Module",
+    "Modules:",
+    "More information",
+    "Move repository to another folder",
+    "Move to another folder (applies immediately)",
+    "Move/Copy to Workspace",
+    "My Profile",
+    "My profile",
+    "My project",
+    "NEW",
+    "Name is required",
+    "Namespace",
+    "Namespace:",
+    "Need more plugins?",
+    "Need to add another credential?",
+    "Need to import many projects at once? Reach out to",
+    "Network Activity",
+    "Network Proxy",
+    "Nevermind",
+    "New HTTP Request",
+    "New Mock Route",
+    "New Plugin",
+    "New Project",
+    "New Project Name:",
+    "New project will be created as Local. You can change the type later in project settings.",
+    "Next",
+    "No Project Environment",
+    "No additional Git credentials configured",
+    "No body returned for response",
+    "No cloud service provider credentials found",
+    "No control planes synced yet",
+    "No cookies found.",
+    "No credit card required to explore the benefits:",
+    "No file selected",
+    "No folder selected",
+    "No matching requests/tests to display",
+    "No members or teams",
+    "No notifications found",
+    "No proto files exist for this workspace",
+    "No proxy",
+    "No response found",
+    "No results found.",
+    "No results from this run",
+    "No test result found",
+    "No test was detected, add test cases in scripts to see results.",
+    "No valid resources found",
+    "No, Thanks",
+    "Nonce",
+    "Not available when creating from a design document",
+    "Not available when creating with Auto Generate.",
+    "Not synced",
+    "Note: This change is backwards compatible, but we strongly recommend",
+    "Note: This update does NOT affect any ongoing work or pending changes, and only affects how your local Insomnia files are stored.",
+    "Note: Your data is safe and the update only takes seconds.",
+    "Notifications",
+    "Notify Roots",
+    "Now you can use traditional git actions on your CLI to manage changes to your Git Sync projects.",
+    "Nunjucks Templating",
+    "Objects",
+    "Older Than This Week",
+    "On-Premises",
+    "Only available for cloud projects",
+    "Only open folders from a source you trust.",
+    "Open In New Tab",
+    "Open in New Tab",
+    "Open in file system",
+    "Open project",
+    "OpenAI",
+    "OpenAPI",
+    "OpenAPI File",
+    "OpenAPI Spec",
+    "OpenAPI Specs",
+    "OpenAPI specification",
+    "Operations Dropdown",
+    "Optional bearer token",
+    "Optional staging label of the version of the secret to retrieve.",
+    "Optional token used for multi-factor authentication",
+    "Optional unique identifier of the version of the secret to retrieve.",
+    "Optional version of the secret to retrieve, by default as latest.",
+    "Optional version of the secret to retrieve, leave it blank to get latest version",
+    "Or quick start:",
+    "Or, start right away with limited capabilities",
+    "Organization Id:",
+    "Organization members",
+    "Organization to keep",
+    "Organization:",
+    "Organizations",
+    "Origin",
+    "Orphaned projects (",
+    "Other Section",
+    "Override Base Environment On Name Conflict",
+    "Override existing variables in the base environment if the same variable names are found during import.",
+    "Overwrite",
+    "PAT Credential",
+    "PDF response preview",
+    "PREVIEW",
+    "Parameter Builder",
+    "Parameter Overview",
+    "Parameter value",
+    "Parameters",
+    "Parse file",
+    "Parsing CSV...",
+    "Part Actions Dropdown",
+    "Password:",
+    "Paste Curl to import request",
+    "Paste curl request here",
+    "Path",
+    "Path parameters",
+    "Path to local files",
+    "Path to this project:",
+    "Paths",
+    "Pending",
+    "Permissions",
+    "Persist responses for a session",
+    "Personal Access Token",
+    "Pinned",
+    "Plain text",
+    "Please copy the full redirect URL showed in the redirect page and paste it below after you complete the authorization in your browser.",
+    "Please disconnect or delete these projects before removing this credential.",
+    "Please note that this will not include personal data or any sensitive information, such as request data, names, etc.",
+    "Please save or download the vault key which will be needed when you login again.",
+    "Please select a folder that contains all the projects that need to be imported. Each project will be named after its source file.",
+    "Plugin Hub.",
+    "Plugin Name",
+    "Plugin installation trusted certificates file",
+    "Plugin name",
+    "Plugin name must start with insomnia-plugin-",
+    "Plugins (",
+    "Postman",
+    "Pre/post-request scripts run inside a security sandbox that restricts access to dangerous APIs.",
+    "Preferred HTTP version",
+    "Prefix",
+    "Press desired key combination and then press ENTER.",
+    "Prettify GraphQL",
+    "Preview Data",
+    "Preview Mode",
+    "Preview Mode Dropdown",
+    "Preview Mode Section",
+    "Previous",
+    "Privacy Policy",
+    "Private Key",
+    "Proceed",
+    "Profile Name:",
+    "Profile name of the configuration to use in the config file",
+    "Project Actions Menu",
+    "Project Environments",
+    "Project Id:",
+    "Project Storage Restriction Banner",
+    "Project Type Radio",
+    "Project is required",
+    "Project type",
+    "Projects here mirror your Konnect control planes.",
+    "Prompt",
+    "Provide a URL to API documentation",
+    "Provide a description of the API endpoints",
+    "Provider",
+    "Proxy for HTTP",
+    "Proxy for HTTPS",
+    "Pull Required",
+    "Pull to see if there is a newer version on the Cloud, or create a new MCP Client.",
+    "Pulling:",
+    "Push action is not allowed for branches on non-origin remotes",
+    "Push failed",
+    "Push to origin",
+    "Query Variables",
+    "Query parameters",
+    "Quick actions",
+    "Quick switcher",
+    "Raw Cookie String",
+    "Raw Edit",
+    "Re-authenticate",
+    "Re-point to origin",
+    "Re-upload Proto File",
+    "Read",
+    "Really delete",
+    "Realm",
+    "Reauthorize",
+    "Rebuild path dot sequences",
+    "Recompile ruleset, including re-fetching any referenced remote entries.",
+    "Redirect URL",
+    "Reflection server API key",
+    "Reflection server URL",
+    "Refresh Schema",
+    "Refresh ruleset from remote sources",
+    "Refreshing...",
+    "Region",
+    "Region:",
+    "Regular Edit",
+    "Reject",
+    "Remote Branches",
+    "Remote Branches list",
+    "Remote GraphQL Schema",
+    "Remote GraphQL Schema Section",
+    "Remote connection is unavailable. Ensure your",
+    "Remove Data",
+    "Remove Local Copy",
+    "Remove collections or environments tied to control planes, services, or routes deleted in Konnect",
+    "Remove existing",
+    "Remove existing section",
+    "Removing Git Sync connection",
+    "Render Failure:",
+    "Render as",
+    "Render as section",
+    "Render error",
+    "Renew",
+    "Repeat on Interval",
+    "Repo URL",
+    "Repositories",
+    "Repository",
+    "Repository Search",
+    "Repository information could not be retrieved. Please",
+    "Request / Response",
+    "Request API Collection",
+    "Request Actions Menu",
+    "Request Group Actions Menu",
+    "Request Options",
+    "Request Order",
+    "Request bodies",
+    "Request group tabs",
+    "Request pane tabs",
+    "Request scripts tabs",
+    "Res",
+    "Resend",
+    "Reset Cache",
+    "Reset File",
+    "Reset Vault Key",
+    "Reset all",
+    "Reset keyboard shortcuts",
+    "Reset keyboard shortcuts section",
+    "Resource",
+    "Response Filtering Help",
+    "Response Timeline",
+    "Response Type",
+    "Response history dropdown",
+    "Response history limit",
+    "Response over",
+    "Response sampling for MCP clients",
+    "Responses",
+    "Responses over",
+    "Restore",
+    "Retry Update",
+    "Reveal",
+    "Reveal Plugins Folder",
+    "Revoke",
+    "Role Id",
+    "Role Id:",
+    "Root Types",
+    "Roots",
+    "Run Options",
+    "Run results will appear here",
+    "Run this plugin in the main process with full host access instead of the sandbox.",
+    "Run via CLI",
+    "Runs locally or on your infrastructure, ideal for private usage and lower latency.",
+    "Runs on Insomnia cloud, ideal for collaboration.",
+    "SSL Certificate Validation",
+    "SSO Credential",
+    "SSO, SCIM, RBAC and Teams let you control who can access what",
+    "Sampling Form",
+    "Sandbox all plugin code (experimental)",
+    "Save Credential",
+    "Save Response To File",
+    "Save To File",
+    "Save as File",
+    "Save encrypted vault key locally",
+    "Scanning remote repo for Insomnia files...",
+    "Schema",
+    "Schema Dropdown",
+    "Schema fetched",
+    "Schema not fetched yet",
+    "Schemas",
+    "Scope filter",
+    "Script Sandbox",
+    "Scripting",
+    "Search and switch between requests, collections and documents",
+    "Search collaborators",
+    "Search cookies",
+    "Search the docs...",
+    "Search..",
+    "Secret Access Key",
+    "Secret Access Key:",
+    "Secret Cache Duration (min)",
+    "Secret Id",
+    "Secret Id:",
+    "Secret Identifier",
+    "Secret Key",
+    "Secret Key:",
+    "Secret Mount Path:",
+    "Secret Name",
+    "Secret Name Or ARN",
+    "Secret Path:",
+    "Secret Type",
+    "Section Name:",
+    "Section name of the credential in the file",
+    "Secure",
+    "See all features",
+    "Select API Collection",
+    "Select API Collection:",
+    "Select Data File",
+    "Select Method",
+    "Select Part Dropdown",
+    "Select Project",
+    "Select Project:",
+    "Select Proto File",
+    "Select a Project Environment",
+    "Select a client",
+    "Select a file to compare changes",
+    "Select a mode",
+    "Select a model",
+    "Select a project",
+    "Select a project to get started",
+    "Select a role for the user",
+    "Select a target",
+    "Select an MCP server primitive from the list to start.",
+    "Select an auth type from above",
+    "Select an item",
+    "Select an item to compare",
+    "Select an organization",
+    "Select credentials",
+    "Select from created mock routes to overwrite with this response",
+    "Select from created mock servers to add the route to",
+    "Select gRPC method",
+    "Select requests and press",
+    "Select role",
+    "Select sort order",
+    "Select source for mock server generation",
+    "Select type Dropdown",
+    "Select value type",
+    "Selected File",
+    "Self Hosted Mock",
+    "Self-hosted Mock",
+    "Self-hosted mock server URL",
+    "Send After Delay",
+    "Send And Download",
+    "Send Anonymous Usage Statistics",
+    "Send Max Tokens parameter",
+    "Send Namespace Via Header",
+    "Send Temperature parameter",
+    "Send Top P parameter",
+    "Send cookies automatically",
+    "Server Address",
+    "Server Address:",
+    "Server Capability filter",
+    "Servers",
+    "Service",
+    "Service Account Key File Path:",
+    "Service Provider",
+    "Service Provider Credential List",
+    "Service account key path",
+    "Session Token",
+    "Session Token:",
+    "Set branch upstream to origin",
+    "Set window for FHD Screenshot",
+    "Setup Git Credentials",
+    "Setup Network Proxy",
+    "Should your mock server use dynamic responses?",
+    "Show",
+    "Show Anyway",
+    "Show Documentation",
+    "Show PAT",
+    "Show URL",
+    "Show Value",
+    "Show details",
+    "Show docs preview",
+    "Show login alternatives",
+    "Show/hide hidden browser window",
+    "Show/hide plugin browser window",
+    "SideBar Workspace Actions",
+    "Sidebar Shortcut Create Menu",
+    "Sidebar focus mode onboarding",
+    "Sign Up to create",
+    "Sign up for free",
+    "Signature Method",
+    "Skip",
+    "Skip importing projects that already exist",
+    "Skip rendering of request body",
+    "Skipped",
+    "Smart Commits",
+    "Smart commits",
+    "Socket.IO Handshake Path",
+    "SocketIO Events",
+    "SocketIO request pane tabs",
+    "Software Updates",
+    "Sort order",
+    "Spec format",
+    "Spec format menu",
+    "Specify Origin header when CORS is required for oauth endpoints",
+    "Specify a URL to a public or self-hosted LLM endpoint.",
+    "Stack trace",
+    "Stage All Changes",
+    "Stage change",
+    "Stage this file",
+    "Star",
+    "Start Free Trial",
+    "Start from Scratch",
+    "Start from a sample",
+    "Start from a sample dropdown",
+    "Start with an example",
+    "Starting...",
+    "State",
+    "Static Value",
+    "Status Code",
+    "Status Text",
+    "Stop Auto-Download",
+    "Stop run if an error occurs",
+    "Stop/start hidden browser window",
+    "Stop/start plugin browser window",
+    "Store cookies automatically",
+    "Store in Local Vault",
+    "Stored locally only, with no cloud. Ideal when collaboration is not needed.",
+    "Stream",
+    "Stream summary JSONPath",
+    "Stream summary render mode dropdown",
+    "Subject (sub)",
+    "Submit",
+    "Subscribe",
+    "Suggest comments and grouping for Git Sync project commits",
+    "Summary",
+    "Supported Formats",
+    "Supported Formats: (",
+    "Swagger",
+    "Switch Requests",
+    "Switch between your local projects and integrated resources from here",
+    "Sync",
+    "Sync Konnect",
+    "Sync and collaborate with Git",
+    "Sync complete",
+    "Sync complete, with warnings",
+    "Sync error: click to retry",
+    "Sync failed",
+    "Sync from Konnect to pull them in.",
+    "Sync the latest changes from your Konnect organization into Insomnia. This will:",
+    "Synced from Konnect",
+    "Syncing",
+    "Syncing...",
+    "System Type:",
+    "Tab Plus",
+    "Tab Tag",
+    "Table Edit",
+    "Table View",
+    "Take all current changes",
+    "Take all incoming changes",
+    "Target namespace, admin as default top-level namespace for Vault Dedicated clusters",
+    "Team",
+    "Templating Documentation",
+    "Temporary Credential",
+    "Terms of Service",
+    "Test Suite",
+    "Test Suites",
+    "Text (Multi-line)",
+    "Text Editor Key Map",
+    "Text editor font",
+    "Text mode",
+    "The ARN or name of the secret to retrieve. To retrieve a secret from another account, you must use an ARN.",
+    "The LLM set to active will be used with Insomnia AI features",
+    "The callback URL is provided by Insomnia and cannot be modified when authorizing via the default browser.",
+    "The custom ruleset in this project contains invalid content:",
+    "The following Git Sync projects were disconnected from remote as a result of the file system update:",
+    "The organization owner mandates that projects must be created and stored using",
+    "The path of the secret to read",
+    "The path to the shared config file, leave blank for default location generated by AWS CLI",
+    "The path to the shared credentials file, leave blank for default location generated by AWS CLI",
+    "The path where the secrets engine is mounted. It is displayed as the engine name in the UI.",
+    "The project will be deleted everywhere. You cannot undo this action.",
+    "The project will still exist on the Cloud.",
+    "The request failed due to an unhandled error:",
+    "The runner failed due to an unhandled error:",
+    "The secret identifier is the URI of the secret in Azure Key Vault. You can get it from your Azure portal.",
+    "The secret key of the retrived key-value secrets.",
+    "The vault key will be needed when you login again.",
+    "There are no staged changes to commit. Would you like to stage all your changes and commit them directly?",
+    "There are no workspaces to export in the",
+    "There are pending changes to commit.",
+    "These are secret environment variables. However, the required vault key has not been provided yet.",
+    "These environment variables have been defined, but have not been assigned a value within the currently active environment:",
+    "These files are not associated with any project in your account. You can move them to a project in your current organization below.",
+    "These projects are not associated to your current logged-in account. You can move them to an organization below.",
+    "These projects will need to be reconnected to the git remote server to continue with push, pull, and fetch actions.",
+    "This",
+    "This JSONPath did not match any incoming message.",
+    "This MCP client only",
+    "This Week",
+    "This allows you to control what folders Insomnia (and scripts within Insomnia) can read/write to.",
+    "This branch tracks a non-origin remote which is currently unsupported in Insomnia",
+    "This can be whatever you want or need it to be. Insomnia will automatically detect a redirect in the client browser window and extract the code from the redirected URL.",
+    "This file has syntax errors:",
+    "This file includes changes to",
+    "This git credential is currently being used by the following projects:",
+    "This is a helpful message that describes the changes made in this commit.",
+    "This project contains",
+    "This section is now locked since the connection has already been established. To change these settings, please disconnect first.",
+    "This space has unpaid past invoices. Please ask the space owner to enter a new payment method to continue using Insomnia.",
+    "This will permanently delete",
+    "This will permanently delete the",
+    "This will remove all sensitive data, including",
+    "Timestamp",
+    "Title:",
+    "To continue pushing and pulling to the remote repo with this branch, complete the following steps using the git CLI:",
+    "To learn more about self hosting",
+    "To work together in Insomnia long-term",
+    "Today",
+    "Today Section",
+    "Toggle header",
+    "Toggle preview",
+    "Toggle sidebar",
+    "Token Key",
+    "Token Secret",
+    "Tool",
+    "Total",
+    "Transform this",
+    "Trial",
+    "Trust and give access to:",
+    "Try using the install button on",
+    "Type Selection",
+    "URL",
+    "Uncommitted changes",
+    "Unknown Request",
+    "Unknown error",
+    "Unlimited",
+    "Unlock all secrets by entering the vault key",
+    "Unlock full features",
+    "Unmanaged users",
+    "Unpushed changes",
+    "Unselect All",
+    "Unstage change",
+    "Unstage this file",
+    "Unsubscribe",
+    "Unsupported",
+    "Untracked",
+    "Untracked files (",
+    "Update Credential",
+    "Update Data",
+    "Update existing resources to match Konnect",
+    "Update payment method",
+    "Update successful with some warnings",
+    "Updating...",
+    "Upgrade",
+    "Upgrade Plan",
+    "Upgrade to Enterprise now for access to...",
+    "Upload",
+    "Upload Data",
+    "Upload a custom Spectral ruleset",
+    "Upload an OpenAPI specification (JSON or YAML)",
+    "Url",
+    "Url Preview",
+    "Use",
+    "Use OS color scheme",
+    "Use PKCE",
+    "Use QuickJS sandbox for scripts (proof of concept)",
+    "Use Random Seed",
+    "Use an LLM to generate sample data when working with an MCP server",
+    "Use default",
+    "Use dynamic responses in mock server",
+    "Use example OpenAPI Spec",
+    "Use global setting",
+    "Use local Scratch Pad",
+    "Use proxy for",
+    "Use proxy from preferences settings",
+    "Use the Buf Schema Registry API",
+    "User Governance",
+    "Uses system git config for identity",
+    "Using",
+    "Using default browser",
+    "Using ruleset from",
+    "Validate Payload",
+    "Validate certificates during authentication",
+    "Validating credential...",
+    "Values",
+    "Variable Dropdown",
+    "Variables to use in GraphQL query",
+    "Vault Dedicated",
+    "Vault Key Input",
+    "Vault Secrets",
+    "Verifier",
+    "Version",
+    "Version Id",
+    "Version Stage",
+    "Version:",
+    "View Credential",
+    "View Data",
+    "View Document",
+    "View Headers",
+    "View diff",
+    "View response timeline",
+    "WHO HAS ACCESS (",
+    "WS",
+    "WSDL",
+    "We found legacy Insomnia files in your repository",
+    "We have detected orphaned projects on your computer, click here to view them.",
+    "We hit an unexpected error while updating your file system. Please try again.",
+    "We suggest to save your response into an environment variable using after-response script.",
+    "Websocket Preview Mode Dropdown",
+    "Websocket request pane tabs",
+    "Week Section",
+    "Welcome to Insomnia,",
+    "Welcome to focus mode",
+    "Welcome to your organization!",
+    "What folders can Insomnia access?",
+    "What is your self-hosted mock server URL?",
+    "What should Insomnia generate your mock server from?",
+    "When",
+    "When All traffic is selected, Insomnia uses the configured proxy for all calls, including login, git, auto-updates, etc.",
+    "Where should we put your request?",
+    "Whether or not to send credentials as Basic Auth, or as plain text in the request body",
+    "Whether to send the namespace in the request header. Uncheck this to apply namespace via Secret Mount Path.",
+    "Will be calculated from hostname or host if not given",
+    "Workspace Actions Dropdown",
+    "Workspace Actions Menu",
+    "Workspace actions",
+    "World Class Support",
+    "Write",
+    "Write a description",
+    "XML",
+    "XPath",
+    "You",
+    "You are adding a new",
+    "You are offline. Connect to sync your data.",
+    "You are running at least one plug-in that may be impacted.",
+    "You are using the legacy Git integration in this project, learn more about converting to the new Git Sync capability.",
+    "You can add more models by placing GGUF files in",
+    "You can duplicate the following file to a project:",
+    "You can now browse Git Sync project files on your local file system and manage changes using your normal Git workflows.",
+    "You can retrieve a token from Anthropic",
+    "You can retrieve a token from Gemini",
+    "You can retrieve a token from OpenAI",
+    "You can review your usage here.",
+    "You cannot invite anyone as there are no available licenses.",
+    "You do not have write access to this repository",
+    "You have uncommitted changes. Commit or discard them to proceed with pull.",
+    "You may need to",
+    "You should be sure you understand and trust this STDIO server before using it.",
+    "You will lose any unsaved changes. Are you sure you want to cancel?",
+    "Your account does not have access to Konnect control planes.",
+    "Your local version of this MCP Client contains errors and cannot be opened.",
+    "Your netrc file will be used to authenticate this request",
+    "Your organization admin has disabled the use of AI features",
+    "Your requests have been automatically set with a",
+    "Your space has unpaid past invoices. Please enter a new payment method to continue using Insomnia.",
+    "a new commit will be created",
+    "agreement.",
+    "and",
+    "and all proto files contained within? All requests that use these proto files will stop working.",
+    "and select a different repository.",
+    "authenticated proxies",
+    "buf.build/connectrpc/eliza",
+    "by Kong",
+    "cURL",
+    "click here",
+    "cloud provider credentials (AWS, GCP, Azure, HashiCorp)",
+    "collection(s)",
+    "control plane(s),",
+    "curl --request GET --url http://insomnia.rest/",
+    "data folders",
+    "days left of free trial",
+    "docs.",
+    "does not contain an OpenAPI specification to export.",
+    "e.g. John Doe",
+    "e.g. fix/protected-branch",
+    "e.g. https://github.com/organization/repo-name.git",
+    "e.g. insomnia-plugin-example",
+    "environment variable for quick testing against different deployment stages. Enter it here before testing your gateway routes.",
+    "environment-kv-editor-type-selector",
+    "error",
+    "errors",
+    "event name",
+    "example-name",
+    "example.com",
+    "failed, this file will not be imported:",
+    "feature request",
+    "file",
+    "file to the root of your connected git repository",
+    "file(s) selected:",
+    "files",
+    "following these best practices",
+    "for JSONPath. Insomnia uses",
+    "for more info.",
+    "for the following routes:",
+    "from",
+    "from the Cloud for everyone. You cannot undo this action.",
+    "from your local storage. This will also disconnect authenticated Git repositories from your workspaces.",
+    "gRPC",
+    "header to",
+    "header which will override the default behavior. Remove or disable the new header to return to default behavior.",
+    "here",
+    "https://api.example.com",
+    "https://buf.build",
+    "https://example.com",
+    "https://mcp.example.com/mcp",
+    "https://registry.npmjs.org/",
+    "https://website.com/insomnia-import.json",
+    "httpsnippet",
+    "in your requests.",
+    "insomnia-plugin-",
+    "is valid, then try again.",
+    "item(s)",
+    "jsonpath-plus",
+    "loading",
+    "logout",
+    "managed",
+    "match",
+    "matches",
+    "more",
+    "more fields found... Click here to show",
+    "more types found... Click here to show",
+    "more.",
+    "ms)",
+    "mutation",
+    "n/a",
+    "name",
+    "name:",
+    "next page",
+    "no standard",
+    "npm Registry",
+    "npm Registry URL",
+    "of",
+    "of cookies was disabled at the time this request was made",
+    "on your local system have been updated. You can now explore them, use git from your favourite CLI, or modify them from any other tool of your choice.",
+    "or",
+    "or add a",
+    "or drag and drop",
+    "organization, but this computer has Konnect data under more than one organization. Pick the one you want to keep Insomnia connected to.",
+    "our GitHub Issues",
+    "our Github Issues",
+    "pending changes",
+    "pre request and post-response scripts",
+    "preferences",
+    "previous page",
+    "prior to sending",
+    "query",
+    "refresh",
+    "remote username for PAT",
+    "requests",
+    "resources to be imported from",
+    "response to a new mock route or overwrite an existing one.",
+    "rjsf-checkbox",
+    "rjsf-input",
+    "rjsf-select",
+    "send-now",
+    "setting.",
+    "subscription",
+    "the LLMs folder",
+    "to filter the response body. Here are some examples that you might use on a book store API:",
+    "to have multi-project import enabled.",
+    "to import",
+    "to manage installed ones.",
+    "to run",
+    "uri:",
+    "users",
+    "via proxy",
+    "warning",
+    "warnings",
+    "when returning to an earlier version of Insomnia.",
+    "which once synced will result in any users on older versions of Insomnia no longer being able to access these collections.",
+    "will be bundled into a single ruleset on upload.",
+    "with",
+    "wss://example.com/chat"
+  ]
+}

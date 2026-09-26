@@ -8,7 +8,10 @@ module.exports = {
   asarUnpack: ['node_modules/@getinsomnia/node-libcurl/**/*'],
   directories: { output: 'dist' },
   files: [{ from: './build', to: '.', filter: ['**/*', '!**/*.map'] }, './package.json'],
-  extraResources: [{ from: './src/vendor', to: './offline-plugins', filter: ['**/*'] }],
+  extraResources: [
+    { from: './src/vendor', to: './offline-reviewed-sources', filter: ['**/*'] },
+    { from: './offline-plugin-resources', to: './offline-plugins', filter: ['**/*', '**/.*'] },
+  ],
   extraMetadata: { main: 'entry.main.min.js' },
   protocols: [{ name: 'Insomnia Offline', role: 'Viewer', schemes: ['insomnia-offline'] }],
   publish: null,

@@ -1,8 +1,10 @@
+
 import type { Request } from 'insomnia-data';
 import React, { useEffect, useRef, useState } from 'react';
 import { OverlayContainer } from 'react-aria';
 
 import { CodeEditor } from '~/ui/components/.client/codemirror/code-editor';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { Modal, type ModalHandle, type ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
@@ -88,9 +90,7 @@ export const PasteCurlModal = ({
             {isValid ? `Detected ${req.method} request to ${req.url}` : 'Invalid input'}
           </div>
           <div>
-            <button className="btn" onClick={() => modalRef.current?.hide()}>
-              Cancel
-            </button>
+            <button className="btn" onClick={() => modalRef.current?.hide()}>{translateOfflineUi("Cancel")}</button>
             <button
               className="btn"
               onClick={() => {
@@ -98,9 +98,7 @@ export const PasteCurlModal = ({
                 modalRef.current?.hide();
               }}
               disabled={!isValid}
-            >
-              Import
-            </button>
+            >{translateOfflineUi("Import")}</button>
           </div>
         </ModalFooter>
       </Modal>

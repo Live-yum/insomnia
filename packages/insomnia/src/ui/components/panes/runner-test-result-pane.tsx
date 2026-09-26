@@ -1,9 +1,11 @@
+
 import type { BaseRunnerTestResult, RunnerResultPerRequest } from 'insomnia-data';
 import React, { type FC, useState } from 'react';
 import { Toolbar } from 'react-aria-components';
 
 import { useRootLoaderData } from '~/root';
 import { Hotkey } from '~/ui/components/hotkey';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { RequestResultCard } from './request-result-card';
 import { hasMatchingTestResults, type TargetTestType } from './request-test-result-pane';
@@ -103,15 +105,11 @@ export const RunnerTestResultPane: FC<Props> = ({ result }) => {
             <button
               className={targetTests === 'passed' ? activeFilterClassnames : filterClassnames}
               onClick={selectPassedTests}
-            >
-              Passed
-            </button>
+            >{translateOfflineUi("Passed")}</button>
             <button
               className={targetTests === 'failed' ? activeFilterClassnames : filterClassnames}
               onClick={selectFailedTests}
-            >
-              Failed
-            </button>
+            >{translateOfflineUi("Failed")}</button>
             <button
               className={targetTests === 'skipped' ? activeFilterClassnames : filterClassnames}
               onClick={selectSkippedTests}

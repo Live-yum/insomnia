@@ -33,7 +33,6 @@ import type {
 } from '~/common/plugins/types';
 import type { RenderedRequest } from '~/common/templating/types';
 import { bundleSpectralRuleset } from '~/main/bundle-spectral-ruleset';
-import { assertOfflineBrowserRequest, openOfflineExternal } from '~/main/offline-network';
 import { initializeWorkspaceBackendProject, syncNewWorkspaceIfNeeded } from '~/main/cloud-sync/initialization';
 import type { SyncBridgeAPI } from '~/main/cloud-sync/ipc';
 import {
@@ -46,6 +45,7 @@ import {
 import { convert } from '~/main/importers/convert';
 import { getCurrentConfig, type LLMConfigServiceAPI } from '~/main/llm-config-service';
 import { multipartBufferToArray, type Part } from '~/main/multipart-buffer-to-array';
+import { assertOfflineBrowserRequest, openOfflineExternal } from '~/main/offline-network';
 import { insecureReadFile, insecureReadFileWithEncoding, isPathAllowed, secureReadFile } from '~/main/secure-read-file';
 import {
   deleteCompiledRuleset,
@@ -59,8 +59,9 @@ import type { HiddenBrowserWindowBridgeAPI } from '../../entry.hidden-window';
 import { getRuntime } from '../../runtimes';
 import type { AnalyticsEvent } from '../analytics';
 import { setCurrentOrganizationId, trackAnalyticsEvent, trackPageView } from '../analytics';
+import type {
+  authorizeUserInDefaultBrowser} from '../authorize-user-in-default-browser';
 import {
-  authorizeUserInDefaultBrowser,
   cancelAuthorizationInDefaultBrowser,
   onDefaultBrowserOAuthRedirect,
 } from '../authorize-user-in-default-browser';

@@ -2,6 +2,8 @@ import type { CommandSearchResult } from 'insomnia-data';
 import { models, services } from 'insomnia-data';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { OFFLINE_BUILD, OFFLINE_ORGANIZATION } from '~/common/offline';
+
 interface UseCommandSearchParams {
   accountId: string;
   organizationId: string;
@@ -49,7 +51,7 @@ export function useCommandSearch({
       );
       // The Konnect organization is local-only so it is never in the cached list, and search scopes
       // projects by organization id — without it Konnect projects are unreachable.
-      const allOrganizations = [
+      const allOrganizations = OFFLINE_BUILD ? [OFFLINE_ORGANIZATION] : [
         ...cachedOrganizations,
         {
           id: models.organization.getKonnectOrganizationId(accountId),

@@ -1,8 +1,10 @@
+
 import type { AuthTypeOAuth2, OAuth2ResponseType, OAuth2Token, RequestAuthentication } from 'insomnia-data';
 import { services } from 'insomnia-data';
 import React, { type ChangeEvent, type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { clearOAuthWindowSessionId } from '~/ui/spawn-oauth-window';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import {
   getOauthRedirectUrl,
@@ -104,8 +106,8 @@ const credentialsInBodyOptions = [
 ];
 
 const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth2' }>) => {
-  const clientId = <AuthInputRow label="Client ID" property="clientId" key="clientId" />;
-  const clientSecret = <AuthInputRow label="Client Secret" property="clientSecret" key="clientSecret" mask />;
+  const clientId = <AuthInputRow label={translateOfflineUi("Client ID")} property="clientId" key="clientId" />;
+  const clientSecret = <AuthInputRow label={translateOfflineUi("Client Secret")} property="clientSecret" key="clientSecret" mask />;
   const usePkce = (
     <AuthToggleRow label="Use PKCE" property="usePkce" key="usePkce" onTitle="Disable PKCE" offTitle="Enable PKCE" />
   );
@@ -120,7 +122,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   );
   const authorizationUrl = (
     <AuthInputRow
-      label="Authorization URL"
+      label={translateOfflineUi("Authorization URL")}
       property="authorizationUrl"
       key="authorizationUrl"
       getAutocompleteConstants={getAuthorizationUrls}
@@ -128,7 +130,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   );
   const accessTokenUrl = (
     <AuthInputRow
-      label="Access Token URL"
+      label={translateOfflineUi("Access Token URL")}
       property="accessTokenUrl"
       key="accessTokenUrl"
       getAutocompleteConstants={getAccessTokenUrls}
@@ -178,9 +180,9 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
     />
   );
   const state = <AuthInputRow label="State" property="state" key="state" />;
-  const scope = <AuthInputRow label="Scope" property="scope" key="scope" />;
-  const username = <AuthInputRow label="Username" property="username" key="username" />;
-  const password = <AuthInputRow label="Password" property="password" key="password" mask />;
+  const scope = <AuthInputRow label={translateOfflineUi("Scope")} property="scope" key="scope" />;
+  const username = <AuthInputRow label={translateOfflineUi("Username")} property="username" key="username" />;
+  const password = <AuthInputRow label={translateOfflineUi("Password")} property="password" key="password" mask />;
   const tokenPrefix = (
     <AuthInputRow
       label="Header Prefix"
@@ -214,7 +216,7 @@ const getFields = (authentication: Extract<RequestAuthentication, { type: 'oauth
   );
   const credentialsInBody = (
     <AuthSelectRow
-      label="Credentials"
+      label={translateOfflineUi("Credentials")}
       property="credentialsInBody"
       key="credentialsInBody"
       options={credentialsInBodyOptions}
@@ -401,9 +403,9 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
     return (
       <>
         <AuthTableBody>
-          <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+          <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert disabled={disabled} />
           <AuthSelectRow
-            label="Grant Type"
+            label={translateOfflineUi("Grant Type")}
             property="grantType"
             disabled={disabled}
             options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
@@ -423,9 +425,9 @@ export const OAuth2Auth = ({ showMcpAuthFlow, disabled }: { showMcpAuthFlow?: bo
   return (
     <>
       <AuthTableBody>
-        <AuthToggleRow label="Enabled" property="disabled" invert disabled={disabled} />
+        <AuthToggleRow label={translateOfflineUi("Enabled")} property="disabled" invert disabled={disabled} />
         <AuthSelectRow
-          label="Grant Type"
+          label={translateOfflineUi("Grant Type")}
           property="grantType"
           disabled={disabled}
           options={showMcpAuthFlow ? grantTypeOptionsWithMcpAuthFlow : grantTypeOptions}
@@ -615,9 +617,9 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
     <div className="notice subtle text-left">
       {error && <p className="selectable notice warning margin-bottom">{error}</p>}
       <OAuth2Error token={token} />
-      <OAuth2TokenInput token={token} label="Refresh Token" property="refreshToken" />
+      <OAuth2TokenInput token={token} label={translateOfflineUi("Refresh Token")} property="refreshToken" />
       <OAuth2TokenInput token={token} label="Identity Token" property="identityToken" />
-      <OAuth2TokenInput token={token} label="Access Token" property="accessToken" />
+      <OAuth2TokenInput token={token} label={translateOfflineUi("Access Token")} property="accessToken" />
       <div className="pad-top text-right">
         {token ? (
           <button
@@ -629,9 +631,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
                 services.oAuth2Token.remove(token);
               }
             }}
-          >
-            Clear
-          </button>
+          >{translateOfflineUi("Clear")}</button>
         ) : null}
         {!hideRefresh && (
           <button
@@ -658,7 +658,7 @@ const OAuth2Tokens = ({ hideRefresh }: { hideRefresh?: boolean }) => {
             }}
             disabled={loading}
           >
-            {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? 'Refresh Token' : 'Fetch Tokens'}
+            {loading ? (token ? 'Refreshing...' : 'Fetching...') : token ? translateOfflineUi("Refresh Token") : translateOfflineUi("Fetch Tokens")}
           </button>
         )}
       </div>

@@ -1,3 +1,4 @@
+
 import clone from 'clone';
 import { isValid } from 'date-fns';
 import type { Cookie, CookieJar } from 'insomnia-data';
@@ -24,6 +25,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { useUpdateCookieJarActionFetcher } from '~/routes/organization.$organizationId.project.$projectId.workspace.$workspaceId.update-cookie-jar';
 import { OneLineEditor } from '~/ui/components/.client/codemirror/one-line-editor';
 import { useIsLightTheme } from '~/ui/hooks/theme';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 import { useWorkspaceLoaderData } from '../../../routes/organization.$organizationId.project.$projectId.workspace.$workspaceId';
 import { useNunjucks } from '../../context/nunjucks/use-nunjucks';
@@ -256,9 +258,7 @@ export const CookiesModal = ({ setIsOpen }: Props) => {
                 <Button
                   className="flex h-full items-center justify-center gap-2 rounded-md border border-solid border-(--hl-md) bg-(--color-surprise) px-4 py-2 text-sm font-semibold text-(--color-font-surprise) ring-1 ring-transparent transition-all hover:bg-(--color-surprise)/80 focus:ring-(--hl-md) focus:ring-inset aria-pressed:opacity-80"
                   onPress={close}
-                >
-                  Done
-                </Button>
+                >{translateOfflineUi("Done")}</Button>
               </div>
             </>
           )}
@@ -328,9 +328,7 @@ const CookieList = ({ cookies, onCookieDelete, onUpdateCookie }: CookieListProps
                 <Button
                   className="flex min-w-[35px] items-center justify-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   onPress={() => setCookieToEdit(cookie)}
-                >
-                  Edit
-                </Button>
+                >{translateOfflineUi("Edit")}</Button>
                 <PromptButton
                   className="flex min-w-[15px] items-center gap-2 px-2 py-1 text-sm font-semibold text-(--color-font) transition-all aria-pressed:bg-(--hl-sm)"
                   confirmMessage=""
@@ -476,16 +474,12 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                         <Tab
                           className="flex h-full shrink-0 cursor-pointer items-center justify-between gap-2 px-3 py-1 text-(--hl) outline-hidden transition-colors duration-300 select-none hover:bg-(--hl-sm) hover:text-(--color-font) focus:bg-(--hl-sm) aria-selected:bg-(--hl-xs) aria-selected:text-(--color-font) aria-selected:hover:bg-(--hl-sm) aria-selected:focus:bg-(--hl-sm)"
                           id="raw"
-                        >
-                          Raw
-                        </Tab>
+                        >{translateOfflineUi("Raw")}</Tab>
                       </TabList>
                       <TabPanel className="flex w-full flex-1 flex-col overflow-y-auto pt-3" id="friendly">
                         <div className="form-row">
                           <div className="form-control form-control--outlined">
-                            <label data-testid="CookieKey">
-                              Key
-                              <OneLineEditor
+                            <label data-testid="CookieKey">{translateOfflineUi("Key")}<OneLineEditor
                                 id="cookie-key"
                                 historyKey={`cookie-key::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.key) || '').toString()}
@@ -494,9 +488,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                             </label>
                           </div>
                           <div className="form-control form-control--outlined">
-                            <label data-testid="CookieValue">
-                              Value
-                              <OneLineEditor
+                            <label data-testid="CookieValue">{translateOfflineUi("Value")}<OneLineEditor
                                 id="cookie-value"
                                 historyKey={`cookie-value::${editCookie?.id}`}
                                 defaultValue={((editCookie && editCookie.value) || '').toString()}
@@ -612,9 +604,7 @@ const CookieModifyModal = ({ cookie, isOpen, setIsOpen, onUpdateCookie }: Cookie
                     onUpdateCookie(editCookie as Cookie);
                     setIsOpen(false);
                   }}
-                >
-                  Done
-                </Button>
+                >{translateOfflineUi("Done")}</Button>
               </div>
             </>
           )}

@@ -1,3 +1,4 @@
+
 import type { CustomGitCredentialV2 } from 'insomnia-data';
 import { Form } from 'react-aria-components';
 
@@ -5,6 +6,7 @@ import { Button } from '~/basic-components/button';
 import { useGitCredentialsUpdateActionFetcher } from '~/routes/git-credentials.$id.update';
 import { useGitCredentialsCreateActionFetcher } from '~/routes/git-credentials.create';
 import { Input } from '~/ui/components/base/input';
+import { translateOfflineUi } from '~/ui/translate-offline';
 
 export const GitCustomCredentialForm = ({
   onCancel,
@@ -71,7 +73,7 @@ export const GitCustomCredentialForm = ({
             name="username"
             isRequired
             className="w-1/2"
-            label="Username"
+            label={translateOfflineUi("Username")}
             placeholder="remote username for PAT"
             defaultValue={gitCredentialToEdit?.credentials?.username}
           />
@@ -90,7 +92,7 @@ export const GitCustomCredentialForm = ({
         <Button primary type="submit">
           {isEditing ? 'Update Credential' : 'Save Credential'}
         </Button>
-        <Button onPress={onCancel}>Cancel</Button>
+        <Button onPress={onCancel}>{translateOfflineUi("Cancel")}</Button>
       </div>
     </Form>
   );
