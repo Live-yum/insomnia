@@ -17,7 +17,7 @@ test('importing external vault references preserves the request without cloud au
   // Exercise both user actions and wait for the actual import to finish.
   await page.getByRole('dialog').getByRole('button', { name: 'Scan' }).click();
   const preview = page.getByRole('dialog', { name: 'Modal', exact: true });
-  await expect(preview.getByRole('cell', { name: '14 Requests', exact: true })).toBeVisible();
+  await expect.soft(preview.getByRole('cell', { name: '14 Requests', exact: true })).toBeVisible();
   // The visible icon contributes a prefix to the accessible button name.
   // Keep the confirmation scoped to its preview, without depending on its glyph.
   await preview.getByRole('button', { name: /\bImport$/ }).click();
