@@ -267,30 +267,14 @@ export class ProjectPage extends BasePage {
     await expect.poll(() => this.page.getByRole('form', { name: 'Git Setup Form' }).evaluate(form => new FormData(form as HTMLFormElement).get('branch'))).toBe('master');
     await this.page.getByRole('button', { name: 'Scan for files' }).click();
     await this.page.getByRole('button', { name: 'Create Blank Project' }).click();
-    const projectModalCloseButton = this.page.locator('[data-test-id="project-modal-close-button"]');
-    await projectModalCloseButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-    if (await projectModalCloseButton.isVisible()) {
-      await projectModalCloseButton.click();
-      // The name/type fields were filled in, so closing can trigger a "discard unsaved changes" confirmation.
-      // App-side race: an in-flight navigation (e.g. from the project just being created) can force-close
-      // the whole modal - confirm dialog included - independent of this click, detaching the "Yes" button
-      // mid-click. Tolerate that here; the waitFor below is the real assertion that the modal is gone.
-      const discardConfirmDialog = this.page.getByRole('dialog', { name: 'Unsaved changes' });
-      if (await discardConfirmDialog.isVisible().catch(() => false)) {
-        await discardConfirmDialog
-          .getByRole('button', { name: 'Yes' })
-          .click({ timeout: 5000 })
-          .catch(() => {});
-      }
-    }
-    // The modal's backdrop still intercepts clicks for a moment after closing
-    // (exit animation / unmount), which flakily blocks the click below. Named rather than a bare
-    // `getByRole('dialog')`: the discard confirmation above can briefly coexist with this one, and
-    // a bare role locator matching both is a Playwright strict-mode violation.
+    // Creation closes this dialog asynchronously. Clicking its close button races
+    // the successful navigation and can also discard a still-pending submission.
+    // Require the real success transition instead of forcing or swallowing a click.
     await this.page.getByRole('dialog', { name: 'Create or update dialog' }).waitFor({ state: 'hidden' });
     // A local project must appear without switching to a cloud organization.
     await this.page.getByRole('grid', { name: 'Project Navigation Tree' }).getByRole('row', { name, exact: true }).waitFor();
     await this.sidebar.selectProject(name);
+    await this.waitForProjectDashboard();
   }
 
   /**
