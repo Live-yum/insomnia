@@ -16,8 +16,12 @@ test('importing external vault references preserves the request without cloud au
   // Choosing Clipboard selects the source; Scan produces the import preview.
   // Exercise both user actions and wait for the actual import to finish.
   await page.getByRole('dialog').getByRole('button', { name: 'Scan' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Import', exact: true }).click();
-  await page.getByRole('dialog').waitFor({ state: 'hidden' });
+  const preview = page.getByRole('dialog', { name: 'Modal', exact: true });
+  await expect(preview.getByRole('cell', { name: '14 Requests', exact: true })).toBeVisible();
+  // The visible icon contributes a prefix to the accessible button name.
+  // Keep the confirmation scoped to its preview, without depending on its glyph.
+  await preview.getByRole('button', { name: /\bImport$/ }).click();
+  await preview.waitFor({ state: 'hidden' });
   await insomnia.navigationSidebar.clickRequestOrFolder('External Vault Tag');
   const before = await page.evaluate(() => window._dataServicesInvoke('request', 'all'));
   await page.getByTestId('settings-button').click();
